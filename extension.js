@@ -313,7 +313,8 @@ const NewRunDialog = new Lang.Class({
         let result = {
             name: null,
             keyword: null,
-            url: null
+            url: null,
+            open_url: false
         };
         let web_search_query_regexp = /^(.{1,}?)\s$/;
 
@@ -328,6 +329,10 @@ const NewRunDialog = new Lang.Class({
                 if(engine) {
                     result.name = engine.name.trim();
                     result.url = engine.url.trim();
+
+                    if(engine.open_url) {
+                        result.open_url = true;
+                    }
                 }
             }
         }
@@ -346,7 +351,8 @@ const NewRunDialog = new Lang.Class({
             info = {
                 name: OPEN_URL_DATA.name,
                 keyword: this._settings.get_string(GSETTINGS.OPEN_URL_KEY),
-                url: OPEN_URL_DATA.url
+                url: OPEN_URL_DATA.url,
+                open_url: true
             };
 
             return info;
@@ -388,7 +394,7 @@ const NewRunDialog = new Lang.Class({
         if(this.show_suggestions) {
             let text = this.search_entry.get_text().trim();
 
-            if(this.search_engine.name == OPEN_URL_DATA.name) {
+            if(this.search_engine.open_url) {
                 let is_matches_protocol = 
                     Convenience.starts_with(
                         text, 'http://'.slice(0, text.length)
@@ -402,7 +408,7 @@ const NewRunDialog = new Lang.Class({
                     this.search_entry.set_text(text);
                 }
 
-                if(/^https?:\/\/.+?/.exec(text)) {
+                if(/^https?:\/\/.+?/.test(text)) {
                     this._display_suggestions(text);
                 }
                 else {
@@ -422,13 +428,13 @@ const NewRunDialog = new Lang.Class({
     },
 
     _show_engine_label: function(text) {
-        this.search_engine_label.text = text;
+        this.search_engine_label.set_text(text);
         this.search_engine_label.show();
     },
 
     _hide_engine_label: function() {
         this.search_engine_label.hide();
-        this.search_engine_label.text = '';
+        this.search_engine_label.set_text('');
     },
 
     _parse_suggestions: function(suggestions_source) {
@@ -505,14 +511,13 @@ const NewRunDialog = new Lang.Class({
             if(suggestions) {
                 this.suggestions_box.removeAll();
                 suggestions = this._parse_suggestions(suggestions);
-                let is_open_url = this.search_engine.name == OPEN_URL_DATA.name;
 
                 if(!suggestions){return false;}
 
                 for(let i = 0; i < suggestions.length; i++) {
                     let suggestion = suggestions[i];
 
-                    if(is_open_url && suggestion.type != 'NAVIGATION') {
+                    if(this.search_engine.open_url && suggestion.type != 'NAVIGATION') {
                         continue;
                     }
                     if(suggestion.text == text) {
@@ -541,7 +546,6 @@ const NewRunDialog = new Lang.Class({
         }
 
         if(!Convenience.is_blank(url)) {
-            log('url');
             this._toggle_dialog();
             this.close();
             this._run_search(url);
@@ -558,8 +562,12 @@ const NewRunDialog = new Lang.Class({
                 text = this.search_entry.get_text().trim();
             }
 
+            if(Convenience.is_blank(text)) {
+                return false;
+            }
+
             if(!Convenience.is_blank(this.search_engine.url)) {
-                if(this.search_engine.name != OPEN_URL_DATA.name) {
+                if(!this.search_engine.open_url) {
                     text = encodeURIComponent(text);
                 }
 
