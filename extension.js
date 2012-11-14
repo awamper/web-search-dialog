@@ -166,6 +166,7 @@ const NewRunDialog = new Lang.Class({
         this.parent();
 
         this._settings = Convenience.getSettings();
+        this._clipboard = St.Clipboard.get_default();
         this.show_suggestions = true;
         this.search_engine = null;
 
@@ -264,6 +265,27 @@ const NewRunDialog = new Lang.Class({
                 this.search_entry.set_text('');
                 this._toggle_dialog();
             }
+        }
+        // Ctrl+V
+        else if(symbol == 118) {
+            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+                if (!text) {
+                    return false;
+                }
+
+                let clutter_text = this.search_entry.get_clutter_text();
+                clutter_text.delete_selection();
+                let pos = clutter_text.get_cursor_position();
+                clutter_text.insert_text(text, pos);
+
+                return true;
+            }));
+        }
+        // Ctrl+C
+        else if(symbol == 99) {
+            let clutter_text = this.search_entry.get_clutter_text();
+            let selection = clutter_text.get_selection();
+            this._clipboard.set_text(selection);
         }
         else {
             // nothing
