@@ -1,0 +1,12 @@
+{
+  "description": "Search in web", 
+  "name": "Run Dialog Web Search", 
+  "shell-version": [
+    "3.4"
+  ], 
+  "url": "", 
+  "uuid": "run_dialog_web_search@awamper.gmail.com",
+  "settings-schema": "org.gnome.shell.extensions.run-dialog-web-search",
+  "dev-version": "0.1",
+  "version": 1
+}

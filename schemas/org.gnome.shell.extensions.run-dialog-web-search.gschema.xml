@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+
+  <schema path="/org/gnome/shell/extensions/run-dialog-web-search/" id="org.gnome.shell.extensions.run-dialog-web-search">
+
+    <key type="as" name="search-engines">
+      <default>
+        [
+          '{"name": "Google", "keyword": "g", "url": "http://google.com/search?q={term}"}',
+          '{"name": "Yandex", "keyword": "y", "url": "http://yandex.com/yandsearch?text={term}"}',
+          '{"name": "Wikipedia", "keyword": "w", "url": "http://en.wikipedia.org/wiki/Special:Search?search={term}"}',
+          '{"name": "Bing", "keyword": "b", "url": "http://www.bing.com/search?q={term}"}'
+        ]
+      </default>
+      <summary>Search engines.</summary>
+    </key>
+
+    <key type="b" name="enable-suggestions">
+	<default>false</default>
+        <summary>Enable suggetsions</summary>
+    </key>
+
+    <key type="s" name="open-url-keyword">
+	<default>"url"</default>
+    </key>
+  </schema>
+</schemalist>

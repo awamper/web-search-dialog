@@ -1,0 +1,35 @@
+.search-entry {
+    width: 23em;
+    color: rgb(128, 128, 128);
+    border: 1px solid rgba(245,245,245,0.2);
+    selection-background-color: white;
+    selected-color: black;
+    font-weight: bold;
+    transition-duration: 300;
+}
+
+.search-engine-label {
+    border: 1px solid rgba(245,245,245,0.2);
+    background-color: black;
+    font-weight: bold;
+    transition-duration: 500;
+}
+
+.menu-item-icon {
+    icon-size: 1em;
+    color: #8d8f8a;
+}
+
+.run-dialog {
+    border-radius: 16px;
+
+    padding-right: 21px;
+    padding-left: 21px;
+    padding-bottom: 21px;
+    padding-top: 21px;
+}
+
+.run-dialog-entry {
+    border: 1px solid rgba(245,245,245,0.1);
+    transition-duration: 300;
+}
