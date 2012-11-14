@@ -7,6 +7,7 @@
       <default>
         [
           '{"name": "Google", "keyword": "g", "url": "http://google.com/search?q={term}"}',
+	  '{"name": "DuckDuckGo", "keyword": "d", "url": "http://duckduckgo.com/?q={term}"}',
           '{"name": "Yandex", "keyword": "y", "url": "http://yandex.com/yandsearch?text={term}"}',
           '{"name": "Wikipedia", "keyword": "w", "url": "http://en.wikipedia.org/wiki/Special:Search?search={term}"}',
           '{"name": "Bing", "keyword": "b", "url": "http://www.bing.com/search?q={term}"}'
