@@ -593,6 +593,16 @@ const NewRunDialog = new Lang.Class({
                     text = encodeURIComponent(text);
                 }
 
+                if(this.search_engine.open_url) {
+                    let url_regexp = imports.misc.util._urlRegexp;
+
+                    if(!url_regexp.test(text)) {
+                        this._showError('Please, enter a correct url.');
+
+                        return false;
+                    }
+                }
+
                 let url = this.search_engine.url.replace('{term}', text);
                 this._toggle_dialog();
                 this.close();
