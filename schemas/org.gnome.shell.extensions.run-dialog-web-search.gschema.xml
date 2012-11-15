@@ -3,11 +3,15 @@
 
   <schema path="/org/gnome/shell/extensions/run-dialog-web-search/" id="org.gnome.shell.extensions.run-dialog-web-search">
 
+    <key type="as" name="search-history">
+      <default>[]</default>
+    </key>
+
     <key type="as" name="search-engines">
       <default>
         [
           '{"name": "Google", "keyword": "g", "url": "http://google.com/search?q={term}"}',
-	  '{"name": "DuckDuckGo", "keyword": "d", "url": "http://duckduckgo.com/?q={term}"}',
+          '{"name": "DuckDuckGo", "keyword": "d", "url": "http://duckduckgo.com/?q={term}"}',
           '{"name": "Yandex", "keyword": "y", "url": "http://yandex.com/yandsearch?text={term}"}',
           '{"name": "Wikipedia", "keyword": "w", "url": "http://en.wikipedia.org/wiki/Special:Search?search={term}"}',
           '{"name": "Bing", "keyword": "b", "url": "http://www.bing.com/search?q={term}"}'
@@ -17,12 +21,12 @@
     </key>
 
     <key type="b" name="enable-suggestions">
-	<default>false</default>
+        <default>false</default>
         <summary>Enable suggetsions</summary>
     </key>
 
     <key type="s" name="open-url-keyword">
-	<default>"url"</default>
+      <default>"url"</default>
     </key>
   </schema>
 </schemalist>

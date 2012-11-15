@@ -12,9 +12,10 @@ const Params = imports.misc.params;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
-const SETTINGS_KEY = 'search-engines';
+const ENGINES_KEY = 'search-engines';
 const SUGGESTIONS_KEY = 'enable-suggestions';
 const OPEN_URL_KEY = 'open-url-keyword';
+const HISTORY_KEY = 'search-history';
 
 const Columns = {
     DISPLAY_NAME: 0,
@@ -311,7 +312,7 @@ const WebSearchPrefsWidget = new GObject.Class({
 
         this._store.clear();
 
-        let current_items = this._settings.get_strv(SETTINGS_KEY);
+        let current_items = this._settings.get_strv(ENGINES_KEY);
         let valid_items = [];
 
         for (let i = 0; i < current_items.length; i++) {
@@ -329,7 +330,7 @@ const WebSearchPrefsWidget = new GObject.Class({
 
         if (valid_items.length != current_items.length) {
             // some items were filtered out
-            this._settings.set_strv(SETTINGS_KEY, valid_items);
+            this._settings.set_strv(ENGINES_KEY, valid_items);
         }
     },
 
@@ -338,7 +339,7 @@ const WebSearchPrefsWidget = new GObject.Class({
             return false;
         }
 
-        let current_items = this._settings.get_strv(SETTINGS_KEY);
+        let current_items = this._settings.get_strv(ENGINES_KEY);
 
         for(let i = 0; i < current_items.length; i++) {
             let info = JSON.parse(current_items[i]);
@@ -350,7 +351,7 @@ const WebSearchPrefsWidget = new GObject.Class({
         }
 
         current_items.push(JSON.stringify(new_item));
-        this._settings.set_strv(SETTINGS_KEY, current_items);
+        this._settings.set_strv(ENGINES_KEY, current_items);
         return true;
     },
 
@@ -359,7 +360,7 @@ const WebSearchPrefsWidget = new GObject.Class({
             return false;
         }
 
-        let current_items = this._settings.get_strv(SETTINGS_KEY);
+        let current_items = this._settings.get_strv(ENGINES_KEY);
         let result = null;
 
         for(let i = 0; i < current_items.length; i++) {
@@ -372,7 +373,7 @@ const WebSearchPrefsWidget = new GObject.Class({
             }
         }
 
-        this._settings.set_strv(SETTINGS_KEY, current_items);
+        this._settings.set_strv(ENGINES_KEY, current_items);
         return result;
     }
 });

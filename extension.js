@@ -3,8 +3,8 @@ const Lang = imports.lang;
 const Main = imports.ui.main;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
-const Gtk = imports.gi.Gtk;
 const Soup = imports.gi.Soup;
+const Params = imports.misc.params;
 const RunDialog = imports.ui.runDialog;
 const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
@@ -19,12 +19,6 @@ Soup.Session.prototype.add_feature.call(
     new Soup.ProxyResolverDefault()
 );
 _httpSession.user_agent = 'Gnome-Shell Web Search';
-
-const GSETTINGS = {
-    ENGINES: Prefs.SETTINGS_KEY,
-    SUGGESTIONS: Prefs.SUGGESTIONS_KEY,
-    OPEN_URL_KEY: Prefs.OPEN_URL_KEY
-};
 
 const OPEN_URL_DATA = {
     url: '{term}',
@@ -158,6 +152,103 @@ const SuggestionsBox = new Lang.Class({
     }
 });
 
+const SearchHistoryManager = new Lang.Class({
+    Name: "SearchHistoryManager",
+
+    _init: function(params) {
+        this._settings = Convenience.getSettings();
+
+        params = Params.parse(params, {
+            gsettings_key: Prefs.HISTORY_KEY,
+            limit: 100//this.setting.get_int()
+        });
+
+        this._key = params.gsettings_key;
+        this._limit = params.limit;
+
+        if(this._key) {
+            this._history = this._settings.get_strv(this._key);
+            this._settings.connect(
+                'changed::'+this._key,
+                Lang.bind(this, this._history_changed)
+            );
+        }
+        else {
+            this._history = [];
+        }
+
+        this._history_index = this._history.length;
+    },
+
+    _history_changed: function() {
+        this._history = this._settings.get_strv(this._key);
+        this._history_index = this._history.length;
+    },
+
+    prev_item: function(text) {
+        if(this._history_index <= 0) {
+            return text;
+        }
+
+        if(text) {
+            this._history[this._history_index] = text;
+        }
+
+        this._history_index--;
+
+        return this._index_changed();
+    },
+
+    next_item: function(text) {
+        if(this._history_index >= this._history.length) {
+            return text;
+        }
+
+        if(text) {
+            this._history[this._history_index] = text;
+        }
+
+        this._history_index++;
+
+        return this._index_changed();
+    },
+
+    last_item: function() {
+        if(this._history_index != this._history.length) {
+            this._history_index = this._history.length;
+            this._index_changed();
+        }
+
+        return this._history_index[this._history.length];
+    },
+
+    add_item: function(input) {
+        if(this._history.length == 0 ||
+            this._history[this._history.length - 1] != input) {
+
+            this._history.push(input);
+            this._save();
+        }
+        this._history_index = this._history.length;
+    },
+
+    _index_changed: function() {
+        let current = this._history[this._history_index] || '';
+
+        return current;
+    },
+
+    _save: function() {
+        if(this._history.length > this._limit) {
+            this._history.splice(0, this._history.length - this._limit);
+        }
+
+        if(this._key) {
+            this._settings.set_strv(this._key, this._history);
+        }
+    }
+});
+
 const NewRunDialog = new Lang.Class({
     Name: 'NewRunDialog',
     Extends: RunDialog.RunDialog,
@@ -221,6 +312,8 @@ const NewRunDialog = new Lang.Class({
         this.suggestions_box = new SuggestionsBox(this);
         this.suggestions_box.setSourceAlignment(0.02);
 
+        this.search_history = new SearchHistoryManager();
+
         this._search_table = new St.Table({
             name: 'web_search_table',
             style_class: 'search-table'
@@ -256,6 +349,20 @@ const NewRunDialog = new Lang.Class({
         else if(symbol == Clutter.Down) {
             if(this.suggestions_box.isOpen) {
                 this.suggestions_box.firstMenuItem.setActive(true);
+            }
+            else {
+                this.show_suggestions = false;
+                let text = this.search_entry.get_text();
+                let item = this.search_history.next_item(text);
+                this.search_entry.set_text(item);
+            }
+        }
+        else if(symbol == Clutter.Up) {
+            if(!this.suggestions_box.isOpen) {
+                this.show_suggestions = false;
+                let text = this.search_entry.get_text();
+                let item = this.search_history.prev_item(text);
+                this.search_entry.set_text(item);
             }
         }
         else if(symbol == Clutter.BackSpace) {
@@ -369,10 +476,10 @@ const NewRunDialog = new Lang.Class({
 
         let info;
 
-        if(key == this._settings.get_string(GSETTINGS.OPEN_URL_KEY)) {
+        if(key == this._settings.get_string(Prefs.OPEN_URL_KEY)) {
             info = {
                 name: OPEN_URL_DATA.name,
-                keyword: this._settings.get_string(GSETTINGS.OPEN_URL_KEY),
+                keyword: this._settings.get_string(Prefs.OPEN_URL_KEY),
                 url: OPEN_URL_DATA.url,
                 open_url: true
             };
@@ -380,7 +487,7 @@ const NewRunDialog = new Lang.Class({
             return info;
         }
         else {
-            let engines_list = this._settings.get_strv(GSETTINGS.ENGINES);
+            let engines_list = this._settings.get_strv(Prefs.ENGINES_KEY);
 
             for(let i = 0; i < engines_list.length; i++) {
                 info = JSON.parse(engines_list[i]);
@@ -513,7 +620,7 @@ const NewRunDialog = new Lang.Class({
     },
 
     _display_suggestions: function(text) {
-        if(!this._settings.get_boolean(GSETTINGS.SUGGESTIONS)) {
+        if(!this._settings.get_boolean(Prefs.SUGGESTIONS_KEY)) {
             return false;
         }
         if(!this.show_suggestions) {
@@ -568,6 +675,8 @@ const NewRunDialog = new Lang.Class({
         }
 
         if(!Convenience.is_blank(url)) {
+            this.search_history.add_item(url);
+
             this._toggle_dialog();
             this.close();
             this._run_search(url);
@@ -589,6 +698,8 @@ const NewRunDialog = new Lang.Class({
             }
 
             if(!Convenience.is_blank(this.search_engine.url)) {
+                this.search_history.add_item(text);
+
                 if(!this.search_engine.open_url) {
                     text = encodeURIComponent(text);
                 }
