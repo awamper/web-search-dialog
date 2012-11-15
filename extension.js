@@ -32,12 +32,13 @@ const SuggestionMenuItem = new Lang.Class({
     Name: 'SuggestionMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function(text, type, relevance, params) {
+    _init: function(text, type, relevance, term, params) {
         this.parent(params);
 
         this._text = text;
         this._type = type;
         this._relevance = relevance;
+        this._term = term;
 
         this._find_icon = new St.Icon({
             style_class: 'menu-item-icon',
@@ -51,9 +52,15 @@ const SuggestionMenuItem = new Lang.Class({
             icon_type: St.IconType.SYMBOLIC
         });
 
+        let highlight_text = this._text.replace(
+            new RegExp('(.*?)('+this._term+')(.*?)', "i"),
+            "$1<b>$2</b>$3"
+        );
+
         this._label = new St.Label({
-            text: this._text
+            text: highlight_text
         });
+        this._label.clutter_text.use_markup = true;
 
         this._box = new St.BoxLayout();
 
@@ -139,8 +146,8 @@ const SuggestionsBox = new Lang.Class({
         return true;
     },
 
-    add_suggestion: function(text, type, relevance) {
-        let item = new SuggestionMenuItem(text, type, relevance);
+    add_suggestion: function(text, type, relevance, term) {
+        let item = new SuggestionMenuItem(text, type, relevance, term);
         item.connect('activate', Lang.bind(this, this._on_activated));
         item.connect('active-changed', Lang.bind(this, this._on_active_changed));
         this.addMenuItem(item)
@@ -652,11 +659,11 @@ const NewRunDialog = new Lang.Class({
                     if(suggestion.text == text) {
                         continue;
                     }
-
                     this.suggestions_box.add_suggestion(
                         suggestion.text,
                         suggestion.type,
-                        suggestion.relevance
+                        suggestion.relevance,
+                        text
                     );
                 }
 
