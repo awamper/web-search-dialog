@@ -239,6 +239,27 @@ const SearchHistoryManager = new Lang.Class({
         this._history_index = this._history.length;
     },
 
+    get_best_matches: function(text, min_score, limit) {
+        let result = [];
+        let history = this._history;
+        let unique_history = history.filter(function(elem, pos) {
+            return history.indexOf(elem) == pos;
+        })
+
+        for(let i = 0; i < unique_history.length; i++) {
+            let score = Convenience.string_score(text, unique_history[i], 0.5);
+
+            if(score >= min_score) {
+                result.push([score, unique_history[i]]);
+            }
+        }
+
+        result.sort(function(a, b){return a[0] < b[0]});
+
+        return result.slice(0, limit);
+
+    },
+
     _index_changed: function() {
         let current = this._history[this._history_index] || '';
 
@@ -578,7 +599,7 @@ const NewRunDialog = new Lang.Class({
             return false;
         }
 
-        let result = Array();
+        let result = new Array();
 
         for(let i = 0; i < suggestions_source[1].length; i++) {
             let text = suggestions_source[1][i].trim();
@@ -644,8 +665,9 @@ const NewRunDialog = new Lang.Class({
 
         text = text.trim();
         this._get_suggestions(text, function(suggestions) {
+            this.suggestions_box.removeAll();
+
             if(suggestions) {
-                this.suggestions_box.removeAll();
                 suggestions = this._parse_suggestions(suggestions);
 
                 if(!suggestions){return false;}
@@ -653,12 +675,15 @@ const NewRunDialog = new Lang.Class({
                 for(let i = 0; i < suggestions.length; i++) {
                     let suggestion = suggestions[i];
 
-                    if(this.search_engine.open_url && suggestion.type != 'NAVIGATION') {
+                    if(this.search_engine.open_url && 
+                        suggestion.type != 'NAVIGATION') {
+                        
                         continue;
                     }
                     if(suggestion.text == text) {
                         continue;
                     }
+
                     this.suggestions_box.add_suggestion(
                         suggestion.text,
                         suggestion.type,
@@ -670,10 +695,40 @@ const NewRunDialog = new Lang.Class({
                 this.suggestions_box.open();
             }
 
-            return false;
+            this._display_history_suggestions(text);
+
+            return true;
         });
 
         return true;
+    },
+
+    _display_history_suggestions: function(text) {
+        let history_suggestions = this.search_history.get_best_matches(
+            text,
+            0.45,
+            3
+        );
+
+        if(history_suggestions.length > 0) {
+            this.suggestions_box.addMenuItem(
+                new PopupMenu.PopupMenuItem('History:', {
+                    reactive: false,
+                    activate: false,
+                    hover: false,
+                    sensitive: false
+                })
+            );
+
+            for(let i = 0; i < history_suggestions.length; i++) {
+                this.suggestions_box.add_suggestion(
+                    history_suggestions[i][1],
+                    'QUERY',
+                    history_suggestions[i][0],
+                    text
+                );
+            }
+        }
     },
 
     _activate_search: function(text_obj, url) {
