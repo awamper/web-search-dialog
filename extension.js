@@ -167,7 +167,7 @@ const SearchHistoryManager = new Lang.Class({
 
         params = Params.parse(params, {
             gsettings_key: Prefs.HISTORY_KEY,
-            limit: 100//this.setting.get_int()
+            limit: this._settings.get_int(Prefs.HISTORY_LIMIT_KEY)
         });
 
         this._key = params.gsettings_key;
@@ -704,6 +704,10 @@ const NewRunDialog = new Lang.Class({
     },
 
     _display_history_suggestions: function(text) {
+        if(!this._settings.get_boolean(Prefs.HISTORY_SUGGESTIONS_KEY)) {
+            return false;
+        }
+
         let history_suggestions = this.search_history.get_best_matches(
             text,
             0.45,
@@ -729,6 +733,8 @@ const NewRunDialog = new Lang.Class({
                 );
             }
         }
+
+        return true;
     },
 
     _activate_search: function(text_obj, url) {

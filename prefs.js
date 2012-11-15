@@ -16,6 +16,8 @@ const ENGINES_KEY = 'search-engines';
 const SUGGESTIONS_KEY = 'enable-suggestions';
 const OPEN_URL_KEY = 'open-url-keyword';
 const HISTORY_KEY = 'search-history';
+const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
+const HISTORY_LIMIT_KEY = 'history-limit';
 
 const Columns = {
     DISPLAY_NAME: 0,
@@ -43,7 +45,7 @@ const WebSearchPrefsWidget = new GObject.Class({
             hexpand:true
         });
         let enable_suggestions_switch = new Gtk.Switch({
-            halign:Gtk.Align.END
+            halign: Gtk.Align.END
         });
         enable_suggestions_switch.set_active(
             this._settings.get_boolean(SUGGESTIONS_KEY)
@@ -55,14 +57,82 @@ const WebSearchPrefsWidget = new GObject.Class({
             })
         );
         let enable_suggestions_box = new Gtk.Box({
-            spacing:30,
-            margin_left:10,
-            margin_top:10,
-            margin_right:10
+            spacing: 30,
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
         });
         enable_suggestions_box.add(enable_suggestions_label);
         enable_suggestions_box.add(enable_suggestions_switch);
         this.add(enable_suggestions_box);
+
+        // history suggestions
+        let enable_history_suggestions_label = new Gtk.Label({
+            label: "Enable history suggestions:", 
+            xalign: 0,
+            hexpand:true
+        });
+        let enable_history_suggestions_switch = new Gtk.Switch({
+            halign: Gtk.Align.END
+        });
+        enable_history_suggestions_switch.set_active(
+            this._settings.get_boolean(HISTORY_SUGGESTIONS_KEY)
+        );
+        enable_history_suggestions_switch.connect(
+            "notify::active",
+            Lang.bind(this, function(check) {
+                this._settings.set_boolean(
+                    HISTORY_SUGGESTIONS_KEY,
+                    check.get_active()
+                );
+            })
+        );
+        let enable_history_suggestions_box = new Gtk.Box({
+            spacing: 30,
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
+        });
+        enable_history_suggestions_box.add(enable_history_suggestions_label);
+        enable_history_suggestions_box.add(enable_history_suggestions_switch);
+        this.add(enable_history_suggestions_box);
+
+        // history limit
+        let history_limit_label = new Gtk.Label({
+            label: "History limit:", 
+            xalign: 0,
+            hexpand:true
+        });
+
+        let adjustment = new Gtk.Adjustment({
+            lower: 10,
+            upper: 1000,
+            step_increment: 5
+        });
+        let spin_button = new Gtk.SpinButton({
+            adjustment: adjustment,
+            numeric: true,
+            snap_to_ticks: true
+        });
+
+        spin_button.set_value(this._settings.get_int(HISTORY_LIMIT_KEY));
+        spin_button.connect('value-changed', Lang.bind(this, function (spin) {
+            let value = spin.get_value_as_int();
+
+            if(this._settings.get_int(HISTORY_LIMIT_KEY) !== value) {
+                this._settings.set_int(HISTORY_LIMIT_KEY, value);
+            }
+        }));
+        let history_limit_box = new Gtk.Box({
+            spacing: 30,
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
+        });
+        history_limit_box.add(history_limit_label);
+        history_limit_box.add(spin_button);
+        this.add(history_limit_box);
+
 
         // open url
         let open_url_label = new Gtk.Label({
@@ -83,10 +153,10 @@ const WebSearchPrefsWidget = new GObject.Class({
         );
 
         let open_url_box = new Gtk.Box({
-            spacing:30,
-            margin_left:10,
-            margin_top:10,
-            margin_right:10
+            spacing: 30,
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
         });
 
         open_url_box.add(open_url_label);
@@ -95,10 +165,10 @@ const WebSearchPrefsWidget = new GObject.Class({
 
         // engines
         let engines_list_box = new Gtk.Box({
-            spacing:30,
-            margin_left:10,
-            margin_top:10,
-            margin_right:10
+            spacing: 30,
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
         });
 
         this._store = new Gtk.ListStore();
@@ -164,9 +234,9 @@ const WebSearchPrefsWidget = new GObject.Class({
 
         let toolbar = new Gtk.Toolbar({
             hexpand: true,
-            margin_left:10,
-            margin_top:10,
-            margin_right:10
+            margin_left: 10,
+            margin_top: 10,
+            margin_right: 10
         });
         toolbar.get_style_context().add_class(
             Gtk.STYLE_CLASS_INLINE_TOOLBAR

@@ -25,6 +25,15 @@
         <summary>Enable suggetsions</summary>
     </key>
 
+    <key type="b" name="enable-history-suggestions">
+      <default>true</default>
+      <summary>Enable history suggestions.</summary>
+    </key>
+
+    <key type="i" name="history-limit">
+      <default>500</default>
+    </key>
+
     <key type="s" name="open-url-keyword">
       <default>"url"</default>
     </key>
