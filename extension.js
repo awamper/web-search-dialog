@@ -691,11 +691,18 @@ const NewRunDialog = new Lang.Class({
                         text
                     );
                 }
-
-                this.suggestions_box.open();
             }
 
             this._display_history_suggestions(text);
+
+            if(!this.suggestions_box.isEmpty()) {
+                this.suggestions_box.open();
+            }
+            else {
+                if(this.suggestions_box.isOpen) {
+                    this.suggestions_box.close();
+                }
+            }
 
             return true;
         });
