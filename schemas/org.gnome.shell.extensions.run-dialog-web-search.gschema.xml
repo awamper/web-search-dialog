@@ -21,7 +21,7 @@
     </key>
 
     <key type="b" name="enable-suggestions">
-        <default>false</default>
+        <default>true</default>
         <summary>Enable suggetsions</summary>
     </key>
 
