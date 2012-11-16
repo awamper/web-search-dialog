@@ -1,3 +1,7 @@
+.search-dialog-label {
+    font-size: 9pt;
+}
+
 .search-entry {
     width: 23em;
     color: rgb(128, 128, 128);
@@ -15,21 +19,15 @@
     transition-duration: 500;
 }
 
+.search-hint {
+    padding-left: 5px;
+    padding-top: 2px;
+    font-weight: bold;
+    font-size: 7pt;
+    color: rgba(255, 255, 255, 1);
+}
+
 .menu-item-icon {
     icon-size: 1em;
     color: #8d8f8a;
-}
-
-.run-dialog {
-    border-radius: 16px;
-
-    padding-right: 21px;
-    padding-left: 21px;
-    padding-bottom: 21px;
-    padding-top: 21px;
-}
-
-.run-dialog-entry {
-    border: 1px solid rgba(245,245,245,0.1);
-    transition-duration: 300;
 }

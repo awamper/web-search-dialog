@@ -1,11 +1,12 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
+const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
 const Params = imports.misc.params;
-const RunDialog = imports.ui.runDialog;
+const ModalDialog = imports.ui.modalDialog;
 const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
@@ -277,30 +278,24 @@ const SearchHistoryManager = new Lang.Class({
     }
 });
 
-const NewRunDialog = new Lang.Class({
-    Name: 'NewRunDialog',
-    Extends: RunDialog.RunDialog,
+const WebSearchDialog = new Lang.Class({
+    Name: 'WebSearchDialog',
+    Extends: ModalDialog.ModalDialog,
 
     _init: function() {
-        this.parent();
+        this.parent({
+            styleClass: 'run-dialog'
+        });
 
+        this.default_engine = 'Google';
         this._settings = Convenience.getSettings();
         this._clipboard = St.Clipboard.get_default();
         this.show_suggestions = true;
-        this.search_engine = null;
+        this.search_engine = false;
 
-        this._run_entry_signal_id = this._entryText.connect(
-            'text-changed', 
-            Lang.bind(this, function() {
-                this._on_run_text_changed();
-            })
-        );
-
-        this.run_label = this.contentLayout.get_child_at_index(0);
-        this.default_run_label = this.run_label.get_text();
-        this.run_dialog = this.contentLayout.get_child_at_index(1);
-
-        this._create_search_entry();
+        this._open_hint = 'Type to search in '+this.default_engine+
+            ' or enter a keyword.\nPress "space" for available search engines';
+        this._create_search_dialog();
 
         this.activate_window = false;
         this._window_handler_id = global.display.connect(
@@ -316,10 +311,25 @@ const NewRunDialog = new Lang.Class({
         }
     },
 
-    _create_search_entry: function() {
-        this.search_engine_label = new St.Label({
-            style_class: 'search-engine-label'
+    _create_search_dialog: function() {
+        // let label = new St.Label({
+        //     style_class: 'search-dialog-label',
+        //     text: dialog_label
+        // });
+
+        // this.contentLayout.add(label, {
+        //     y_align: St.Align.START
+        // });
+
+        this.hint = new St.Label({
+            style_class: 'search-hint'
         });
+        this.hint.hide();
+
+        this.search_engine_label = new St.Label({
+            style_class: 'search-engine-label',
+        });
+        this.search_engine_label.hide();
 
         this.search_entry = new St.Entry({
             style_class: 'search-entry'
@@ -343,8 +353,7 @@ const NewRunDialog = new Lang.Class({
         this.search_history = new SearchHistoryManager();
 
         this._search_table = new St.Table({
-            name: 'web_search_table',
-            style_class: 'search-table'
+            name: 'web_search_table'
         })
         this._search_table.add(this.search_engine_label, {
             row: 0,
@@ -354,9 +363,10 @@ const NewRunDialog = new Lang.Class({
             row: 0,
             col: 1
         });
-        this._search_table.hide();
+        this._search_table.show();
 
-        this.contentLayout.insert_child_at_index(this._search_table, 2);
+        this.contentLayout.add(this._search_table);
+        this.contentLayout.add(this.hint);
     },
 
     _on_key_press: function(o, e) {
@@ -364,7 +374,8 @@ const NewRunDialog = new Lang.Class({
 
         if(symbol == Clutter.Escape) {
             this.search_entry.set_text('');
-            this._toggle_dialog();
+            // this._toggle_dialog();
+            this.close();
         }
         else if(symbol == Clutter.Tab) {
             if(this.suggestions_box.isOpen) {
@@ -430,49 +441,90 @@ const NewRunDialog = new Lang.Class({
     },
 
     _toggle_dialog: function() {
-        if(this._errorBox.visible) {
-            this._errorBox.hide();
-        }
+        // if(this._errorBox.visible) {
+        //     this._errorBox.hide();
+        // }
 
-        if(this.run_dialog.visible) {
-            this.run_dialog.hide();
-            this.run_label.set_text('Web Search');
-            this._search_table.show();
-            this.search_entry.grab_key_focus();
-        }
-        else {
+        if(this.visible) {
             if(this.suggestions_box.isOpen) {
                 this.suggestions_box.close();
             }
 
-            this.run_label.set_text(this.default_run_label);
-            this.run_dialog.set_text(this.run_dialog.get_text().trim());
-            this.run_dialog.show();
-            this.run_dialog.grab_key_focus();
-            this.search_entry.set_text('');
-            this._search_table.hide();
+            this.close();
+        }
+        else {
+            this.open();
+            this.search_entry.grab_key_focus();
         }
     },
 
-    _on_run_text_changed: function() {
-        let text = this._entryText.get_text();
-        this.search_engine = this._parse_query(text);
+    _on_search_text_changed: function() {
+        let text = this.search_entry.get_text();
 
-        if(!Convenience.is_blank(this.search_engine.url)) {
-            this.run_label.set_text('Web Search');
-            this._show_engine_label(this.search_engine.name+':');
-
-            this._toggle_dialog();
+        if(text == ' ') {
+            this._display_engines();
+            return true;
         }
+
+        this._hide_hint();
+
+        if(this.search_engine == false) {
+            this.search_engine = this._parse_query(text);
+
+            if(this.search_engine.url != null) {
+                this._show_engine_label(this.search_engine.name+':');
+                this.show_suggestions = false;
+                this.search_entry.set_text('');
+
+                return true;
+            }
+        }
+
+        if(this.show_suggestions) {
+            text = text.trim();
+
+            if(this.search_engine.open_url) {
+                let is_matches_protocol = 
+                    Convenience.starts_with(
+                        text, 'http://'.slice(0, text.length)
+                    ) ||
+                    Convenience.starts_with(
+                        text, 'https://'.slice(0, text.length)
+                    );
+
+                if(!is_matches_protocol) {
+                    text = 'http://'+text;
+                    this.search_entry.set_text(text);
+                }
+
+                if(/^https?:\/\/.+?/.test(text)) {
+                    this._display_suggestions(text);
+                }
+                else {
+                    if(this.suggestions_box.isOpen) {
+                        this.suggestions_box.close();
+                    }
+                }
+            }
+            else {
+                this._display_suggestions(text);
+            }
+        }
+        else {
+            this.show_suggestions = true;
+        }
+
+        return true;
     },
 
     _parse_query: function(text) {
-        let result = {
-            name: null,
-            keyword: null,
-            url: null,
-            open_url: false
-        };
+        // let result = {
+        //     name: null,
+        //     keyword: null,
+        //     url: null,
+        //     open_url: false
+        // };
+        let result = false;
         let web_search_query_regexp = /^(.{1,}?)\s$/;
 
         if(web_search_query_regexp.test(text)) {
@@ -480,10 +532,11 @@ const NewRunDialog = new Lang.Class({
             let keyword = matches[0];
 
             if(!Convenience.is_blank(keyword)) {
-                result.keyword = keyword.trim();
-                let engine = this._get_engine(result.keyword);
+                let engine = this._get_engine(keyword);
 
                 if(engine) {
+                    result = {};
+                    result.keyword = keyword.trim();
                     result.name = engine.name.trim();
                     result.url = engine.url.trim();
 
@@ -503,6 +556,7 @@ const NewRunDialog = new Lang.Class({
         }
 
         let info;
+        key = key.trim();
 
         if(key == this._settings.get_string(Prefs.OPEN_URL_KEY)) {
             info = {
@@ -531,67 +585,110 @@ const NewRunDialog = new Lang.Class({
         return false;
     },
 
-    _on_search_text_changed: function() {
-        if(this._errorBox.visible) {
-            let [errorBoxMinHeight, errorBoxNaturalHeight] =
-                this._errorBox.get_preferred_height(-1);
-            let parentActor = this._errorBox.get_parent();
+    _show_hint: function(text) {
+        if(Convenience.is_blank(text)) {
+            return false;
+        }
+        if(this.hint.visible) {
+            this._hide_hint();
+        }
 
-            Tweener.addTween(parentActor,{
-                height: parentActor.height - errorBoxNaturalHeight,
-                time: 0.1,
+        this.hint.opacity = 30;
+        this.hint.set_text(text);
+        this.hint.show();
+        Tweener.addTween(this.hint, {
+            opacity: 255,
+            time: 0.3,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                Tweener.addTween(this.hint, {
+                    opacity: 120,
+                    time: 0.2,
+                    transition: 'easeOutQuad'
+                })
+            })
+        });
+
+        return true;
+    },
+
+    _hide_hint: function() {
+        if(this.hint.visible) {
+            Tweener.addTween(this.hint, {
+                opacity: 0,
+                time: 0.2,
                 transition: 'easeOutQuad',
                 onComplete: Lang.bind(this, function() {
-                    this._errorBox.hide();
-                    parentActor.set_height(-1);
+                    this.hint.hide();
                 })
-            });
-        }
+            })
 
-        if(this.show_suggestions) {
-            let text = this.search_entry.get_text().trim();
-
-            if(this.search_engine.open_url) {
-                let is_matches_protocol = 
-                    Convenience.starts_with(
-                        text, 'http://'.slice(0, text.length)
-                    ) ||
-                    Convenience.starts_with(
-                        text, 'https://'.slice(0, text.length)
-                    );
-
-                if(!is_matches_protocol) {
-                    text = 'http://'+text;
-                    this.search_entry.set_text(text);
-                }
-
-                if(/^https?:\/\/.+?/.test(text)) {
-                    this._display_suggestions(text);
-                }
-                else {
-                    if(this.suggestions_box.isOpen) {
-                        this.suggestions_box.close();
-                    }
-                }
-
-            }
-            else {
-                this._display_suggestions(text);
-            }
+            return true;
         }
         else {
-            this.show_suggestions = true;
+            return false;
         }
     },
 
     _show_engine_label: function(text) {
+        let opacity = this.search_engine_label.opacity == 255;
+        let visible = this.search_engine_label.visible;
+        let blank = Convenience.is_blank(text);
+
+        if(opacity && visible || blank) {
+            return false;
+        }
+
+        this.search_engine_label.opacity = 0;
         this.search_engine_label.set_text(text);
-        this.search_engine_label.show();
+        this.search_engine_label.show()
+
+        let [min_width, natural_width] =
+            this.contentLayout.get_preferred_width(-1)
+
+        Tweener.addTween(this.contentLayout, {
+            width: natural_width+5,
+            time: 0.2,
+            transition: 'easeOutQuad',
+            onStart: Lang.bind(this, function() {
+                Tweener.addTween(this.search_engine_label, {
+                    opacity: 255,
+                    time: 0.2,
+                    transition: 'easeOutQuad'
+                })
+            })
+        });
+
+        return true;
     },
 
     _hide_engine_label: function() {
-        this.search_engine_label.hide();
-        this.search_engine_label.set_text('');
+        if(!this.search_engine_label.visible) {
+            return false;
+        }
+
+        Tweener.addTween(this.search_engine_label, {
+            opacity: 0,
+            time: 0.2,
+            transition: 'easeOutQuad',
+            onComplete: Lang.bind(this, function() {
+                this.search_engine_label.hide();
+                this.search_engine_label.set_text('');
+                this.contentLayout.set_width(-1);
+            })
+        })
+
+        return true;
+    },
+
+    _hide_suggestions: function() {
+        if(this.suggestions_box.isOpen) {
+            this.suggestions_box.close();
+
+            return true;
+        }
+
+        return false;
     },
 
     _parse_suggestions: function(suggestions_source) {
@@ -744,12 +841,33 @@ const NewRunDialog = new Lang.Class({
         return true;
     },
 
+    _display_engines: function() {
+        this.suggestions_box.removeAll();
+        let engines = this._settings.get_strv(Prefs.ENGINES_KEY);
+
+        for(let i = 0; i < engines.length; i++) {
+            let info = JSON.parse(engines[i]);
+
+            this.suggestions_box.add_suggestion(
+                info.name,
+                'ENGINE',
+                0,
+                ''
+            );
+        }
+
+        if(!this.suggestions_box.isEmpty()) {
+            this.suggestions_box.open();
+        }
+    },
+
     _activate_search: function(text_obj, url) {
         if(this.suggestions_box.isOpen) {
             this.suggestions_box.close();
         }
-
+        log('start');
         if(!Convenience.is_blank(url)) {
+            log('url');
             this.search_history.add_item(url);
 
             this._toggle_dialog();
@@ -759,19 +877,22 @@ const NewRunDialog = new Lang.Class({
             return true;
         }
         else {
+            log('not url');
             let text = null;
 
             if(text_obj && !Convenience.is_blank(text_obj.get_text())) {
+                log('object');
                 text = text_obj.get_text().trim();
             }
             else {
+                log('entry');
                 text = this.search_entry.get_text().trim();
             }
 
             if(Convenience.is_blank(text)) {
                 return false;
             }
-
+            log(JSON.stringify(this.search_engine));
             if(!Convenience.is_blank(this.search_engine.url)) {
                 this.search_history.add_item(text);
 
@@ -782,11 +903,11 @@ const NewRunDialog = new Lang.Class({
                 if(this.search_engine.open_url) {
                     let url_regexp = imports.misc.util._urlRegexp;
 
-                    if(!url_regexp.test(text)) {
-                        this._showError('Please, enter a correct url.');
+                    // if(!url_regexp.test(text)) {
+                    //     this._showError('Please, enter a correct url.');
 
-                        return false;
-                    }
+                    //     return false;
+                    // }
                 }
 
                 let url = this.search_engine.url.replace('{term}', text);
@@ -796,11 +917,11 @@ const NewRunDialog = new Lang.Class({
 
                 return true;
             }
-            else {
-                this._showError('error');
+            // else {
+            //     this._showError('error');
 
-                return false;
-            }
+            //     return false;
+            // }
         }
     },
 
@@ -823,35 +944,46 @@ const NewRunDialog = new Lang.Class({
         return false;
     },
 
-    destroy: function () {
-        this._entryText.disconnect(this._run_entry_signal_id);
+    open: function() {
+        this._show_hint(this._open_hint);
+        this.parent();
+    },
+
+    close: function() {
+        this._hide_engine_label();
+        this.search_entry.set_text('');
+        this.search_engine = false;
+
+        this.parent();
+    },
+
+    enable: function() {
+        global.display.add_keybinding(
+            'open-web-search-dialog',
+            this._settings,
+            Meta.KeyBindingFlags.NONE,
+            Lang.bind(this, function() {
+                this._toggle_dialog();
+            })
+        );
+    },
+
+    disable: function() {
+        global.display.remove_keybinding('open-web-search-dialog');
         global.display.disconnect(this._window_handler_id);
     }
 });
 
-let old_run_dialog = null;
+let search_dialog;
 
 function init() {
-    // nothing
-}
-
-function get_new_run_dialog() {
-    if (Main.runDialog == null) {
-        Main.runDialog = new NewRunDialog();
-    }
-
-    return Main.runDialog;
+    search_dialog = new WebSearchDialog();
 }
 
 function enable() {
-    Main.runDialog = null;
-    old_run_dialog = Main.getRunDialog;
-    Main.getRunDialog = get_new_run_dialog;
+    search_dialog.enable();
 }
 
 function disable() {
-    Main.runDialog.destroy();
-    Main.runDialog = null;
-    Main.getRunDialog = old_run_dialog;
-    old_run_dialog = null;
+    search_dialog.disable();
 }
