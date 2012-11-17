@@ -885,6 +885,10 @@ const WebSearchDialog = new Lang.Class({
             }
 
             if(Convenience.is_blank(text)) {
+                this._show_hint({
+                    text: 'Error.\nPlease, enter a query.',
+                    icon_name: 'dialog-error-symbolic'
+                });
                 return false;
             }
             log(JSON.stringify(this.search_engine));
