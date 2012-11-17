@@ -609,16 +609,27 @@ const WebSearchDialog = new Lang.Class({
         this._hint_box.show();
         this.hint.set_text(params.text);
 
+        let [hint_box_min_height, hint_box_natural_height] =
+            this._hint_box.get_preferred_height(-1);
+        this._hint_box.set_height(0);
+
         Tweener.addTween(this._hint_box, {
-            opacity: 255,
+            height: hint_box_natural_height,
             time: 0.3,
             transition: 'easeOutQuad',
+            onStart: Lang.bind(this, function() {
+                Tweener.addTween(this._hint_box, {
+                    opacity: 255,
+                    time: 0.1,
+                    transition: 'easeOutQuad'
+                });
+            }),
             onComplete: Lang.bind(this, function() {
                 Tweener.addTween(this._hint_box, {
                     opacity: 120,
                     time: 0.2,
                     transition: 'easeOutQuad'
-                })
+                });
             })
         });
 
@@ -629,10 +640,12 @@ const WebSearchDialog = new Lang.Class({
         if(this._hint_box.visible) {
             Tweener.addTween(this._hint_box, {
                 opacity: 0,
-                time: 0.2,
+                height: 0,
+                time: 0.3,
                 transition: 'easeOutQuad',
                 onComplete: Lang.bind(this, function() {
                     this._hint_box.hide();
+                    this._hint_box.set_height(-1);
                 })
             })
 
