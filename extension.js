@@ -293,8 +293,9 @@ const WebSearchDialog = new Lang.Class({
         this.show_suggestions = true;
         this.search_engine = false;
 
-        this._open_hint = 'Type to search in '+this.default_engine+
-            ' or enter a keyword.\nPress "space" for available search engines';
+        this._open_hint = 
+            'Type to search in {engine_name} or enter a keyword.\n'+
+            'Press "space" for available search engines';
         this._create_search_dialog();
 
         this.activate_window = false;
@@ -931,8 +932,11 @@ const WebSearchDialog = new Lang.Class({
     },
 
     open: function() {
-        this._show_hint(this._open_hint);
         this.parent();
+        this._show_hint(this._open_hint.replace(
+            '{engine_name}',
+            this.default_engine)
+        );
     },
 
     close: function() {
