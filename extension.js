@@ -498,7 +498,9 @@ const WebSearchDialog = new Lang.Class({
             let keyword = this._get_keyword(text);
             this._set_engine(keyword);
 
-            return true;
+            if(!this.search_engine._default) {
+                this.show_suggestions = false;
+            }
         }
 
         if(this.show_suggestions) {
