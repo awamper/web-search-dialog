@@ -788,8 +788,6 @@ const WebSearchDialog = new Lang.Class({
                         text
                     );
                 }
-
-                return true;
             }
 
             this._display_history_suggestions(text);
@@ -803,6 +801,8 @@ const WebSearchDialog = new Lang.Class({
 
             return true;
         });
+
+        return true;
     },
 
     _display_history_suggestions: function(text) {
