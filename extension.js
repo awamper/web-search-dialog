@@ -602,6 +602,8 @@ const WebSearchDialog = new Lang.Class({
 
             this.search_entry.set_text('');
             this._show_engine_label(this.search_engine.name+':');
+
+            return true;
         }
         else {
             return null;
@@ -646,7 +648,7 @@ const WebSearchDialog = new Lang.Class({
 
         Tweener.addTween(this._hint_box, {
             height: hint_box_natural_height,
-            time: 0.3,
+            time: 0.2,
             transition: 'easeOutQuad',
             onStart: Lang.bind(this, function() {
                 Tweener.addTween(this._hint_box, {
@@ -658,7 +660,7 @@ const WebSearchDialog = new Lang.Class({
             onComplete: Lang.bind(this, function() {
                 Tweener.addTween(this._hint_box, {
                     opacity: 120,
-                    time: 0.2,
+                    time: 0.1,
                     transition: 'easeOutQuad'
                 });
             })
@@ -672,7 +674,7 @@ const WebSearchDialog = new Lang.Class({
             Tweener.addTween(this._hint_box, {
                 opacity: 0,
                 height: 0,
-                time: 0.3,
+                time: 0.2,
                 transition: 'easeOutQuad',
                 onComplete: Lang.bind(this, function() {
                     this._hint_box.hide();
@@ -712,7 +714,7 @@ const WebSearchDialog = new Lang.Class({
             onStart: Lang.bind(this, function() {
                 Tweener.addTween(this.search_engine_label, {
                     opacity: 255,
-                    time: 0.2,
+                    time: 0.1,
                     transition: 'easeOutQuad'
                 })
             }),
