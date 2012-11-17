@@ -39,6 +39,10 @@
       <default>500</default>
     </key>
 
+    <key type="i" name="default-search-engine">
+      <default>0</default>
+    </key>
+
     <key type="s" name="open-url-keyword">
       <default>"url"</default>
     </key>

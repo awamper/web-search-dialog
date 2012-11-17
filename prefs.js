@@ -18,6 +18,7 @@ const OPEN_URL_KEY = 'open-url-keyword';
 const HISTORY_KEY = 'search-history';
 const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
 const HISTORY_LIMIT_KEY = 'history-limit';
+const DEFAULT_ENGINE_KEY = 'default-search-engine';
 
 const Columns = {
     DISPLAY_NAME: 0,

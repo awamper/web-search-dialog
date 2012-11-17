@@ -298,7 +298,6 @@ const WebSearchDialog = new Lang.Class({
             styleClass: 'run-dialog'
         });
 
-        this.default_engine = 'Google';
         this._settings = Convenience.getSettings();
         this._clipboard = St.Clipboard.get_default();
         this.show_suggestions = true;
@@ -478,9 +477,10 @@ const WebSearchDialog = new Lang.Class({
                 }
             }
             else {
+                let default_engine = this._get_default_engine();
                 hint_text = this._open_hint.replace(
                     '{engine_name}',
-                    this.default_engine
+                    default_engine.name
                 )
             }
 
@@ -497,10 +497,7 @@ const WebSearchDialog = new Lang.Class({
 
         if(this.search_engine == false) {
             let keyword = this._get_keyword(text);
-
-            if(keyword) {
-                this._set_engine(keyword);
-            }
+            this._set_engine(keyword);
 
             return true;
         }
@@ -560,6 +557,19 @@ const WebSearchDialog = new Lang.Class({
         return result;
     },
 
+    _get_default_engine: function() {
+        let engines = this._settings.get_strv(Prefs.ENGINES_KEY);
+        let index = this._settings.get_int(Prefs.DEFAULT_ENGINE_KEY);
+        let engine = JSON.parse(engines[index]);
+        
+        if(!Convenience.is_blank(engine.url)) {
+            return engine;
+        }
+        else {
+            return false;
+        }
+    },
+
     _get_engine: function(key) {
         if(Convenience.is_blank(key)) {
             return false;
@@ -597,23 +607,25 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _set_engine: function(keyword) {
-        let engine = this._get_engine(keyword);
+        let engine_info = this._get_engine(keyword);
+        let engine = '';
+        this.search_engine = {};
 
-        if(engine) {
-            this.search_engine = {};
-            this.search_engine.keyword = keyword;
-            this.search_engine.name = engine.name.trim();
-            this.search_engine.url = engine.url.trim();
-            this.search_engine.open_url = engine.open_url;
-
+        if(engine_info) {
             this.search_entry.set_text('');
             this._show_engine_label(this.search_engine.name+':');
-
-            return true;
+            engine = engine_info;
         }
         else {
-            return null;
+            engine = this._get_default_engine();
         }
+
+        this.search_engine.keyword = engine.keyword.trim();
+        this.search_engine.name = engine.name.trim();
+        this.search_engine.url = engine.url.trim();
+        this.search_engine.open_url = engine.open_url;
+
+        return true;
     },
 
     _show_hint: function(params) {
@@ -1011,8 +1023,9 @@ const WebSearchDialog = new Lang.Class({
     open: function() {
         this.parent();
 
+        let default_engine = this._get_default_engine();
         let hint_text = 
-            this._open_hint.replace('{engine_name}', this.default_engine);
+            this._open_hint.replace('{engine_name}', default_engine.name);
         this._show_hint({
             text: hint_text,
             icon_name: 'dialog-information-symbolic'
