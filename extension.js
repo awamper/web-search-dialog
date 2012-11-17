@@ -446,10 +446,7 @@ const WebSearchDialog = new Lang.Class({
         // }
 
         if(this.visible) {
-            if(this.suggestions_box.isOpen) {
-                this.suggestions_box.close();
-            }
-
+            this.suggestions_box.close();
             this.close();
         }
         else {
@@ -460,6 +457,11 @@ const WebSearchDialog = new Lang.Class({
 
     _on_search_text_changed: function() {
         let text = this.search_entry.get_text();
+
+        if(Convenience.is_blank(text)) {
+            this.suggestions_box.close();
+            this.show_suggestions = false;
+        }
 
         if(text == ' ') {
             this._display_engines();
@@ -483,6 +485,10 @@ const WebSearchDialog = new Lang.Class({
         if(this.show_suggestions) {
             text = text.trim();
 
+            if(text.length <= 2) {
+                return false;
+            }
+
             if(this.search_engine.open_url) {
                 let is_matches_protocol = 
                     Convenience.starts_with(
@@ -501,9 +507,7 @@ const WebSearchDialog = new Lang.Class({
                     this._display_suggestions(text);
                 }
                 else {
-                    if(this.suggestions_box.isOpen) {
-                        this.suggestions_box.close();
-                    }
+                    this.suggestions_box.close();
                 }
             }
             else {
@@ -625,9 +629,8 @@ const WebSearchDialog = new Lang.Class({
 
             return true;
         }
-        else {
-            return false;
-        }
+
+        return false;
     },
 
     _show_engine_label: function(text) {
@@ -679,16 +682,6 @@ const WebSearchDialog = new Lang.Class({
         })
 
         return true;
-    },
-
-    _hide_suggestions: function() {
-        if(this.suggestions_box.isOpen) {
-            this.suggestions_box.close();
-
-            return true;
-        }
-
-        return false;
     },
 
     _parse_suggestions: function(suggestions_source) {
@@ -753,9 +746,7 @@ const WebSearchDialog = new Lang.Class({
         }
 
         if(Convenience.is_blank(text)) {
-            if(this.suggestions_box.isOpen) {
-                this.suggestions_box.close();
-            }
+            this.suggestions_box.close();
 
             return false;
         }
@@ -796,15 +787,11 @@ const WebSearchDialog = new Lang.Class({
                 this.suggestions_box.open();
             }
             else {
-                if(this.suggestions_box.isOpen) {
-                    this.suggestions_box.close();
-                }
+                this.suggestions_box.close();
             }
 
             return true;
         });
-
-        return true;
     },
 
     _display_history_suggestions: function(text) {
@@ -862,9 +849,8 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _activate_search: function(text_obj, url) {
-        if(this.suggestions_box.isOpen) {
-            this.suggestions_box.close();
-        }
+        this.suggestions_box.close();
+
         log('start');
         if(!Convenience.is_blank(url)) {
             log('url');
