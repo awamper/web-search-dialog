@@ -144,8 +144,10 @@ const SuggestionsBox = new Lang.Class({
     },
 
     _on_active_changed: function(menu_item) {
-        this._search_dialog.show_suggestions = false;
-        this._entry.set_text(menu_item._text);
+        if(!menu_item._type == 'ENGINE') {
+            this._search_dialog.show_suggestions = false;
+            this._entry.set_text(menu_item._text);
+        }
 
         return true;
     },
