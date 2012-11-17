@@ -157,14 +157,6 @@ const SuggestionsBox = new Lang.Class({
         this.addMenuItem(item)
     },
 
-    get lastMenuItem() {
-        let items = this._getMenuItems();
-        if (items.length)
-            return items.slice(-1);
-        else
-            return null;
-    },
-
     close: function() {
         this._entry.grab_key_focus();
         this.parent();
