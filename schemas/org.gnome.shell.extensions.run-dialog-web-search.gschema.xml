@@ -4,7 +4,7 @@
   <schema path="/org/gnome/shell/extensions/run-dialog-web-search/" id="org.gnome.shell.extensions.run-dialog-web-search">
 
     <key type="as" name="open-web-search-dialog">
-      <default><![CDATA[['<Super>t']]]></default>
+      <default><![CDATA[['<Alt>F3']]]></default>
       <summary>Open web search.</summary>
     </key>
 
