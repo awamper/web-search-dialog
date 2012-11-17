@@ -295,7 +295,7 @@ const WebSearchDialog = new Lang.Class({
 
     _init: function() {
         this.parent();
-        this._dialogLayout.style_class = 'search-dialog';
+        this._dialogLayout.set_style_class_name('search-dialog');
 
         this._settings = Convenience.getSettings();
         this._clipboard = St.Clipboard.get_default();

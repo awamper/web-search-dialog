@@ -8,43 +8,37 @@
     padding-top: 5px;
 }
 
-.search-dialog-label {
-    font-size: 9pt;
-}
-
 .search-entry {
-    width: 23em;
+    width: 800px;
+    height: 35px;
+    font-size: 35px;
     color: rgb(128, 128, 128);
     border: 1px solid rgba(245,245,245,0.2);
     selection-background-color: white;
     selected-color: black;
-    font-size: 2em;
-    font-weight: bold;
-    transition-duration: 300;
 }
 
 .search-engine-label {
     border: 1px solid rgba(245,245,245,0.2);
     background-color: rgba(0.0, 0.0, 0.0, 0.0);
-    font-size: 2em;
-    transition-duration: 500;
+    font-size: 35px;
 }
 
 .search-hint {
     padding-left: 5px;
     padding-top: 2px;
     font-weight: bold;
-    font-size: 0.7em;
+    font-size: 10px;
     color: rgba(255, 255, 255, 1);
 }
 .hint-icon {
     padding-left: 5px;
     padding-top: 2px;
-    icon-size: 1.3em;
+    icon-size: 20px;
     color: rgba(255, 255, 255, 1);
 }
 
 .menu-item-icon {
-    icon-size: 1em;
+    icon-size: 15px;
     color: #8d8f8a;
 }
