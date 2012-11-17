@@ -18,7 +18,7 @@
     border: 1px solid rgba(245,245,245,0.2);
     selection-background-color: white;
     selected-color: black;
-    font-size: 15pt;
+    font-size: 2em;
     font-weight: bold;
     transition-duration: 300;
 }
@@ -26,7 +26,7 @@
 .search-engine-label {
     border: 1px solid rgba(245,245,245,0.2);
     background-color: rgba(0.0, 0.0, 0.0, 0.0);
-    font-size: 15pt;
+    font-size: 2em;
     transition-duration: 500;
 }
 
@@ -34,7 +34,7 @@
     padding-left: 5px;
     padding-top: 2px;
     font-weight: bold;
-    font-size: 7.5pt;
+    font-size: 0.7em;
     color: rgba(255, 255, 255, 1);
 }
 .hint-icon {
