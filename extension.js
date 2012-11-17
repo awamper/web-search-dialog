@@ -127,13 +127,18 @@ const SuggestionsBox = new Lang.Class({
     _on_activated: function(menu_item) {
         this._search_dialog.suggestions_box.close(true);
 
-        let url = null;
-
-        if(menu_item._type == 'NAVIGATION') {
-            url = menu_item._text.trim();
+        if(menu_item._type == "ENGINE") {
+            this._search_dialog._set_engine(menu_item._term);
         }
+        else {
+            let url = null;
 
-        this._search_dialog._activate_search(false, url);
+            if(menu_item._type == 'NAVIGATION') {
+                url = menu_item._text.trim();
+            }
+
+            this._search_dialog._activate_search(false, url);
+        }
 
         return true;
     },
@@ -459,15 +464,13 @@ const WebSearchDialog = new Lang.Class({
         this._hide_hint();
 
         if(this.search_engine == false) {
-            this.search_engine = this._parse_query(text);
+            let keyword = this._get_keyword(text);
 
-            if(this.search_engine.url != null) {
-                this._show_engine_label(this.search_engine.name+':');
-                this.show_suggestions = false;
-                this.search_entry.set_text('');
-
-                return true;
+            if(keyword) {
+                this._set_engine(keyword);
             }
+
+            return true;
         }
 
         if(this.show_suggestions) {
@@ -509,33 +512,16 @@ const WebSearchDialog = new Lang.Class({
         return true;
     },
 
-    _parse_query: function(text) {
-        // let result = {
-        //     name: null,
-        //     keyword: null,
-        //     url: null,
-        //     open_url: false
-        // };
+    _get_keyword: function(text) {
         let result = false;
         let web_search_query_regexp = /^(.{1,}?)\s$/;
 
         if(web_search_query_regexp.test(text)) {
             let matches = web_search_query_regexp.exec(text);
-            let keyword = matches[0];
+            let keyword = matches[0].trim();
 
             if(!Convenience.is_blank(keyword)) {
-                let engine = this._get_engine(keyword);
-
-                if(engine) {
-                    result = {};
-                    result.keyword = keyword.trim();
-                    result.name = engine.name.trim();
-                    result.url = engine.url.trim();
-
-                    if(engine.open_url) {
-                        result.open_url = true;
-                    }
-                }
+                result = keyword;
             }
         }
 
@@ -568,6 +554,7 @@ const WebSearchDialog = new Lang.Class({
 
                 if(info.keyword == key) {
                     if(info.url.length > 0) {
+                        info.open_url = false;
                         return info;
                     }
                 }
@@ -575,6 +562,24 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return false;
+    },
+
+    _set_engine: function(keyword) {
+        let engine = this._get_engine(keyword);
+
+        if(engine) {
+            this.search_engine = {};
+            this.search_engine.keyword = keyword;
+            this.search_engine.name = engine.name.trim();
+            this.search_engine.url = engine.url.trim();
+            this.search_engine.open_url = engine.open_url;
+
+            this.search_entry.set_text('');
+            this._show_engine_label(this.search_engine.name+':');
+        }
+        else {
+            return null;
+        }
     },
 
     _show_hint: function(params) {
@@ -656,12 +661,15 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _show_engine_label: function(text) {
+        if(Convenience.is_blank(text)) {
+            return false;
+        }
+
         let opacity = this.search_engine_label.opacity == 255;
         let visible = this.search_engine_label.visible;
-        let blank = Convenience.is_blank(text);
 
-        if(opacity && visible || blank) {
-            return false;
+        if(opacity && visible) {
+            this._hide_engine_label();
         }
 
         this.search_engine_label.opacity = 0;
@@ -681,6 +689,9 @@ const WebSearchDialog = new Lang.Class({
                     time: 0.2,
                     transition: 'easeOutQuad'
                 })
+            }),
+            onComplete: Lang.bind(this, function() {
+                this.contentLayout.set_width(-1);
             })
         });
 
@@ -697,9 +708,9 @@ const WebSearchDialog = new Lang.Class({
             time: 0.2,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
+                this.contentLayout.set_width(-1);
                 this.search_engine_label.hide();
                 this.search_engine_label.set_text('');
-                this.contentLayout.set_width(-1);
             })
         })
 
@@ -857,13 +868,13 @@ const WebSearchDialog = new Lang.Class({
         let engines = this._settings.get_strv(Prefs.ENGINES_KEY);
 
         for(let i = 0; i < engines.length; i++) {
-            let info = JSON.parse(engines[i]);
+            let engine = JSON.parse(engines[i]);
 
             this.suggestions_box.add_suggestion(
-                info.name,
+                engine.name,
                 'ENGINE',
                 0,
-                ''
+                engine.keyword
             );
         }
 
