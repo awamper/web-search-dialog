@@ -1004,6 +1004,7 @@ const WebSearchDialog = new Lang.Class({
 
     open: function() {
         this.parent();
+        this.search_entry.grab_key_focus();
 
         let default_engine = this._get_default_engine();
         let hint_text = 
