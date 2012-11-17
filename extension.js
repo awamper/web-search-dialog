@@ -451,17 +451,41 @@ const WebSearchDialog = new Lang.Class({
     _on_search_text_changed: function() {
         let text = this.search_entry.get_text();
 
-        if(Convenience.is_blank(text)) {
-            this.suggestions_box.close();
-            this.show_suggestions = false;
-        }
-
         if(text == ' ') {
             this._display_engines();
             return true;
         }
 
-        this._hide_hint();
+        if(Convenience.is_blank(text)) {
+            let hint_text;
+
+            if(this.search_engine != false) {
+                if(!this.search_engine.open_url) {
+                    hint_text = 
+                        'Type to search in '+this.search_engine.name+'.\n'+
+                        'Press "space" to switch search engine.'
+                }
+                else {
+                    hint_text = 'Please, enter a url.'
+                }
+            }
+            else {
+                hint_text = this._open_hint.replace(
+                    '{engine_name}',
+                    this.default_engine
+                )
+            }
+
+            this._show_hint({
+                text: hint_text,
+                icon_name: 'dialog-information-symbolic'
+            })
+            this.suggestions_box.close();
+            this.show_suggestions = false;
+        }
+        else {
+            this._hide_hint();
+        }
 
         if(this.search_engine == false) {
             let keyword = this._get_keyword(text);
