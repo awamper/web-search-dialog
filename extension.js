@@ -157,6 +157,14 @@ const SuggestionsBox = new Lang.Class({
         this.addMenuItem(item)
     },
 
+    get lastMenuItem() {
+        let items = this._getMenuItems();
+        if (items.length)
+            return items.slice(-1);
+        else
+            return null;
+    },
+
     close: function() {
         this._entry.grab_key_focus();
         this.parent();
@@ -869,6 +877,10 @@ const WebSearchDialog = new Lang.Class({
 
         for(let i = 0; i < engines.length; i++) {
             let engine = JSON.parse(engines[i]);
+
+            if(this.search_engine.keyword == engine.keyword) {
+                continue;
+            }
 
             this.suggestions_box.add_suggestion(
                 engine.name,
