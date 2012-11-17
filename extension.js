@@ -918,9 +918,7 @@ const WebSearchDialog = new Lang.Class({
     _activate_search: function(text_obj, url) {
         this.suggestions_box.close();
 
-        log('start');
         if(!Convenience.is_blank(url)) {
-            log('url');
             this.search_history.add_item(url);
 
             this._toggle_dialog();
@@ -930,15 +928,12 @@ const WebSearchDialog = new Lang.Class({
             return true;
         }
         else {
-            log('not url');
             let text = null;
 
             if(text_obj && !Convenience.is_blank(text_obj.get_text())) {
-                log('object');
                 text = text_obj.get_text().trim();
             }
             else {
-                log('entry');
                 text = this.search_entry.get_text().trim();
             }
 
@@ -949,7 +944,7 @@ const WebSearchDialog = new Lang.Class({
                 });
                 return false;
             }
-            log(JSON.stringify(this.search_engine));
+
             if(!Convenience.is_blank(this.search_engine.url)) {
                 this.search_history.add_item(text);
 
@@ -962,7 +957,7 @@ const WebSearchDialog = new Lang.Class({
 
                     if(!url_regexp.test(text)) {
                         this._show_hint({
-                            text: 'Please, enter a correct url.',
+                            text: 'Please, enter a valid url.',
                             icon_name: 'dialog-error-symbolic'
                         });
 
