@@ -154,8 +154,14 @@ const SuggestionsBox = new Lang.Class({
 
     add_suggestion: function(text, type, relevance, term) {
         let item = new SuggestionMenuItem(text, type, relevance, term);
-        item.connect('activate', Lang.bind(this, this._on_activated));
-        item.connect('active-changed', Lang.bind(this, this._on_active_changed));
+        item.connect(
+            'activate',
+            Lang.bind(this, this._on_activated)
+        );
+        item.connect(
+            'active-changed',
+            Lang.bind(this, this._on_active_changed)
+        );
         this.addMenuItem(item)
     },
 
