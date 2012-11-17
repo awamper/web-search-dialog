@@ -294,9 +294,8 @@ const WebSearchDialog = new Lang.Class({
     Extends: ModalDialog.ModalDialog,
 
     _init: function() {
-        this.parent({
-            styleClass: 'run-dialog'
-        });
+        this.parent();
+        this._dialogLayout.style_class = 'search-dialog';
 
         this._settings = Convenience.getSettings();
         this._clipboard = St.Clipboard.get_default();
@@ -495,7 +494,7 @@ const WebSearchDialog = new Lang.Class({
             this._hide_hint();
         }
 
-        if(this.search_engine == false) {
+        if(this.search_engine == false || this.search_engine._default) {
             let keyword = this._get_keyword(text);
             this._set_engine(keyword);
 
@@ -612,18 +611,23 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine = {};
 
         if(engine_info) {
-            this.search_entry.set_text('');
-            this._show_engine_label(this.search_engine.name+':');
             engine = engine_info;
+            this.search_engine._default = false;
         }
         else {
             engine = this._get_default_engine();
+            this.search_engine._default = true;
         }
 
         this.search_engine.keyword = engine.keyword.trim();
         this.search_engine.name = engine.name.trim();
         this.search_engine.url = engine.url.trim();
         this.search_engine.open_url = engine.open_url;
+
+        if(engine_info) {
+            this.search_entry.set_text('');
+            this._show_engine_label(this.search_engine.name+':');
+        }
 
         return true;
     },

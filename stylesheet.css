@@ -1,3 +1,13 @@
+.search-dialog {
+    border-radius: 5px;
+    background-color: rgba(0.0, 0.0, 0.0, 0.7);
+
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
 .search-dialog-label {
     font-size: 9pt;
 }
@@ -8,13 +18,15 @@
     border: 1px solid rgba(245,245,245,0.2);
     selection-background-color: white;
     selected-color: black;
+    font-size: 15pt;
     font-weight: bold;
     transition-duration: 300;
 }
 
 .search-engine-label {
     border: 1px solid rgba(245,245,245,0.2);
-    background-color: black;
+    background-color: rgba(0.0, 0.0, 0.0, 0.3);
+    font-size: 15pt;
     font-weight: bold;
     transition-duration: 500;
 }
