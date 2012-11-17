@@ -468,7 +468,7 @@ const WebSearchDialog = new Lang.Class({
                         'Press "space" to switch search engine.'
                 }
                 else {
-                    hint_text = 'Please, enter a url.'
+                    hint_text = 'Please, enter a URL.'
                 }
             }
             else {
