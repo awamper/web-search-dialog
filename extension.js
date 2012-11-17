@@ -433,10 +433,6 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _toggle_dialog: function() {
-        // if(this._errorBox.visible) {
-        //     this._errorBox.hide();
-        // }
-
         if(this.visible) {
             this.suggestions_box.close();
             this.close();
@@ -902,11 +898,14 @@ const WebSearchDialog = new Lang.Class({
                 if(this.search_engine.open_url) {
                     let url_regexp = imports.misc.util._urlRegexp;
 
-                    // if(!url_regexp.test(text)) {
-                    //     this._showError('Please, enter a correct url.');
+                    if(!url_regexp.test(text)) {
+                        this._show_hint({
+                            text: 'Please, enter a correct url.',
+                            icon_name: 'dialog-error-symbolic'
+                        });
 
-                    //     return false;
-                    // }
+                        return false;
+                    }
                 }
 
                 let url = this.search_engine.url.replace('{term}', text);
@@ -916,11 +915,14 @@ const WebSearchDialog = new Lang.Class({
 
                 return true;
             }
-            // else {
-            //     this._showError('error');
+            else {
+                this._show_hint({
+                    text: 'Error.\nPlease, enter a correct query.',
+                    icon_name: 'dialog-error-symbolic'
+                });
 
-            //     return false;
-            // }
+                return false;
+            }
         }
     },
 
