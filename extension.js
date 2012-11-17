@@ -43,14 +43,12 @@ const SuggestionMenuItem = new Lang.Class({
 
         this._find_icon = new St.Icon({
             style_class: 'menu-item-icon',
-            icon_name: 'edit-find',
-            icon_type: St.IconType.SYMBOLIC
+            icon_name: 'edit-find-symbolic'
         });
 
         this._web_icon = new St.Icon({
             style_class: 'menu-item-icon',
-            icon_name: 'web-browser',
-            icon_type: St.IconType.SYMBOLIC
+            icon_name: 'web-browser-symbolic'
         });
 
         let highlight_text = this._text.replace(
