@@ -25,9 +25,8 @@
 
 .search-engine-label {
     border: 1px solid rgba(245,245,245,0.2);
-    background-color: rgba(0.0, 0.0, 0.0, 0.3);
+    background-color: rgba(0.0, 0.0, 0.0, 0.0);
     font-size: 15pt;
-    font-weight: bold;
     transition-duration: 500;
 }
 
@@ -35,7 +34,7 @@
     padding-left: 5px;
     padding-top: 2px;
     font-weight: bold;
-    font-size: 7pt;
+    font-size: 7.5pt;
     color: rgba(255, 255, 255, 1);
 }
 .hint-icon {
