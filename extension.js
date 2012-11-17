@@ -376,9 +376,7 @@ const WebSearchDialog = new Lang.Class({
         let symbol = e.get_key_symbol();
 
         if(symbol == Clutter.Escape) {
-            this.search_entry.set_text('');
-            // this._toggle_dialog();
-            this.close();
+            this._toggle_dialog();
         }
         else if(symbol == Clutter.Tab) {
             if(this.suggestions_box.isOpen) {
