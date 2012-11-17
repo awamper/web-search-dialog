@@ -788,6 +788,8 @@ const WebSearchDialog = new Lang.Class({
                         text
                     );
                 }
+
+                return true;
             }
 
             this._display_history_suggestions(text);
