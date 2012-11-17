@@ -376,7 +376,7 @@ const WebSearchDialog = new Lang.Class({
         let symbol = e.get_key_symbol();
 
         if(symbol == Clutter.Escape) {
-            this._toggle_dialog();
+            this.close();
         }
         else if(symbol == Clutter.Tab) {
             if(this.suggestions_box.isOpen) {
@@ -405,14 +405,6 @@ const WebSearchDialog = new Lang.Class({
                 this.search_entry.set_text(item);
             }
         }
-        else if(symbol == Clutter.BackSpace) {
-            let text = this.search_entry.get_text();
-
-            if(Convenience.is_blank(text)) {
-                this.search_entry.set_text('');
-                this._toggle_dialog();
-            }
-        }
         // Ctrl+V
         else if(symbol == 118) {
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
@@ -439,17 +431,6 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
-    },
-
-    _toggle_dialog: function() {
-        if(this.visible) {
-            this.suggestions_box.close();
-            this.close();
-        }
-        else {
-            this.open();
-            this.search_entry.grab_key_focus();
-        }
     },
 
     _on_search_text_changed: function() {
@@ -942,8 +923,6 @@ const WebSearchDialog = new Lang.Class({
 
         if(!Convenience.is_blank(url)) {
             this.search_history.add_item(url);
-
-            this._toggle_dialog();
             this.close();
             this._run_search(url);
 
@@ -988,7 +967,6 @@ const WebSearchDialog = new Lang.Class({
                 }
 
                 let url = this.search_engine.url.replace('{term}', text);
-                this._toggle_dialog();
                 this.close();
                 this._run_search(url);
 
@@ -1050,7 +1028,7 @@ const WebSearchDialog = new Lang.Class({
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Lang.bind(this, function() {
-                this._toggle_dialog();
+                this.open();
             })
         );
     },
