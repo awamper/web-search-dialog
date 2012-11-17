@@ -313,19 +313,12 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _create_search_dialog: function() {
-        // let label = new St.Label({
-        //     style_class: 'search-dialog-label',
-        //     text: dialog_label
-        // });
-
-        // this.contentLayout.add(label, {
-        //     y_align: St.Align.START
-        // });
-
         this.hint = new St.Label({
             style_class: 'search-hint'
         });
-        this.hint.hide();
+        this._hint_box = new St.BoxLayout();
+        this._hint_box.add(this.hint);
+        this._hint_box.hide();
 
         this.search_engine_label = new St.Label({
             style_class: 'search-engine-label',
@@ -367,7 +360,7 @@ const WebSearchDialog = new Lang.Class({
         this._search_table.show();
 
         this.contentLayout.add(this._search_table);
-        this.contentLayout.add(this.hint);
+        this.contentLayout.add(this._hint_box);
     },
 
     _on_key_press: function(o, e) {
@@ -590,23 +583,44 @@ const WebSearchDialog = new Lang.Class({
         return false;
     },
 
-    _show_hint: function(text) {
-        if(Convenience.is_blank(text)) {
+    _show_hint: function(params) {
+        params = Params.parse(params, {
+            text: null,
+            icon_name: 'dialog-information-symbolic'
+        })
+
+        if(Convenience.is_blank(params.text)) {
             return false;
         }
-        if(this.hint.visible) {
+        if(this._hint_box.visible) {
             this._hide_hint();
         }
 
-        this.hint.opacity = 30;
-        this.hint.set_text(text);
-        this.hint.show();
-        Tweener.addTween(this.hint, {
+        let icon = new St.Icon({
+            icon_name: params.icon_name,
+            style_class: 'hint-icon'
+        });
+
+        if(this._hint_box.get_children().length > 1) {
+            this._hint_box.replace_child(
+                this._hint_box.get_children()[0],
+                icon
+            )
+        }
+        else {
+            this._hint_box.insert_child_at_index(icon, 0);
+        }
+
+        this._hint_box.opacity = 30;
+        this._hint_box.show();
+        this.hint.set_text(params.text);
+
+        Tweener.addTween(this._hint_box, {
             opacity: 255,
             time: 0.3,
             transition: 'easeOutQuad',
             onComplete: Lang.bind(this, function() {
-                Tweener.addTween(this.hint, {
+                Tweener.addTween(this._hint_box, {
                     opacity: 120,
                     time: 0.2,
                     transition: 'easeOutQuad'
@@ -618,13 +632,13 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _hide_hint: function() {
-        if(this.hint.visible) {
-            Tweener.addTween(this.hint, {
+        if(this._hint_box.visible) {
+            Tweener.addTween(this._hint_box, {
                 opacity: 0,
                 time: 0.2,
                 transition: 'easeOutQuad',
                 onComplete: Lang.bind(this, function() {
-                    this.hint.hide();
+                    this._hint_box.hide();
                 })
             })
 
@@ -933,10 +947,13 @@ const WebSearchDialog = new Lang.Class({
 
     open: function() {
         this.parent();
-        this._show_hint(this._open_hint.replace(
-            '{engine_name}',
-            this.default_engine)
-        );
+
+        let hint_text = 
+            this._open_hint.replace('{engine_name}', this.default_engine);
+        this._show_hint({
+            text: hint_text,
+            icon_name: 'dialog-information-symbolic'
+        });
     },
 
     close: function() {
