@@ -2,7 +2,8 @@
   "description": "Search in web", 
   "name": "Run Dialog Web Search", 
   "shell-version": [
-    "3.4"
+    "3.4",
+    "3.6"
   ], 
   "url": "", 
   "uuid": "run_dialog_web_search@awamper.gmail.com",

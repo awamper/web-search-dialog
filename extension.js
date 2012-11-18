@@ -310,6 +310,7 @@ const WebSearchDialog = new Lang.Class({
 
     _init: function() {
         this.parent();
+	this._dialogLayout = this.dialogLayout; //3.6
         this._dialogLayout.set_style_class_name('search-dialog');
 
         this._settings = Convenience.getSettings();
