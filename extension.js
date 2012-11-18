@@ -311,7 +311,7 @@ const WebSearchDialog = new Lang.Class({
         this.show_suggestions = true;
         this.search_engine = false;
 
-        this._open_hint = 
+        this._init_hint = 
             'Type to search in {engine_name} or enter '+
             'a keyword and press "space".\n'+
             'Keyword "u" for open URL.\n'+
@@ -514,7 +514,7 @@ const WebSearchDialog = new Lang.Class({
             }
             else {
                 let default_engine = this._get_default_engine();
-                hint_text = this._open_hint.replace(
+                hint_text = this._init_hint.replace(
                     '{engine_name}',
                     default_engine.name
                 )
@@ -1083,7 +1083,7 @@ const WebSearchDialog = new Lang.Class({
 
         let default_engine = this._get_default_engine();
         let hint_text = 
-            this._open_hint.replace('{engine_name}', default_engine.name);
+            this._init_hint.replace('{engine_name}', default_engine.name);
         this._show_hint({
             text: hint_text,
             icon_name: 'dialog-information-symbolic'
