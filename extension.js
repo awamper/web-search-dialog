@@ -27,6 +27,13 @@ const OPEN_URL_DATA = {
     name: 'Open URL'
 }
 
+const ICONS = {
+    information: 'dialog-information-symbolic',
+    error: 'dialog-error-symbolic',
+    find: 'edit-find-symbolic',
+    web: 'web-browser-symbolic'
+}
+
 const SUGGESTIONS_URL = 
     "http://suggestqueries.google.com/complete/search?client=chrome&q=";
 const SUGGESTIONS_DELAY = 150; // ms
@@ -45,12 +52,12 @@ const SuggestionMenuItem = new Lang.Class({
 
         this._find_icon = new St.Icon({
             style_class: 'menu-item-icon',
-            icon_name: 'edit-find-symbolic'
+            icon_name: ICONS.find
         });
 
         this._web_icon = new St.Icon({
             style_class: 'menu-item-icon',
-            icon_name: 'web-browser-symbolic'
+            icon_name: ICONS.web
         });
 
         let highlight_text = this._text.replace(
@@ -522,7 +529,7 @@ const WebSearchDialog = new Lang.Class({
 
             this._show_hint({
                 text: hint_text,
-                icon_name: 'dialog-information-symbolic'
+                icon_name: ICONS.information
             })
             this.suggestions_box.close();
             this.show_suggestions = false;
@@ -676,7 +683,7 @@ const WebSearchDialog = new Lang.Class({
     _show_hint: function(params) {
         params = Params.parse(params, {
             text: null,
-            icon_name: 'dialog-information-symbolic'
+            icon_name: ICONS.information
         })
 
         if(Convenience.is_blank(params.text)) {
@@ -1016,7 +1023,7 @@ const WebSearchDialog = new Lang.Class({
             if(Convenience.is_blank(text)) {
                 this._show_hint({
                     text: 'Error.\nPlease, enter a query.',
-                    icon_name: 'dialog-error-symbolic'
+                    icon_name: ICONS.error
                 });
                 return false;
             }
@@ -1034,7 +1041,7 @@ const WebSearchDialog = new Lang.Class({
                     if(!text) {
                         this._show_hint({
                             text: 'Please, enter a valid url.',
-                            icon_name: 'dialog-error-symbolic'
+                            icon_name: ICONS.error
                         });
 
                         return false;
@@ -1050,7 +1057,7 @@ const WebSearchDialog = new Lang.Class({
             else {
                 this._show_hint({
                     text: 'Error.\nSearch engine doesn\'t have a url.',
-                    icon_name: 'dialog-error-symbolic'
+                    icon_name: ICONS.error
                 });
 
                 return false;
@@ -1086,7 +1093,7 @@ const WebSearchDialog = new Lang.Class({
             this._init_hint.replace('{engine_name}', default_engine.name);
         this._show_hint({
             text: hint_text,
-            icon_name: 'dialog-information-symbolic'
+            icon_name: ICONS.information
         });
     },
 
