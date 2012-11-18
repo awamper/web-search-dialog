@@ -970,9 +970,10 @@ const WebSearchDialog = new Lang.Class({
         })
 
         if(!Convenience.is_blank(params.url)) {
-            this.search_history.add_item(params.url);
+            let url = Convenience.get_url(params.url);
+            this.search_history.add_item(url);
             this.close();
-            this._run_search(params.url);
+            this._run_search(url);
 
             return true;
         }
@@ -1001,9 +1002,9 @@ const WebSearchDialog = new Lang.Class({
                 }
 
                 if(this.search_engine.open_url) {
-                    let url_regexp = imports.misc.util._urlRegexp;
+                    text = Convenience.get_url(text);
 
-                    if(!url_regexp.test(text)) {
+                    if(!text) {
                         this._show_hint({
                             text: 'Please, enter a valid url.',
                             icon_name: 'dialog-error-symbolic'

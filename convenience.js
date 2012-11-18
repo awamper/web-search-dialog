@@ -99,6 +99,26 @@ function _makeLaunchContext(params) {
     return launchContext;
 }
 
+function get_url(text) {
+    let url_regexp = imports.misc.util._urlRegexp;
+    let url;
+
+    if(!starts_with(text, 'http://') && !starts_with(text, 'https://')) {
+      url = 'http://'+text.trim();
+    }
+    else {
+      url = text.trim();
+    }
+
+    if(!url_regexp.test(url)) {
+      return false;
+    }
+    else {
+      return url;
+    }
+
+}
+
 /*!
  * string_score.js: String Scoring Algorithm 0.1.10 
  *
