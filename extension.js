@@ -137,7 +137,9 @@ const SuggestionsBox = new Lang.Class({
                 url = menu_item._text.trim();
             }
 
-            this._search_dialog._activate_search(false, url);
+            this._search_dialog._activate_search({
+                url: url
+            });
         }
 
         return true;
@@ -343,7 +345,15 @@ const WebSearchDialog = new Lang.Class({
         );
         this.search_entry.get_clutter_text().connect(
             'activate',
-            Lang.bind(this, this._activate_search)
+            Lang.bind(this, function(text) {
+                let t = text.get_text();
+
+                if(!Convenience.is_blank(t)) {
+                    this._activate_search({
+                        text: t
+                    });
+                }
+            })
         );
         this.search_entry.get_clutter_text().connect(
             'text-changed', 
@@ -428,9 +438,22 @@ const WebSearchDialog = new Lang.Class({
         }
         // Ctrl+Shift+V - paste and search
         else if(symbol == 86) {
-            // nothing
+            this._set_engine();
+            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+                if (Convenience.is_blank(text)) {
+                    return false;
+                }
+                else {
+                    this._activate_search({
+                        text: text
+                    });
+
+                    return true;
+                }
+            }));
         }
         else {
+            log(symbol);
             // nothing
         }
 
@@ -922,26 +945,30 @@ const WebSearchDialog = new Lang.Class({
         }
     },
 
-    _activate_search: function(text_obj, url) {
+    _activate_search: function(params) {
         this.suggestions_box.close();
 
-        if(!Convenience.is_blank(url)) {
-            this.search_history.add_item(url);
+        params = Params.parse(params, {
+            text: null,
+            url: null
+        })
+
+        if(!Convenience.is_blank(params.url)) {
+            this.search_history.add_item(params.url);
             this.close();
-            this._run_search(url);
+            this._run_search(params.url);
 
             return true;
         }
         else {
             let text = null;
 
-            if(text_obj && !Convenience.is_blank(text_obj.get_text())) {
-                text = text_obj.get_text().trim();
+            if(!Convenience.is_blank(params.text)) {
+                text = params.text;
             }
             else {
                 text = this.search_entry.get_text().trim();
             }
-
             if(Convenience.is_blank(text)) {
                 this._show_hint({
                     text: 'Error.\nPlease, enter a query.',
