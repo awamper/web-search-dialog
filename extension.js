@@ -346,8 +346,8 @@ const WebSearchDialog = new Lang.Class({
 
         this.search_engine_label = new St.Label({
             style_class: 'search-engine-label',
+            text: 'Web Search:'
         });
-        this.search_engine_label.hide();
 
         this.search_entry = new St.Entry({
             style_class: 'search-entry'
