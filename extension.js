@@ -452,6 +452,22 @@ const WebSearchDialog = new Lang.Class({
                 }
             }));
         }
+        // Ctrl+Shift+G - paste and go
+        else if(symbol == 71) {
+            this._set_engine();
+            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+                if (Convenience.is_blank(text)) {
+                    return false;
+                }
+                else {
+                    this._activate_search({
+                        url: text
+                    });
+
+                    return true;
+                }
+            }));
+        }
         else {
             log(symbol);
             // nothing
