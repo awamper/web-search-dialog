@@ -550,10 +550,6 @@ const WebSearchDialog = new Lang.Class({
         if(this.show_suggestions) {
             text = text.trim();
 
-            if(text.length <= 2) {
-                return false;
-            }
-
             if(this.search_engine.open_url) {
                 let is_matches_protocol = 
                     Convenience.starts_with(
