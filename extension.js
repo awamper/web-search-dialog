@@ -1005,7 +1005,7 @@ const WebSearchDialog = new Lang.Class({
             }
             else {
                 this._show_hint({
-                    text: 'Error.\nPlease, enter a correct query.',
+                    text: 'Error.\nSearch engine doesn\'t have a url.',
                     icon_name: 'dialog-error-symbolic'
                 });
 
