@@ -2,6 +2,7 @@ const St = imports.gi.St;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
 const Main = imports.ui.main;
+const Mainloop = imports.mainloop;
 const Clutter = imports.gi.Clutter;
 const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
@@ -28,6 +29,7 @@ const OPEN_URL_DATA = {
 
 const SUGGESTIONS_URL = 
     "http://suggestqueries.google.com/complete/search?client=chrome&q=";
+const SUGGESTIONS_DELAY = 150; // ms
 
 const SuggestionMenuItem = new Lang.Class({
     Name: 'SuggestionMenuItem',
@@ -125,6 +127,7 @@ const SuggestionsBox = new Lang.Class({
     },
 
     _on_activated: function(menu_item) {
+        this._search_dialog._remove_delay_id();
         this._search_dialog.suggestions_box.close(true);
 
         if(menu_item._type == "ENGINE") {
@@ -146,6 +149,8 @@ const SuggestionsBox = new Lang.Class({
     },
 
     _on_active_changed: function(menu_item) {
+        this._search_dialog._remove_delay_id();
+
         if(menu_item._type != 'ENGINE') {
             this._search_dialog.show_suggestions = false;
             this._entry.set_text(menu_item._text);
@@ -168,6 +173,7 @@ const SuggestionsBox = new Lang.Class({
     },
 
     close: function() {
+        this._search_dialog._remove_delay_id();
         this._entry.grab_key_focus();
         this.parent();
     }
@@ -301,6 +307,7 @@ const WebSearchDialog = new Lang.Class({
 
         this._settings = Convenience.getSettings();
         this._clipboard = St.Clipboard.get_default();
+        this._delay_suggestions_id = 0;
         this.show_suggestions = true;
         this.search_engine = false;
 
@@ -314,6 +321,12 @@ const WebSearchDialog = new Lang.Class({
             'window-demands-attention',
             Lang.bind(this, this._on_window_demands_attention)
         );        
+    },
+
+    _remove_delay_id: function() {
+        if(this._delay_suggestions_id > 0) {
+            Mainloop.source_remove(this._delay_suggestions_id);
+        }
     },
 
     _on_window_demands_attention: function(display, window) {
@@ -469,7 +482,6 @@ const WebSearchDialog = new Lang.Class({
             }));
         }
         else {
-            log(symbol);
             // nothing
         }
 
@@ -477,6 +489,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _on_search_text_changed: function() {
+        this._remove_delay_id();
         let text = this.search_entry.get_text();
 
         if(text == ' ') {
@@ -630,6 +643,8 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _set_engine: function(keyword) {
+        this._remove_delay_id();
+
         let engine_info = this._get_engine(keyword);
         let engine = '';
         this.search_engine = {};
@@ -858,47 +873,55 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
+        this._remove_delay_id();
+        this.suggestions_box.open();
         text = text.trim();
-        this._get_suggestions(text, function(suggestions) {
-            this.suggestions_box.removeAll();
 
-            if(suggestions) {
-                suggestions = this._parse_suggestions(suggestions);
+        this._delay_suggestions_id = Mainloop.timeout_add(
+            SUGGESTIONS_DELAY,
+            Lang.bind(this, function() {
+                this._get_suggestions(text, function(suggestions) {
+                    this.suggestions_box.removeAll();
 
-                if(!suggestions){return false;}
+                    if(suggestions) {
+                        suggestions = this._parse_suggestions(suggestions);
 
-                for(let i = 0; i < suggestions.length; i++) {
-                    let suggestion = suggestions[i];
+                        if(!suggestions){return false;}
 
-                    if(this.search_engine.open_url && 
-                        suggestion.type != 'NAVIGATION') {
-                        
-                        continue;
+                        for(let i = 0; i < suggestions.length; i++) {
+                            let suggestion = suggestions[i];
+
+                            if(this.search_engine.open_url && 
+                                suggestion.type != 'NAVIGATION') {
+                                
+                                continue;
+                            }
+                            if(suggestion.text == text) {
+                                continue;
+                            }
+
+                            this.suggestions_box.add_suggestion(
+                                suggestion.text,
+                                suggestion.type,
+                                suggestion.relevance,
+                                text
+                            );
+                        }
                     }
-                    if(suggestion.text == text) {
-                        continue;
-                    }
 
-                    this.suggestions_box.add_suggestion(
-                        suggestion.text,
-                        suggestion.type,
-                        suggestion.relevance,
-                        text
-                    );
-                }
-            }
+                    this._display_history_suggestions(text);
 
-            this._display_history_suggestions(text);
+                    // if(!this.suggestions_box.isEmpty()) {
+                    //     this.suggestions_box.open();
+                    // }
+                    // else {
+                    //     this.suggestions_box.close();
+                    // }
 
-            if(!this.suggestions_box.isEmpty()) {
-                this.suggestions_box.open();
-            }
-            else {
-                this.suggestions_box.close();
-            }
-
-            return true;
-        });
+                    return true;
+                });
+            })
+        );
 
         return true;
     },
@@ -938,6 +961,8 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _display_engines: function() {
+        this._remove_delay_id();
+
         this.suggestions_box.removeAll();
         let engines = this._settings.get_strv(Prefs.ENGINES_KEY);
 
@@ -1064,6 +1089,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     close: function() {
+        this._remove_delay_id();
         this._hide_engine_label();
         this.search_entry.set_text('');
         this.search_engine = false;
@@ -1083,6 +1109,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     disable: function() {
+        this._remove_delay_id();
         global.display.remove_keybinding('open-web-search-dialog');
         global.display.disconnect(this._window_handler_id);
     }
