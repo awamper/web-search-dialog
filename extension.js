@@ -312,7 +312,9 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine = false;
 
         this._open_hint = 
-            'Type to search in {engine_name} or enter a keyword.\n'+
+            'Type to search in {engine_name} or enter '+
+            'a keyword and press "space".\n'+
+            'Keyword "u" for open URL.\n'+
             'Press "space" for available search engines';
         this._create_search_dialog();
 
@@ -500,7 +502,7 @@ const WebSearchDialog = new Lang.Class({
         if(Convenience.is_blank(text)) {
             let hint_text;
 
-            if(this.search_engine != false) {
+            if(this.search_engine != false && !this.search_engine._default) {
                 if(!this.search_engine.open_url) {
                     hint_text = 
                         'Type to search in '+this.search_engine.name+'.\n'+
