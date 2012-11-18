@@ -531,7 +531,6 @@ const WebSearchDialog = new Lang.Class({
                 }
             }
             else {
-                let default_engine = this._get_default_engine();
                 hint_text = this._get_main_hint();
             }
 
