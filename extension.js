@@ -318,11 +318,6 @@ const WebSearchDialog = new Lang.Class({
         this.show_suggestions = true;
         this.search_engine = false;
 
-        this._init_hint = 
-            'Type to search in {engine_name} or enter '+
-            'a keyword and press "space".\n'+
-            'Keyword "u" for open URL.\n'+
-            'Press "space" for available search engines';
         this._create_search_dialog();
 
         this.activate_window = false;
@@ -330,6 +325,22 @@ const WebSearchDialog = new Lang.Class({
             'window-demands-attention',
             Lang.bind(this, this._on_window_demands_attention)
         );        
+    },
+
+    _get_main_hint: function() {
+        let default_engine = this._get_default_engine();
+        let hint = 
+            'Type to search in '+default_engine.name+' or enter '+
+            'a keyword and press "space".';
+
+        if(this._get_open_url_keyword()) {
+            hint +=
+                '\nKeyword "'+this._get_open_url_keyword()+'" for open URL.';
+        }
+
+        hint += '\nPress "space" for available search engines.';
+
+        return hint;
     },
 
     _remove_delay_id: function() {
@@ -521,10 +532,7 @@ const WebSearchDialog = new Lang.Class({
             }
             else {
                 let default_engine = this._get_default_engine();
-                hint_text = this._init_hint.replace(
-                    '{engine_name}',
-                    default_engine.name
-                )
+                hint_text = this._get_main_hint();
             }
 
             this._show_hint({
@@ -582,6 +590,17 @@ const WebSearchDialog = new Lang.Class({
         return true;
     },
 
+    _get_open_url_keyword: function() {
+        let key = this._settings.get_string(Prefs.OPEN_URL_KEY);
+
+        if(Convenience.is_blank(key)) {
+            return false;
+        }
+        else {
+            return key.trim();
+        }
+    },
+
     _get_keyword: function(text) {
         let result = false;
         let web_search_query_regexp = /^(.{1,}?)\s$/;
@@ -619,7 +638,7 @@ const WebSearchDialog = new Lang.Class({
         let info;
         key = key.trim();
 
-        if(key == this._settings.get_string(Prefs.OPEN_URL_KEY)) {
+        if(key == this._get_open_url_keyword()) {
             info = {
                 name: OPEN_URL_DATA.name,
                 keyword: this._settings.get_string(Prefs.OPEN_URL_KEY),
@@ -1084,11 +1103,8 @@ const WebSearchDialog = new Lang.Class({
         this.parent();
         this.search_entry.grab_key_focus();
 
-        let default_engine = this._get_default_engine();
-        let hint_text = 
-            this._init_hint.replace('{engine_name}', default_engine.name);
         this._show_hint({
-            text: hint_text,
+            text: this._get_main_hint(),
             icon_name: ICONS.information
         });
     },
