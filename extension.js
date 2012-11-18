@@ -426,6 +426,10 @@ const WebSearchDialog = new Lang.Class({
             let selection = clutter_text.get_selection();
             this._clipboard.set_text(selection);
         }
+        // Ctrl+Shift+V - paste and search
+        else if(symbol == 86) {
+            // nothing
+        }
         else {
             // nothing
         }
