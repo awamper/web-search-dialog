@@ -705,9 +705,6 @@ const WebSearchDialog = new Lang.Class({
         if(Convenience.is_blank(params.text)) {
             return false;
         }
-        if(this._hint_box.visible) {
-            this._hide_hint();
-        }
 
         let icon = new St.Icon({
             icon_name: params.icon_name,
@@ -726,23 +723,15 @@ const WebSearchDialog = new Lang.Class({
 
         this._hint_box.opacity = 30;
         this._hint_box.show();
-        this.hint.set_text(params.text);
 
-        let [hint_box_min_height, hint_box_natural_height] =
-            this._hint_box.get_preferred_height(-1);
-        this._hint_box.set_height(0);
+        if(params.text != this.hint.get_text()) {
+            this.hint.set_text(params.text);
+        }
 
         Tweener.addTween(this._hint_box, {
-            height: hint_box_natural_height,
-            time: 0.2,
+            time: 0.1,
+            opacity: 255,
             transition: 'easeOutQuad',
-            onStart: Lang.bind(this, function() {
-                Tweener.addTween(this._hint_box, {
-                    opacity: 255,
-                    time: 0.1,
-                    transition: 'easeOutQuad'
-                });
-            }),
             onComplete: Lang.bind(this, function() {
                 Tweener.addTween(this._hint_box, {
                     opacity: 120,
@@ -760,7 +749,7 @@ const WebSearchDialog = new Lang.Class({
             Tweener.addTween(this._hint_box, {
                 opacity: 0,
                 height: 0,
-                time: 0.2,
+                time: 0.1,
                 transition: 'easeOutQuad',
                 onComplete: Lang.bind(this, function() {
                     this._hint_box.hide();
