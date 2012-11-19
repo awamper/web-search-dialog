@@ -347,6 +347,7 @@ const WebSearchDialog = new Lang.Class({
     _remove_delay_id: function() {
         if(this._delay_suggestions_id > 0) {
             Mainloop.source_remove(this._delay_suggestions_id);
+            this._delay_suggestions_id = 0;
         }
     },
 
