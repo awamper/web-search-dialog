@@ -310,7 +310,7 @@ const WebSearchDialog = new Lang.Class({
 
     _init: function() {
         this.parent();
-	this._dialogLayout = this.dialogLayout; //3.6
+        this._dialogLayout = this.dialogLayout; //3.6
         this._dialogLayout.set_style_class_name('search-dialog');
 
         this._settings = Convenience.getSettings();
@@ -325,7 +325,7 @@ const WebSearchDialog = new Lang.Class({
         this._window_handler_id = global.display.connect(
             'window-demands-attention',
             Lang.bind(this, this._on_window_demands_attention)
-        );        
+        );
     },
 
     _get_main_hint: function() {
