@@ -524,13 +524,13 @@ const WebSearchDialog = new Lang.Class({
 
             if(this.search_engine != false && !this.search_engine._default) {
                 if(!this.search_engine.open_url) {
-                    hint_text = 
-                        'Type to search in '+this.search_engine.name+'.\n'+
-                        'Press "space" to switch search engine.'
+                    hint_text = 'Type to search in '+this.search_engine.name+'.';
                 }
                 else {
                     hint_text = 'Please, enter a URL.'
                 }
+
+                hint_text += '\nPress "space" to switch search engine.'
             }
             else {
                 hint_text = this._get_main_hint();
