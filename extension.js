@@ -1083,10 +1083,6 @@ const WebSearchDialog = new Lang.Class({
                 Convenience._makeLaunchContext({})
             );
 
-            if(Main.overview.visible) {
-                Main.overview.hide();
-            }
-
             return true;
         }
 
