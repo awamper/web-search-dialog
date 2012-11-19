@@ -934,6 +934,10 @@ const WebSearchDialog = new Lang.Class({
                         }
                     }
 
+                    if(this.suggestions_box.isEmpty()) {
+                        this.suggestions_box.close();
+                    }
+
                     this._display_history_suggestions(text);
 
                     return true;
