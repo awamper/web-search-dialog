@@ -8,11 +8,6 @@
       <summary>Open web search.</summary>
     </key>
 
-    <key type="as" name="search-from-clipboard">
-      <default><![CDATA[['<Super>v']]]></default>
-      <summary>Search from clipboard.</summary>
-    </key>
-
     <key type="as" name="search-history">
       <default>[]</default>
     </key>
