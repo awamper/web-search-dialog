@@ -13,6 +13,7 @@ const Lang = imports.lang;
 const Params = imports.misc.params;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
+const url_regexp = imports.misc.util._urlRegexp;
 
 
 /**
@@ -100,24 +101,56 @@ function _makeLaunchContext(params) {
 }
 
 function get_url(text) {
-    let url_regexp = imports.misc.util._urlRegexp;
-    let url;
+    let url = parseUri(text);
+    let test_url = '';
 
-    if(!starts_with(text, 'http://') && !starts_with(text, 'https://')) {
-      url = 'http://'+text.trim();
+    if(is_blank(url.protocol)) {
+        test_url = 'http://'+url.source;
     }
     else {
-      url = text.trim();
+        test_url = url.source;
     }
 
-    if(!url_regexp.test(url)) {
-      return false;
+    if(!test_url.match(url_regexp)) {
+        return false;
     }
     else {
-      return url;
+        return test_url;
     }
-
 }
+
+// parseUri 1.2.2
+// (c) Steven Levithan <stevenlevithan.com>
+// MIT License
+
+function parseUri (str) {
+  var o   = parseUri.options,
+    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+    uri = {},
+    i   = 14;
+
+  while (i--) uri[o.key[i]] = m[i] || "";
+
+  uri[o.q.name] = {};
+  uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+    if ($1) uri[o.q.name][$1] = $2;
+  });
+
+  return uri;
+};
+
+parseUri.options = {
+  strictMode: false,
+  key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+  q:   {
+    name:   "queryKey",
+    parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+  },
+  parser: {
+    strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+    loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+  }
+};
 
 /*!
  * string_score.js: String Scoring Algorithm 0.1.10 

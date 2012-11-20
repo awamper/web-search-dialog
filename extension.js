@@ -138,18 +138,18 @@ const SuggestionsBox = new Lang.Class({
         this._search_dialog.suggestions_box.close(true);
 
         if(menu_item._type == "ENGINE") {
-            this._search_dialog._set_engine(menu_item._term);
+            let engine_keyword = menu_item._term.trim();
+            this._search_dialog._set_engine(engine_keyword);
         }
         else {
-            let url = null;
+            let text = menu_item._text.trim();
 
             if(menu_item._type == 'NAVIGATION') {
-                url = menu_item._text.trim();
+                this._search_dialog._open_url(text, true);
             }
-
-            this._search_dialog._activate_search({
-                url: url
-            });
+            else {
+                this._search_dialog._activate_search(text);
+            }
         }
 
         return true;
@@ -385,12 +385,15 @@ const WebSearchDialog = new Lang.Class({
         this.search_entry.get_clutter_text().connect(
             'activate',
             Lang.bind(this, function(text) {
-                let t = text.get_text();
+                text = text.get_text();
 
-                if(!Convenience.is_blank(t)) {
-                    this._activate_search({
-                        text: t
-                    });
+                if(!Convenience.is_blank(text)) {
+                    if(this.search_engine.open_url) {
+                        this._open_url(text, true);
+                    }
+                    else {
+                        this._activate_search(text);
+                    }
                 }
             })
         );
@@ -491,9 +494,7 @@ const WebSearchDialog = new Lang.Class({
                     return false;
                 }
                 else {
-                    this._activate_search({
-                        text: text
-                    });
+                    this._activate_search(text);
 
                     return true;
                 }
@@ -505,8 +506,8 @@ const WebSearchDialog = new Lang.Class({
                 this._set_engine();
             }
 
-            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if(Convenience.is_blank(text)) {
+            this._clipboard.get_text(Lang.bind(this, function(clipboard, url) {
+                if(Convenience.is_blank(url)) {
                     this._show_hint({
                         text: 'Clipboard is empty.',
                         icon_name: ICONS.error
@@ -515,9 +516,7 @@ const WebSearchDialog = new Lang.Class({
                     return false;
                 }
                 else {
-                    this._activate_search({
-                        url: text
-                    });
+                    this._open_url(url, true);
 
                     return true;
                 }
@@ -1017,89 +1016,54 @@ const WebSearchDialog = new Lang.Class({
         }
     },
 
-    _activate_search: function(params) {
+    _activate_search: function(text) {
         this.suggestions_box.close();
 
-        params = Params.parse(params, {
-            text: null,
-            url: null
-        })
+        if(Convenience.is_blank(text)) {
+            this._show_hint({
+                text: 'Error.\nPlease, enter a query.',
+                icon_name: ICONS.error
+            });
 
-        if(!Convenience.is_blank(params.url)) {
-            let url = Convenience.get_url(params.url);
-            this.search_history.add_item(url);
-            this.close();
-            this._run_search(url);
-
-            return true;
+            return false;
         }
-        else {
-            let text = null;
 
-            if(!Convenience.is_blank(params.text)) {
-                text = params.text;
-            }
-            else {
-                text = this.search_entry.get_text().trim();
-            }
-            if(Convenience.is_blank(text)) {
-                this._show_hint({
-                    text: 'Error.\nPlease, enter a query.',
-                    icon_name: ICONS.error
-                });
-                return false;
-            }
+        this.search_history.add_item(text);
 
-            if(!Convenience.is_blank(this.search_engine.url)) {
-                this.search_history.add_item(text);
+        text = encodeURIComponent(text);
+        let url = this.search_engine.url.replace('{term}', text);
+        this._open_url(url);
 
-                if(!this.search_engine.open_url) {
-                    text = encodeURIComponent(text);
-                }
-
-                if(this.search_engine.open_url) {
-                    text = Convenience.get_url(text);
-
-                    if(!text) {
-                        this._show_hint({
-                            text: 'Please, enter a valid url.',
-                            icon_name: ICONS.error
-                        });
-
-                        return false;
-                    }
-                }
-
-                let url = this.search_engine.url.replace('{term}', text);
-                this.close();
-                this._run_search(url);
-
-                return true;
-            }
-            else {
-                this._show_hint({
-                    text: 'Error.\nSearch engine doesn\'t have a url.',
-                    icon_name: ICONS.error
-                });
-
-                return false;
-            }
-        }
+        return true;
     },
 
-    _run_search: function(url) {
-        if(!Convenience.is_blank(url)) {
-            this.activate_window = true;
+    _open_url: function(url, history) {
+        url = Convenience.get_url(url);
 
-            Gio.app_info_launch_default_for_uri(
-                url,
-                Convenience._makeLaunchContext({})
-            );
+        if(!url) {
+            this._show_hint({
+                text: 'Please, enter a valid url.',
+                icon_name: ICONS.error
+            });
 
-            return true;
+            return false;
+        }
+        else {
+            this.close();
         }
 
-        return false;
+        if(history === true) {
+            this.search_history.add_item(url);
+        } 
+
+        this.activate_window = true;
+
+        Gio.app_info_launch_default_for_uri(
+            url,
+            Convenience._makeLaunchContext({})
+        );
+
+        return true;
     },
 
     open: function() {
@@ -1135,7 +1099,6 @@ const WebSearchDialog = new Lang.Class({
     disable: function() {
         this._remove_delay_id();
         global.display.remove_keybinding('open-web-search-dialog');
-        global.display.remove_keybinding('search-from-clipboard');
         global.display.disconnect(this._window_handler_id);
     }
 });
