@@ -1162,7 +1162,32 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _search_from_clipboard: function() {
-        // nothing
+        this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+            if(Convenience.is_blank(text)) {
+                show_popup(
+                    'Clipboard is empty.',
+                    ICONS.information,
+                    750
+                );
+
+                return false;
+            }
+            else {
+                let default_engine = this._get_default_engine();
+                show_popup(
+                    'Searching in '+default_engine.name+'...',
+                    ICONS.information,
+                    750
+                );
+
+                this._set_engine();
+                this._activate_search({
+                    text: text
+                });
+
+                return true;
+            }
+        }));
     },
 
     open: function() {
