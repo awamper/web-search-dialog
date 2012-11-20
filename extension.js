@@ -457,7 +457,7 @@ const WebSearchDialog = new Lang.Class({
         // Ctrl+V
         else if(symbol == 118) {
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if (!text) {
+                if (Convenience.is_blank(text)) {
                     return false;
                 }
 
@@ -477,9 +477,17 @@ const WebSearchDialog = new Lang.Class({
         }
         // Ctrl+Shift+V - paste and search
         else if(symbol == 86) {
-            this._set_engine();
+            if(!this.search_engine) {
+                this._set_engine();
+            }
+
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if (Convenience.is_blank(text)) {
+                if(Convenience.is_blank(text)) {
+                    this._show_hint({
+                        text: 'Clipboard is empty.',
+                        icon_name: ICONS.error
+                    });
+
                     return false;
                 }
                 else {
@@ -493,9 +501,17 @@ const WebSearchDialog = new Lang.Class({
         }
         // Ctrl+Shift+G - paste and go
         else if(symbol == 71) {
-            this._set_engine();
+            if(!this.search_engine) {
+                this._set_engine();
+            }
+
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if (Convenience.is_blank(text)) {
+                if(Convenience.is_blank(text)) {
+                    this._show_hint({
+                        text: 'Clipboard is empty.',
+                        icon_name: ICONS.error
+                    });
+
                     return false;
                 }
                 else {
