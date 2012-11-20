@@ -1086,6 +1086,10 @@ const WebSearchDialog = new Lang.Class({
         return false;
     },
 
+    _search_from_clipboard: function() {
+        // nothing
+    },
+
     open: function() {
         this.parent();
         this.search_entry.grab_key_focus();
@@ -1114,11 +1118,20 @@ const WebSearchDialog = new Lang.Class({
                 this.open();
             })
         );
+        global.display.add_keybinding(
+            'search-from-clipboard',
+            this._settings,
+            Meta.KeyBindingFlags.NONE,
+            Lang.bind(this, function() {
+                this._search_from_clipboard();
+            })
+        );
     },
 
     disable: function() {
         this._remove_delay_id();
         global.display.remove_keybinding('open-web-search-dialog');
+        global.display.remove_keybinding('search-from-clipboard');
         global.display.disconnect(this._window_handler_id);
     }
 });
