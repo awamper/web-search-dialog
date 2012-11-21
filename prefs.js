@@ -14,156 +14,138 @@ const Convenience = Me.imports.convenience;
 const ENGINES_KEY = 'search-engines';
 const SUGGESTIONS_KEY = 'enable-suggestions';
 const OPEN_URL_KEY = 'open-url-keyword';
+const OPEN_URL_LABEL = 'open-url-label';
 const HISTORY_KEY = 'search-history';
 const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
 const HISTORY_LIMIT_KEY = 'history-limit';
 const DEFAULT_ENGINE_KEY = 'default-search-engine';
+const OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
 
-const Columns = {
-    DISPLAY_NAME: 0,
-    KEYWORD: 1,
-    URL: 2
-};
-
-const WebSearchPrefsWidget = new GObject.Class({
-    Name: 'WebSearch.Prefs.Widget',
-    GTypeName: 'WebSearchPrefsWidget',
+const WebSearchDialogPrefsGrid = new GObject.Class({
+    Name: 'WebSearchDialog.Prefs.Grid',
+    GTypeName: 'WebSearchDialogPrefsGrid',
     Extends: Gtk.Grid,
 
-    _init: function(params) {
+    _init: function(settings, params) {
         this.parent(params);
-        this.set_orientation(Gtk.Orientation.VERTICAL);
+        this._settings = settings;
+        this.margin = this.row_spacing = this.column_spacing = 10;
+        this._rownum = 0;
+    },
 
-        this._settings = Convenience.getSettings();
-        this._settings.connect('changed', Lang.bind(this, this._refresh));
-        this._changed_permitted = false;
+    add_entry: function(text, key) {
+        let item = new Gtk.Entry({
+            hexpand: true
+        });
+        item.text = this._settings.get_string(key);
+        this._settings.bind(key, item, 'text', Gio.SettingsBindFlags.DEFAULT);
 
-        // suggestions
-        let enable_suggestions_label = new Gtk.Label({
-            label: "Enable suggestions:", 
-            xalign: 0,
-            hexpand:true
-        });
-        let enable_suggestions_switch = new Gtk.Switch({
-            halign: Gtk.Align.END
-        });
-        enable_suggestions_switch.set_active(
-            this._settings.get_boolean(SUGGESTIONS_KEY)
-        );
-        enable_suggestions_switch.connect(
-            "notify::active",
-            Lang.bind(this, function(check) {
-                this._settings.set_boolean(SUGGESTIONS_KEY, check.get_active());
-            })
-        );
-        let enable_suggestions_box = new Gtk.Box({
-            spacing: 30,
-            margin_left: 10,
-            margin_top: 10,
-            margin_right: 10
-        });
-        enable_suggestions_box.add(enable_suggestions_label);
-        enable_suggestions_box.add(enable_suggestions_switch);
-        this.add(enable_suggestions_box);
+        return this.add_row(text, item);
+    },
 
-        // history suggestions
-        let enable_history_suggestions_label = new Gtk.Label({
-            label: "Enable history suggestions:", 
-            xalign: 0,
-            hexpand:true
+    add_boolean: function(text, key) {
+        let item = new Gtk.Switch({
+            active: this._settings.get_boolean(key)
         });
-        let enable_history_suggestions_switch = new Gtk.Switch({
-            halign: Gtk.Align.END
-        });
-        enable_history_suggestions_switch.set_active(
-            this._settings.get_boolean(HISTORY_SUGGESTIONS_KEY)
-        );
-        enable_history_suggestions_switch.connect(
-            "notify::active",
-            Lang.bind(this, function(check) {
-                this._settings.set_boolean(
-                    HISTORY_SUGGESTIONS_KEY,
-                    check.get_active()
-                );
-            })
-        );
-        let enable_history_suggestions_box = new Gtk.Box({
-            spacing: 30,
-            margin_left: 10,
-            margin_top: 10,
-            margin_right: 10
-        });
-        enable_history_suggestions_box.add(enable_history_suggestions_label);
-        enable_history_suggestions_box.add(enable_history_suggestions_switch);
-        this.add(enable_history_suggestions_box);
+        this._settings.bind(key, item, 'active', Gio.SettingsBindFlags.DEFAULT);
 
-        // history limit
-        let history_limit_label = new Gtk.Label({
-            label: "History limit:", 
-            xalign: 0,
-            hexpand:true
-        });
+        return this.add_row(text, item);
+    },
 
-        let adjustment = new Gtk.Adjustment({
-            lower: 10,
-            upper: 1000,
-            step_increment: 5
+    add_combo: function(text, key, list) {
+        let item = new Gtk.ComboBoxText();
+
+        for(let i = 0; i < list.length; i++) {
+            let title = list[i].title.trim();
+            let id = list[i].value.toString();
+            item.insert(-1, id, title);
+        }
+
+        item.set_active_id(this._settings.get_int(key).toString());
+        item.connect('changed', Lang.bind(this, function(combo) {
+            let value = parseInt(combo.get_active_id(), 10);
+
+            if(this._settings.get_int(key) !== value) {
+                this._settings.set_int(key, value);
+            }
+        }));
+
+        this.add_row(text, item);
+    },
+
+    add_spin: function(label, key, adjustment_properties, spin_properties) {
+        adjustment_properties = Params.parse(adjustment_properties, {
+            lower: 0,
+            upper: 100,
+            step_increment: 100
         });
-        let spin_button = new Gtk.SpinButton({
+        let adjustment = new Gtk.Adjustment(adjustment_properties);
+
+        spin_properties = Params.parse(spin_properties, {
             adjustment: adjustment,
             numeric: true,
             snap_to_ticks: true
-        });
+        }, true);
+        let spin_button = new Gtk.SpinButton(spin_properties);
 
-        spin_button.set_value(this._settings.get_int(HISTORY_LIMIT_KEY));
-        spin_button.connect('value-changed', Lang.bind(this, function (spin) {
+        spin_button.set_value(this._settings.get_int(key));
+        spin_button.connect('value-changed', Lang.bind(this, function(spin) {
             let value = spin.get_value_as_int();
 
-            if(this._settings.get_int(HISTORY_LIMIT_KEY) !== value) {
-                this._settings.set_int(HISTORY_LIMIT_KEY, value);
+            if(this._settings.get_int(key) !== value) {
+                this._settings.set_int(key, value);
             }
         }));
-        let history_limit_box = new Gtk.Box({
-            spacing: 30,
-            margin_left: 10,
-            margin_top: 10,
-            margin_right: 10
-        });
-        history_limit_box.add(history_limit_label);
-        history_limit_box.add(spin_button);
-        this.add(history_limit_box);
 
+        return this.add_row(label, spin_button, true);
+    },
 
-        // open url
-        let open_url_label = new Gtk.Label({
-            label: 'Open URL Keyword(empty to disable):',
+    add_row: function(text, widget, wrap) {
+        let label = new Gtk.Label({
+            label: text,
             hexpand: true,
             halign: Gtk.Align.START
         });
+        label.set_line_wrap(wrap || false);
 
-        let open_url_entry = new Gtk.Entry({
-            hexpand: false
-        });
-        open_url_entry.text = this._settings.get_string(OPEN_URL_KEY);
-        this._settings.bind(
-            OPEN_URL_KEY,
-            open_url_entry,
-            'text',
-            Gio.SettingsBindFlags.DEFAULT
+        this.attach(label, 0, this._rownum, 1, 1); // col, row, colspan, rowspan
+        this.attach(widget, 1, this._rownum, 1, 1);
+        this._rownum++;
+
+        return widget;
+    },
+
+    add_item: function(widget, col, colspan, rowspan) {
+        this.attach(
+            widget,
+            col || 0,
+            this._rownum,
+            colspan || 2,
+            rowspan || 1
         );
+        this._rownum++;
 
-        let open_url_box = new Gtk.Box({
-            spacing: 30,
-            margin_left: 10,
-            margin_top: 10,
-            margin_right: 10
-        });
+        return widget;
+    }
+});
 
-        open_url_box.add(open_url_label);
-        open_url_box.add(open_url_entry);
-        this.add(open_url_box);
+const WebSearchDialogPrefsEnginesList = new GObject.Class({
+    Name: 'WebSearchDialog.Prefs.EnginesList',
+    GTypeName: 'WebSearchDialogPrefsEnginesList',
+    Extends: Gtk.Box,
 
-        // engines
+    _init: function(settings, params) {
+        this.parent(params);
+        this._settings = settings;
+        this._settings.connect('changed', Lang.bind(this, this._refresh));
+        this.set_orientation(Gtk.Orientation.VERTICAL);
+
+        this.columns = {
+            DISPLAY_NAME: 0,
+            KEYWORD: 1,
+            URL: 2
+        };
+
         let engines_list_box = new Gtk.Box({
             spacing: 30,
             margin_left: 10,
@@ -188,50 +170,50 @@ const WebSearchPrefsWidget = new GObject.Class({
         //engine name
         let name_column = new Gtk.TreeViewColumn({
             expand: true,
-            sort_column_id: Columns.DISPLAY_NAME,
-            title: 'Search engine'
+            sort_column_id: this.columns.DISPLAY_NAME,
+            title: 'Name'
         });
 
-        let name_renderer = new Gtk.CellRendererText;
+        let name_renderer = new Gtk.CellRendererText();
         name_column.pack_start(name_renderer, true);
         name_column.add_attribute(
             name_renderer,
             "text",
-            Columns.DISPLAY_NAME
+            this.columns.DISPLAY_NAME
         );
         this._tree_view.append_column(name_column);
 
         //engine keyword
         let keyword_column = new Gtk.TreeViewColumn({
             title: 'Keyword',
-            sort_column_id: Columns.KEYWORD
+            sort_column_id: this.columns.KEYWORD
         });
-        let keyword_renderer = new Gtk.CellRendererText;
+        let keyword_renderer = new Gtk.CellRendererText();
         keyword_column.pack_start(keyword_renderer, true);
         keyword_column.add_attribute(
             keyword_renderer,
             "text",
-            Columns.KEYWORD
+            this.columns.KEYWORD
         );
         this._tree_view.append_column(keyword_column);
 
         //engine url
         let url_column = new Gtk.TreeViewColumn({
             title: 'Url',
-            sort_column_id: Columns.URL
+            sort_column_id: this.columns.URL
         });
-        let url_renderer = new Gtk.CellRendererText;
+        let url_renderer = new Gtk.CellRendererText();
         url_column.pack_start(url_renderer, true);
         url_column.add_attribute(
             url_renderer,
             "text",
-            Columns.URL
+            this.columns.URL
         );
         this._tree_view.append_column(url_column);
 
         engines_list_box.add(this._tree_view);
-        this.add(engines_list_box);
 
+        // buttons
         let toolbar = new Gtk.Toolbar({
             hexpand: true,
             margin_left: 10,
@@ -241,7 +223,6 @@ const WebSearchPrefsWidget = new GObject.Class({
         toolbar.get_style_context().add_class(
             Gtk.STYLE_CLASS_INLINE_TOOLBAR
         );
-        this.add(toolbar);
 
         let new_button = new Gtk.ToolButton({
             stock_id: Gtk.STOCK_NEW,
@@ -253,31 +234,19 @@ const WebSearchPrefsWidget = new GObject.Class({
         );
         toolbar.add(new_button);
 
-        let del_button = new Gtk.ToolButton({
+        let delete_button = new Gtk.ToolButton({
             stock_id: Gtk.STOCK_DELETE
         });
-        del_button.connect('clicked',
+        delete_button.connect('clicked',
             Lang.bind(this, this._delete_selected)
         );
-        toolbar.add(del_button);
+        toolbar.add(delete_button);
+
+        this.add(engines_list_box);
+        this.add(toolbar);
 
         this._changed_permitted = true;
         this._refresh();
-    },
-
-    _is_valid_item: function(item) {
-        if(Convenience.is_blank(item.name)) {
-            return false;
-        }
-        else if(Convenience.is_blank(item.keyword)) {
-            return false;
-        }
-        else if(Convenience.is_blank(item.url)) {
-            return false;
-        }
-        else {
-            return true;
-        }
     },
 
     _create_new: function() {
@@ -291,7 +260,7 @@ const WebSearchPrefsWidget = new GObject.Class({
             Gtk.ResponseType.CANCEL
         );
         dialog.add_button(
-            'Add',
+            Gtk.STOCK_ADD,
             Gtk.ResponseType.OK
         );
         dialog.set_default_response(
@@ -328,7 +297,7 @@ const WebSearchPrefsWidget = new GObject.Class({
         dialog.get_content_area().add(grid);
 
         dialog.connect('response', Lang.bind(this, function(dialog, id) {
-            if (id != Gtk.ResponseType.OK) {
+            if(id != Gtk.ResponseType.OK) {
                 dialog.destroy();
                 return;
             }
@@ -342,22 +311,13 @@ const WebSearchPrefsWidget = new GObject.Class({
                 url: url
             };
 
-            this._changed_permitted = false;
-
-            if (!this._append_item(new_item)) {
-                this._changed_permitted = true;
+            if(!this._append_item(new_item)) {
                 return;
             }
 
-            let iter = this._store.append();
-            this._store.set(iter,
-                [Columns.DISPLAY_NAME, Columns.KEYWORD, Columns.URL],
-                [name, keyword, url]
-            );
-            this._changed_permitted = true;
-
             dialog.destroy();
         }));
+
         dialog.show_all();
     },
 
@@ -365,42 +325,50 @@ const WebSearchPrefsWidget = new GObject.Class({
         let [any, model, iter] = 
             this._tree_view.get_selection().get_selected();
 
-        if (any) {
-            let name = this._store.get_value(iter, Columns.DISPLAY_NAME);
-
-            this._changed_permitted = false;
+        if(any) {
+            let name = this._store.get_value(iter, this.columns.DISPLAY_NAME);
             this._remove_item(name);
             this._store.remove(iter);
-            this._changed_permitted = true;
         }
     },
 
     _refresh: function() {
-        if (!this._changed_permitted)
-            // Ignore this notification, model is being modified outside
-            return;
-
         this._store.clear();
 
         let current_items = this._settings.get_strv(ENGINES_KEY);
         let valid_items = [];
 
-        for (let i = 0; i < current_items.length; i++) {
+        for(let i = 0; i < current_items.length; i++) {
             let item = JSON.parse(current_items[i]);
 
             if(this._is_valid_item(item)) {
                 valid_items.push(current_items[i]);
                 let iter = this._store.append();
                 this._store.set(iter,
-                    [Columns.DISPLAY_NAME, Columns.KEYWORD, Columns.URL],
+                    [this.columns.DISPLAY_NAME, this.columns.KEYWORD, this.columns.URL],
                     [item.name, item.keyword, item.url]
                 );
             }
         }
 
-        if (valid_items.length != current_items.length) {
+        if(valid_items.length != current_items.length) {
             // some items were filtered out
             this._settings.set_strv(ENGINES_KEY, valid_items);
+        }
+    },
+
+    _is_valid_item: function(item) {
+        if(Convenience.is_blank(item.name)) {
+            return false;
+        }
+        else if(Convenience.is_blank(item.keyword)) {
+            return false;
+        }
+        else if(Convenience.is_blank(item.url)) {
+            return false;
+        }
+        else {
+            return true;
         }
     },
 
@@ -416,6 +384,11 @@ const WebSearchPrefsWidget = new GObject.Class({
 
             if(info.name == new_item.name) {
                 printerr("Already have an item for this name");
+                this._show_error('sda');
+                return false;
+            }
+            else if(info.keyword == new_item.keyword) {
+                printerr("Already have an item for this keyword");
                 return false;
             }
         }
@@ -448,12 +421,100 @@ const WebSearchPrefsWidget = new GObject.Class({
     }
 });
 
+const WebSearchDialogPrefsWidget = new GObject.Class({
+    Name: 'WebSearchDialog.Prefs.Widget',
+    GTypeName: 'WebSearchDialogPrefsWidget',
+    Extends: Gtk.Box,
+
+    _init: function(params) {
+        this.parent(params);
+        this._settings = Convenience.getSettings();
+
+        let settings_grid = new WebSearchDialogPrefsGrid(this._settings);
+        let settings_grid_label = new Gtk.Label({
+            label: "Settings"
+        });
+
+        // default engine
+        let engines_list = this._settings.get_strv(ENGINES_KEY);
+        let result_list = [];
+
+        for(let i = 0; i < engines_list.length; i++) {
+            let info = JSON.parse(engines_list[i]);
+            let result = {
+                title: info.name,
+                value: i
+            };
+            result_list.push(result);
+        }
+
+        let default_engine = settings_grid.add_combo(
+            'Default search engine:',
+            DEFAULT_ENGINE_KEY,
+            result_list
+        );
+
+        // suggestions
+        let enable_suggestions = settings_grid.add_boolean(
+            'Suggestions:',
+            SUGGESTIONS_KEY
+        );
+
+        // history suggestions
+        let enable_history_suggestions = settings_grid.add_boolean(
+            'History suggestions:',
+            HISTORY_SUGGESTIONS_KEY
+        );
+
+        // history limit
+        let adjustment = {
+            lower: 10,
+            upper: 1000,
+            step_increment: 5
+        }
+        let history_limit = settings_grid.add_spin(
+            'History limit:',
+            HISTORY_LIMIT_KEY,
+            adjustment
+        );
+
+        // open url keyword
+        let open_url_keyword = settings_grid.add_entry(
+            'Open url keyword(empty to disable):',
+            OPEN_URL_KEY
+        );
+
+        // open url label
+        let open_url_label = settings_grid.add_entry(
+            'Open url label:',
+            OPEN_URL_LABEL
+        );
+
+        let engines_list = new WebSearchDialogPrefsEnginesList(this._settings);
+        let engines_list_label = new Gtk.Label({
+            label: "Search engines"
+        });
+
+        let notebook = new Gtk.Notebook({
+            margin_left: 5,
+            margin_top: 5,
+            margin_bottom: 5,
+            margin_right: 5
+        });
+
+        notebook.append_page(settings_grid, settings_grid_label);
+        notebook.append_page(engines_list, engines_list_label);
+
+        this.add(notebook);
+    },
+});
+
 function init(){
     // nothing
 }
 
 function buildPrefsWidget() {
-    let widget = new WebSearchPrefsWidget();
+    let widget = new WebSearchDialogPrefsWidget();
     widget.show_all();
 
     return widget;

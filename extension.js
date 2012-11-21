@@ -22,11 +22,6 @@ Soup.Session.prototype.add_feature.call(
 );
 _httpSession.user_agent = 'Gnome-Shell Web Search';
 
-const OPEN_URL_DATA = {
-    url: '{term}',
-    name: 'Open URL'
-}
-
 const ICONS = {
     information: 'dialog-information-symbolic',
     error: 'dialog-error-symbolic',
@@ -45,53 +40,53 @@ const SuggestionMenuItem = new Lang.Class({
     _init: function(text, type, relevance, term, params) {
         this.parent(params);
 
-        this._text = text;
+        this._text = text.trim();
         this._type = type;
         this._relevance = relevance;
-        this._term = term;
+        this._term = term.trim();
 
-        this._find_icon = new St.Icon({
-            style_class: 'menu-item-icon',
-            icon_name: ICONS.find
-        });
-
-        this._web_icon = new St.Icon({
-            style_class: 'menu-item-icon',
-            icon_name: ICONS.web
-        });
-
-        let highlight_text = this._text.replace(
-            new RegExp('(.*?)('+this._term+')(.*?)', "i"),
+        let highlight_text = Convenience.escape_html(this._text).replace(
+            new RegExp(
+                '(.*?)('+Convenience.escape_html(this._term)+')(.*?)',
+                "i"
+            ),
             "$1<b>$2</b>$3"
         );
 
-        this._label = new St.Label({
+        let label = new St.Label({
             text: highlight_text
         });
-        this._label.clutter_text.use_markup = true;
+        label.clutter_text.use_markup = true;
 
-        this._box = new St.BoxLayout();
+        let icon = new St.Icon({
+                style_class: 'menu-item-icon'
+        });
 
         if(this._type == 'NAVIGATION') {
-            this._box.add(this._web_icon);
+            icon.icon_name = ICONS.web;
         }
         else {
-            this._box.add(this._find_icon);
+            icon.icon_name = ICONS.find;
         }
-        this._box.add(this._label);
+
+        this._box = new St.BoxLayout();
+        this._box.add(icon);
+        this._box.add(label);
 
         this.addActor(this._box);
-        this.actor.label_actor = this._label
+        this.actor.label_actor = label;
     },
 
     _onKeyPressEvent: function(actor, event) {
         let symbol = event.get_key_symbol();
 
-        if (symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
             this.activate(event);
             return true;
         }
-        return false;
+        else {
+            return false;
+        }
     }
 });
 
@@ -109,10 +104,10 @@ const SuggestionsBox = new Lang.Class({
         this.actor.hide();
     },
 
-    _onKeyPressEvent: function (actor, event) {
+    _onKeyPressEvent: function(actor, event) {
         let symbol = event.get_key_symbol();
 
-        if (symbol == Clutter.Escape) {
+        if(symbol == Clutter.Escape) {
             this.close(true);
             return true;
         }
@@ -156,8 +151,6 @@ const SuggestionsBox = new Lang.Class({
     },
 
     _on_active_changed: function(menu_item) {
-        this._search_dialog._remove_delay_id();
-
         if(menu_item._type != 'ENGINE') {
             this._search_dialog.show_suggestions = false;
             this._entry.set_text(menu_item._text);
@@ -166,8 +159,24 @@ const SuggestionsBox = new Lang.Class({
         return true;
     },
 
-    add_suggestion: function(text, type, relevance, term) {
-        let item = new SuggestionMenuItem(text, type, relevance, term);
+    add_suggestion: function(params) {
+        params = Params.parse(params, {
+            text: false,
+            type: 'QUERY',
+            relevance: 0,
+            term: ''
+        });
+
+        if(!params.text) {
+            return false;
+        }
+
+        let item = new SuggestionMenuItem(
+            params.text,
+            params.type,
+            params.relevance,
+            params.term
+        );
         item.connect(
             'activate',
             Lang.bind(this, this._on_activated)
@@ -177,6 +186,8 @@ const SuggestionsBox = new Lang.Class({
             Lang.bind(this, this._on_active_changed)
         );
         this.addMenuItem(item)
+
+        return true;
     },
 
     close: function() {
@@ -266,7 +277,18 @@ const SearchHistoryManager = new Lang.Class({
         this._history_index = this._history.length;
     },
 
-    get_best_matches: function(text, min_score, limit) {
+    get_best_matches: function(params) {
+        params = Params.parse(params, {
+            text: false,
+            min_score: 0.5,
+            limit: 5,
+            fuzziness: 0.5
+        });
+
+        if(params.text == false) {
+            return false;
+        }
+
         let result = [];
         let history = this._history;
         let unique_history = history.filter(function(elem, pos) {
@@ -274,17 +296,20 @@ const SearchHistoryManager = new Lang.Class({
         })
 
         for(let i = 0; i < unique_history.length; i++) {
-            let score = Convenience.string_score(text, unique_history[i], 0.5);
+            let score = Convenience.string_score(
+                unique_history[i],
+                params.text,
+                params.fuzziness
+            );
 
-            if(score >= min_score) {
+            if(score >= params.min_score) {
                 result.push([score, unique_history[i]]);
             }
         }
 
         result.sort(function(a, b){return a[0] < b[0]});
 
-        return result.slice(0, limit);
-
+        return result.slice(0, params.limit);
     },
 
     _index_changed: function() {
@@ -343,7 +368,7 @@ const WebSearchDialog = new Lang.Class({
                 '\nKeyword "'+this._get_open_url_keyword()+'" for open URL.';
         }
 
-        hint += '\nPress "space" for available search engines.';
+        hint += '\nPress "Tab" for available search engines.';
 
         return hint;
     },
@@ -432,10 +457,14 @@ const WebSearchDialog = new Lang.Class({
         }
         else if(symbol == Clutter.Tab) {
             if(this.suggestions_box.isOpen) {
-                // let first_item = this.suggestions_box.firstMenuItem;
-                // this.search_entry.set_text(first_item._text);
-                // this.suggestions_box.close();
                 this.suggestions_box.firstMenuItem.setActive(true);
+            }
+            else {
+                let text = this.search_entry.get_text();
+
+                if(Convenience.is_blank(text)) {
+                    this._display_engines();
+                }
             }
         }
         else if(symbol == Clutter.Down) {
@@ -533,34 +562,16 @@ const WebSearchDialog = new Lang.Class({
         this._remove_delay_id();
         let text = this.search_entry.get_text();
 
-        if(text == ' ') {
-            this._display_engines();
-            return true;
-        }
-
         if(Convenience.is_blank(text)) {
-            let hint_text;
-
-            if(this.search_engine != false && !this.search_engine._default) {
-                if(!this.search_engine.open_url) {
-                    hint_text = 'Type to search in '+this.search_engine.name+'.';
-                }
-                else {
-                    hint_text = 'Please, enter a URL.'
-                }
-
-                hint_text += '\nPress "space" to switch search engine.'
-            }
-            else {
-                hint_text = this._get_main_hint();
-            }
-
-            this._show_hint({
-                text: hint_text,
-                icon_name: ICONS.information
-            })
             this.suggestions_box.close();
-            this.show_suggestions = false;
+
+            if(this.search_engine._default === true) {
+                let hint_text = this._get_main_hint();
+                this._show_hint({
+                    text: hint_text,
+                    icon_name: ICONS.information
+                });
+            }
         }
         else {
             this._hide_hint();
@@ -569,25 +580,11 @@ const WebSearchDialog = new Lang.Class({
         if(this.search_engine == false || this.search_engine._default) {
             let keyword = this._get_keyword(text);
             this._set_engine(keyword);
-
-            if(!this.search_engine._default) {
-                this.show_suggestions = false;
-            }
         }
 
         if(this.show_suggestions) {
-            text = text.trim();
-
             if(this.search_engine.open_url) {
-                let is_matches_protocol = 
-                    Convenience.starts_with(
-                        text, 'http://'.slice(0, text.length)
-                    ) ||
-                    Convenience.starts_with(
-                        text, 'https://'.slice(0, text.length)
-                    );
-
-                if(!is_matches_protocol) {
+                if(!Convenience.is_matches_protocol(text)) {
                     text = 'http://'+text;
                     this.search_entry.set_text(text);
                 }
@@ -623,7 +620,7 @@ const WebSearchDialog = new Lang.Class({
 
     _get_keyword: function(text) {
         let result = false;
-        let web_search_query_regexp = /^(.{1,}?)\s$/;
+        let web_search_query_regexp = /^(.+?)\s$/;
 
         if(web_search_query_regexp.test(text)) {
             let matches = web_search_query_regexp.exec(text);
@@ -660,9 +657,8 @@ const WebSearchDialog = new Lang.Class({
 
         if(key == this._get_open_url_keyword()) {
             info = {
-                name: OPEN_URL_DATA.name,
+                name: this._settings.get_string(Prefs.OPEN_URL_LABEL),
                 keyword: this._settings.get_string(Prefs.OPEN_URL_KEY),
-                url: OPEN_URL_DATA.url,
                 open_url: true
             };
 
@@ -674,11 +670,9 @@ const WebSearchDialog = new Lang.Class({
             for(let i = 0; i < engines_list.length; i++) {
                 info = JSON.parse(engines_list[i]);
 
-                if(info.keyword == key) {
-                    if(info.url.length > 0) {
-                        info.open_url = false;
-                        return info;
-                    }
+                if(info.keyword == key && info.url.length > 0) {
+                    info.open_url = false;
+                    return info;
                 }
             }
         }
@@ -702,14 +696,36 @@ const WebSearchDialog = new Lang.Class({
             this.search_engine._default = true;
         }
 
-        this.search_engine.keyword = engine.keyword.trim();
-        this.search_engine.name = engine.name.trim();
-        this.search_engine.url = engine.url.trim();
-        this.search_engine.open_url = engine.open_url;
+        if(engine.keyword == this.search_engine.keyword) {
+            return false;
+        }
 
-        if(engine_info) {
+        this.search_engine.keyword = engine.keyword.trim();
+        this.search_engine.open_url = engine.open_url;
+        this.search_engine.name = engine.name.trim();
+        this.search_engine.url = !engine.open_url
+            ? engine.url.trim()
+            : null
+
+        if(!this.search_engine._default) {
+            let hint_text;
+
+            if(!engine.open_url) {
+                hint_text = 'Type to search in '+this.search_engine.name+'.';
+            }
+            else {
+                hint_text = 'Please, enter a URL.';
+            }
+
+            hint_text += '\nPress "Tab" to switch search engine.';
+            this.show_suggestions = false;
             this.search_entry.set_text('');
             this._show_engine_label(this.search_engine.name+':');
+
+            this._show_hint({
+                text: hint_text,
+                icon_name: ICONS.information
+            });
         }
 
         return true;
@@ -798,8 +814,7 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine_label.set_text(text);
         this.search_engine_label.show()
 
-        let [min_width, natural_width] =
-            this.contentLayout.get_preferred_width(-1)
+        let natural_width = this.contentLayout.get_preferred_width(-1)[1];
 
         Tweener.addTween(this.contentLayout, {
             width: natural_width+5,
@@ -916,30 +931,33 @@ const WebSearchDialog = new Lang.Class({
                 this._get_suggestions(text, function(suggestions) {
                     this.suggestions_box.removeAll();
 
-                    if(suggestions) {
-                        suggestions = this._parse_suggestions(suggestions);
+                    if(!suggestions) {
+                        this.suggestions_box.close();
+                        return false;
+                    }
 
-                        if(!suggestions){return false;}
+                    suggestions = this._parse_suggestions(suggestions);
 
-                        for(let i = 0; i < suggestions.length; i++) {
-                            let suggestion = suggestions[i];
+                    if(!suggestions){return false;}
 
-                            if(this.search_engine.open_url && 
-                                suggestion.type != 'NAVIGATION') {
-                                
-                                continue;
-                            }
-                            if(suggestion.text == text) {
-                                continue;
-                            }
+                    for(let i = 0; i < suggestions.length; i++) {
+                        let suggestion = suggestions[i];
 
-                            this.suggestions_box.add_suggestion(
-                                suggestion.text,
-                                suggestion.type,
-                                suggestion.relevance,
-                                text
-                            );
+                        if(this.search_engine.open_url && 
+                            suggestion.type != 'NAVIGATION') {
+                            
+                            continue;
                         }
+                        if(suggestion.text == text) {
+                            continue;
+                        }
+
+                        this.suggestions_box.add_suggestion({
+                            text: suggestion.text,
+                            type: suggestion.type,
+                            relevance: suggestion.relevance,
+                            term: text
+                        });
                     }
 
                     if(this.suggestions_box.isEmpty()) {
@@ -961,11 +979,12 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
-        let history_suggestions = this.search_history.get_best_matches(
-            text,
-            0.45,
-            3
-        );
+        let history_suggestions = this.search_history.get_best_matches({
+            text: text,
+            min_score: 0.35,
+            limit: 3,
+            fuzziness: 0.5
+        });
 
         if(history_suggestions.length > 0) {
             this.suggestions_box.addMenuItem(
@@ -978,12 +997,12 @@ const WebSearchDialog = new Lang.Class({
             );
 
             for(let i = 0; i < history_suggestions.length; i++) {
-                this.suggestions_box.add_suggestion(
-                    history_suggestions[i][1],
-                    'QUERY',
-                    history_suggestions[i][0],
-                    text
-                );
+                this.suggestions_box.add_suggestion({
+                    text: history_suggestions[i][1],
+                    type: 'QUERY',
+                    relevance: history_suggestions[i][0],
+                    term: text
+                });
             }
         }
 
@@ -998,17 +1017,29 @@ const WebSearchDialog = new Lang.Class({
 
         for(let i = 0; i < engines.length; i++) {
             let engine = JSON.parse(engines[i]);
+            let default_engine = this._get_default_engine();
 
             if(this.search_engine.keyword == engine.keyword) {
                 continue;
             }
+            else if(default_engine.name == engine.name) {
+                continue;
+            }
+            else {
+                this.suggestions_box.add_suggestion({
+                    text: engine.name,
+                    type: 'ENGINE',
+                    term: engine.keyword
+                });
+            }
+        }
 
-            this.suggestions_box.add_suggestion(
-                engine.name,
-                'ENGINE',
-                0,
-                engine.keyword
-            );
+        if(this._get_open_url_keyword()) {
+            this.suggestions_box.add_suggestion({
+                text: this._settings.get_string(Prefs.OPEN_URL_LABEL),
+                type: 'ENGINE',
+                term: this._get_open_url_keyword()
+            });
         }
 
         if(!this.suggestions_box.isEmpty()) {
@@ -1037,7 +1068,7 @@ const WebSearchDialog = new Lang.Class({
         return true;
     },
 
-    _open_url: function(url, history) {
+    _open_url: function(url, to_history) {
         url = Convenience.get_url(url);
 
         if(!url) {
@@ -1052,7 +1083,7 @@ const WebSearchDialog = new Lang.Class({
             this.close();
         }
 
-        if(history === true) {
+        if(to_history === true) {
             this.search_history.add_item(url);
         } 
 
@@ -1081,13 +1112,14 @@ const WebSearchDialog = new Lang.Class({
         this._hide_engine_label();
         this.search_entry.set_text('');
         this.search_engine = false;
+        this.suggestions_box.close();
 
         this.parent();
     },
 
     enable: function() {
         global.display.add_keybinding(
-            'open-web-search-dialog',
+            Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Lang.bind(this, function() {
@@ -1098,7 +1130,7 @@ const WebSearchDialog = new Lang.Class({
 
     disable: function() {
         this._remove_delay_id();
-        global.display.remove_keybinding('open-web-search-dialog');
+        global.display.remove_keybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
         global.display.disconnect(this._window_handler_id);
     }
 });

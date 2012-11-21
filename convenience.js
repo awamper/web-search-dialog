@@ -99,6 +99,28 @@ function _makeLaunchContext(params) {
     return launchContext;
 }
 
+function escape_html(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
+
+function is_matches_protocol(text) {
+    text = text.trim();
+    let http = starts_with(text, 'http://'.slice(0, text.length));
+    let https = starts_with(text, 'https://'.slice(0, text.length));
+
+    if(http || https) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 function get_url(text) {
     let url_regexp = imports.misc.util._urlRegexp;
     let url = parseUri(text);
