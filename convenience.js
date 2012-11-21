@@ -13,7 +13,6 @@ const Lang = imports.lang;
 const Params = imports.misc.params;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
-const url_regexp = imports.misc.util._urlRegexp;
 
 
 /**
@@ -101,6 +100,7 @@ function _makeLaunchContext(params) {
 }
 
 function get_url(text) {
+    let url_regexp = imports.misc.util._urlRegexp;
     let url = parseUri(text);
     let test_url = '';
 
