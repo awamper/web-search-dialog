@@ -43,6 +43,23 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
         return this.add_row(text, item);
     },
 
+    add_shortcut: function(text, settings_key) {
+        let item = new Gtk.Entry({
+            hexpand: true
+        });
+        item.set_text(this._settings.get_strv(settings_key)[0]);
+        item.connect('changed', Lang.bind(this, function(entry) {
+            let [key, mods] = Gtk.accelerator_parse(entry.get_text());
+
+            if(Gtk.accelerator_valid(key, mods)) {
+                let shortcut = Gtk.accelerator_name(key, mods);
+                this._settings.set_strv(settings_key, [shortcut]);
+            }
+        }));
+
+        return this.add_row(text, item);
+    },
+
     add_boolean: function(text, key) {
         let item = new Gtk.Switch({
             active: this._settings.get_boolean(key)
@@ -495,6 +512,12 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             label: "Search engines"
         });
 
+        let shortcuts = new WebSearchDialogPrefsGrid(this._settings);
+        shortcuts.add_shortcut('Open search dialog:', OPEN_SEARCH_DIALOG_KEY);
+        let shortcuts_label = new Gtk.Label({
+            label: "Keyboard shortcuts"
+        });
+
         let notebook = new Gtk.Notebook({
             margin_left: 5,
             margin_top: 5,
@@ -504,9 +527,10 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
         notebook.append_page(settings_grid, settings_grid_label);
         notebook.append_page(engines_list, engines_list_label);
+        notebook.append_page(shortcuts, shortcuts_label);
 
         this.add(notebook);
-    },
+    }
 });
 
 function init(){
