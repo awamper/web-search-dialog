@@ -491,7 +491,7 @@ const WebSearchDialog = new Lang.Class({
                 // this._show_hint({
                 //     text: hint_text,
                 //     icon_name: ICONS.information
-                });
+                // });
             }
         }
         else if(symbol == Clutter.Up) {
