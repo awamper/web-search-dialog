@@ -267,6 +267,14 @@ const SearchHistoryManager = new Lang.Class({
         return this._history_index[this._history.length];
     },
 
+    current_index: function() {
+        return this._history_index;
+    },
+
+    total_items: function() {
+        return this._history.length;
+    },
+
     add_item: function(input) {
         if(this._history.length == 0 ||
             this._history[this._history.length - 1] != input) {
@@ -476,6 +484,14 @@ const WebSearchDialog = new Lang.Class({
                 let text = this.search_entry.get_text();
                 let item = this.search_history.next_item(text);
                 this.search_entry.set_text(item);
+
+                // let hint_text = 'History.\nCurrent item '+
+                //     this.search_history.current_index()+' of '+
+                //     this.search_history.total_items();
+                // this._show_hint({
+                //     text: hint_text,
+                //     icon_name: ICONS.information
+                });
             }
         }
         else if(symbol == Clutter.Up) {
@@ -484,6 +500,14 @@ const WebSearchDialog = new Lang.Class({
                 let text = this.search_entry.get_text();
                 let item = this.search_history.prev_item(text);
                 this.search_entry.set_text(item);
+
+                // let hint_text = 'History.\nCurrent item '+
+                //     this.search_history.current_index()+' of '+
+                //     this.search_history.total_items();
+                // this._show_hint({
+                //     text: hint_text,
+                //     icon_name: ICONS.information
+                // });
             }
         }
         // Ctrl+V
