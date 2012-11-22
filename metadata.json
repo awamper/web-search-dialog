@@ -1,15 +1,11 @@
 {
-    "description": "
-        Alt+F1 to open search dialog.
-        Ctrl+Shift+V - paste&search
-        Ctrl+Shift+G - paste&go
-    ", 
-    "name": "Web Search Dialog", 
+    "description": "Alt+F1 to open search dialog.\nCtrl+Shift+V - paste&search\nCtrl+Shift+G - paste&go",
+    "name": "Web Search Dialog",
     "shell-version": [
         "3.4",
         "3.6"
-    ], 
-    "url": "http://github.com/awamper/web-search-dialog", 
+    ],
+    "url": "http://github.com/awamper/web-search-dialog",
     "uuid": "web_search_dialog@awamper.gmail.com",
     "settings-schema": "org.gnome.shell.extensions.web-search-dialog",
     "dev-version": "0.2",
