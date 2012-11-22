@@ -9,7 +9,7 @@ const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Params = imports.misc.params;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+const Utils = Me.imports.utils;
 
 const ENGINES_KEY = 'search-engines';
 const SUGGESTIONS_KEY = 'enable-suggestions';
@@ -375,13 +375,13 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
     },
 
     _is_valid_item: function(item) {
-        if(Convenience.is_blank(item.name)) {
+        if(Utils.is_blank(item.name)) {
             return false;
         }
-        else if(Convenience.is_blank(item.keyword)) {
+        else if(Utils.is_blank(item.keyword)) {
             return false;
         }
-        else if(Convenience.is_blank(item.url)) {
+        else if(Utils.is_blank(item.url)) {
             return false;
         }
         else {
@@ -416,7 +416,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
     },
 
     _remove_item: function(name) {
-        if(Convenience.is_blank(name)) {
+        if(Utils.is_blank(name)) {
             return false;
         }
 
@@ -445,7 +445,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
     _init: function(params) {
         this.parent(params);
-        this._settings = Convenience.getSettings();
+        this._settings = Utils.getSettings();
 
         let settings_grid = new WebSearchDialogPrefsGrid(this._settings);
         let settings_grid_label = new Gtk.Label({

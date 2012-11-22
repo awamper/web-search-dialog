@@ -12,7 +12,7 @@ const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Convenience = Me.imports.convenience;
+const Utils = Me.imports.utils;
 const Prefs = Me.imports.prefs;
 
 const _httpSession = new Soup.SessionAsync();
@@ -45,9 +45,9 @@ const SuggestionMenuItem = new Lang.Class({
         this._relevance = relevance;
         this._term = term.trim();
 
-        let highlight_text = Convenience.escape_html(this._text).replace(
+        let highlight_text = Utils.escape_html(this._text).replace(
             new RegExp(
-                '(.*?)('+Convenience.escape_html(this._term)+')(.*?)',
+                '(.*?)('+Utils.escape_html(this._term)+')(.*?)',
                 "i"
             ),
             "$1<b>$2</b>$3"
@@ -201,7 +201,7 @@ const SearchHistoryManager = new Lang.Class({
     Name: "SearchHistoryManager",
 
     _init: function(params) {
-        this._settings = Convenience.getSettings();
+        this._settings = Utils.getSettings();
 
         params = Params.parse(params, {
             gsettings_key: Prefs.HISTORY_KEY,
@@ -296,7 +296,7 @@ const SearchHistoryManager = new Lang.Class({
         })
 
         for(let i = 0; i < unique_history.length; i++) {
-            let score = Convenience.string_score(
+            let score = Utils.string_score(
                 unique_history[i],
                 params.text,
                 params.fuzziness
@@ -342,7 +342,7 @@ const WebSearchDialog = new Lang.Class({
 
         this._dialogLayout.set_style_class_name('search-dialog');
 
-        this._settings = Convenience.getSettings();
+        this._settings = Utils.getSettings();
         this._clipboard = St.Clipboard.get_default();
         this._delay_suggestions_id = 0;
         this.show_suggestions = true;
@@ -412,7 +412,7 @@ const WebSearchDialog = new Lang.Class({
             Lang.bind(this, function(text) {
                 text = text.get_text();
 
-                if(!Convenience.is_blank(text)) {
+                if(!Utils.is_blank(text)) {
                     if(this.search_engine.open_url) {
                         this._open_url(text, true);
                     }
@@ -462,7 +462,7 @@ const WebSearchDialog = new Lang.Class({
             else {
                 let text = this.search_entry.get_text();
 
-                if(Convenience.is_blank(text)) {
+                if(Utils.is_blank(text)) {
                     this._display_engines();
                 }
             }
@@ -489,7 +489,7 @@ const WebSearchDialog = new Lang.Class({
         // Ctrl+V
         else if(symbol == 118) {
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if (Convenience.is_blank(text)) {
+                if (Utils.is_blank(text)) {
                     return false;
                 }
 
@@ -514,7 +514,7 @@ const WebSearchDialog = new Lang.Class({
             }
 
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
-                if(Convenience.is_blank(text)) {
+                if(Utils.is_blank(text)) {
                     this._show_hint({
                         text: 'Clipboard is empty.',
                         icon_name: ICONS.error
@@ -536,7 +536,7 @@ const WebSearchDialog = new Lang.Class({
             }
 
             this._clipboard.get_text(Lang.bind(this, function(clipboard, url) {
-                if(Convenience.is_blank(url)) {
+                if(Utils.is_blank(url)) {
                     this._show_hint({
                         text: 'Clipboard is empty.',
                         icon_name: ICONS.error
@@ -562,7 +562,7 @@ const WebSearchDialog = new Lang.Class({
         this._remove_delay_id();
         let text = this.search_entry.get_text();
 
-        if(Convenience.is_blank(text)) {
+        if(Utils.is_blank(text)) {
             this.suggestions_box.close();
 
             if(this.search_engine._default === true) {
@@ -584,7 +584,7 @@ const WebSearchDialog = new Lang.Class({
 
         if(this.show_suggestions) {
             if(this.search_engine.open_url) {
-                if(!Convenience.is_matches_protocol(text)) {
+                if(!Utils.is_matches_protocol(text)) {
                     text = 'http://'+text;
                     this.search_entry.set_text(text);
                 }
@@ -610,7 +610,7 @@ const WebSearchDialog = new Lang.Class({
     _get_open_url_keyword: function() {
         let key = this._settings.get_string(Prefs.OPEN_URL_KEY);
 
-        if(Convenience.is_blank(key)) {
+        if(Utils.is_blank(key)) {
             return false;
         }
         else {
@@ -626,7 +626,7 @@ const WebSearchDialog = new Lang.Class({
             let matches = web_search_query_regexp.exec(text);
             let keyword = matches[0].trim();
 
-            if(!Convenience.is_blank(keyword)) {
+            if(!Utils.is_blank(keyword)) {
                 result = keyword;
             }
         }
@@ -639,7 +639,7 @@ const WebSearchDialog = new Lang.Class({
         let index = this._settings.get_int(Prefs.DEFAULT_ENGINE_KEY);
         let engine = JSON.parse(engines[index]);
         
-        if(!Convenience.is_blank(engine.url)) {
+        if(!Utils.is_blank(engine.url)) {
             return engine;
         }
         else {
@@ -648,7 +648,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _get_engine: function(key) {
-        if(Convenience.is_blank(key)) {
+        if(Utils.is_blank(key)) {
             return false;
         }
 
@@ -737,7 +737,7 @@ const WebSearchDialog = new Lang.Class({
             icon_name: ICONS.information
         })
 
-        if(Convenience.is_blank(params.text)) {
+        if(Utils.is_blank(params.text)) {
             return false;
         }
 
@@ -799,7 +799,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _show_engine_label: function(text) {
-        if(Convenience.is_blank(text)) {
+        if(Utils.is_blank(text)) {
             return false;
         }
 
@@ -868,8 +868,8 @@ const WebSearchDialog = new Lang.Class({
                 suggestions_source[4]['google:suggestrelevance'][i]
             );
 
-            if(Convenience.is_blank(text)) {continue;}
-            if(Convenience.is_blank(type)) {continue;}
+            if(Utils.is_blank(text)) {continue;}
+            if(Utils.is_blank(type)) {continue;}
             if(relevance < 1) {continue;}
 
             let suggestion = {
@@ -915,7 +915,7 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
-        if(Convenience.is_blank(text)) {
+        if(Utils.is_blank(text)) {
             this.suggestions_box.close();
 
             return false;
@@ -1050,7 +1050,7 @@ const WebSearchDialog = new Lang.Class({
     _activate_search: function(text) {
         this.suggestions_box.close();
 
-        if(Convenience.is_blank(text)) {
+        if(Utils.is_blank(text)) {
             this._show_hint({
                 text: 'Error.\nPlease, enter a query.',
                 icon_name: ICONS.error
@@ -1069,7 +1069,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _open_url: function(url, to_history) {
-        url = Convenience.get_url(url);
+        url = Utils.get_url(url);
 
         if(!url) {
             this._show_hint({
@@ -1091,7 +1091,7 @@ const WebSearchDialog = new Lang.Class({
 
         Gio.app_info_launch_default_for_uri(
             url,
-            Convenience._makeLaunchContext({})
+            Utils._makeLaunchContext({})
         );
 
         return true;
