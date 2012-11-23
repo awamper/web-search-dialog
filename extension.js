@@ -27,7 +27,7 @@ const ICONS = {
     error: 'dialog-error-symbolic',
     find: 'edit-find-symbolic',
     web: 'web-browser-symbolic'
-}
+};
 
 const SUGGESTIONS_URL = 
     "http://suggestqueries.google.com/complete/search?client=chrome&q=";
