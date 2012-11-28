@@ -8,334 +8,20 @@ const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
 const Params = imports.misc.params;
 const ModalDialog = imports.ui.modalDialog;
-const PopupMenu = imports.ui.popupMenu;
 const Tweener = imports.ui.tweener;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Suggestions = Me.imports.suggestions_box;
+const Helper = Me.imports.helper;
 const Utils = Me.imports.utils;
+const HistoryManager = Me.imports.history_manager;
 const Prefs = Me.imports.prefs;
 
-const _httpSession = new Soup.SessionAsync();
-Soup.Session.prototype.add_feature.call(
-    _httpSession,
-    new Soup.ProxyResolverDefault()
-);
-_httpSession.user_agent = 'Gnome-Shell Web Search';
-
-const ICONS = {
-    information: 'dialog-information-symbolic',
-    error: 'dialog-error-symbolic',
-    find: 'edit-find-symbolic',
-    web: 'web-browser-symbolic'
-};
+const _httpSession = Utils._httpSession;
+const ICONS = Utils.ICONS;
 
 const SUGGESTIONS_URL = 
-    "http://suggestqueries.google.com/complete/search?client=chrome&q=";
-const SUGGESTIONS_DELAY = 150; // ms
-
-const SuggestionMenuItem = new Lang.Class({
-    Name: 'SuggestionMenuItem',
-    Extends: PopupMenu.PopupBaseMenuItem,
-
-    _init: function(text, type, relevance, term, params) {
-        this.parent(params);
-
-        this._text = text.trim();
-        this._type = type;
-        this._relevance = relevance;
-        this._term = term.trim();
-
-        let highlight_text = Utils.escape_html(this._text).replace(
-            new RegExp(
-                '(.*?)('+Utils.escape_html(this._term)+')(.*?)',
-                "i"
-            ),
-            "$1<b>$2</b>$3"
-        );
-
-        let label = new St.Label({
-            text: highlight_text
-        });
-        label.clutter_text.use_markup = true;
-
-        let icon = new St.Icon({
-                style_class: 'menu-item-icon'
-        });
-
-        if(this._type == 'NAVIGATION') {
-            icon.icon_name = ICONS.web;
-        }
-        else {
-            icon.icon_name = ICONS.find;
-        }
-
-        this._box = new St.BoxLayout();
-        this._box.add(icon);
-        this._box.add(label);
-
-        this.addActor(this._box);
-        this.actor.label_actor = label;
-    },
-
-    _onKeyPressEvent: function(actor, event) {
-        let symbol = event.get_key_symbol();
-
-        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
-            this.activate(event);
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-});
-
-const SuggestionsBox = new Lang.Class({
-    Name: 'SuggestionsBox',
-    Extends: PopupMenu.PopupMenu,
-
-    _init: function(search_dialog) {
-        this._search_dialog = search_dialog;
-        this._entry = this._search_dialog.search_entry;
-
-        this.parent(this._entry, 0, St.Side.TOP);
-
-        Main.uiGroup.add_actor(this.actor);
-        this.actor.hide();
-    },
-
-    _onKeyPressEvent: function(actor, event) {
-        let symbol = event.get_key_symbol();
-
-        if(symbol == Clutter.Escape) {
-            this.close(true);
-            return true;
-        }
-        else if(symbol == Clutter.BackSpace) {
-            this._entry.grab_key_focus();
-            this._search_dialog.show_suggestions = false;
-            this._entry.set_text(this._entry.get_text().slice(0, -1));
-            return true;
-        }
-        else if(symbol == Clutter.KP_Space || symbol == Clutter.KEY_space) {
-            this._entry.grab_key_focus();
-            this._search_dialog.show_suggestions = false;
-            this._entry.set_text(this._entry.get_text() + ' ');
-            return true;
-        }
-        else {
-            return false;
-        }
-    },
-
-    _on_activated: function(menu_item) {
-        this._search_dialog._remove_delay_id();
-        this._search_dialog.suggestions_box.close(true);
-
-        if(menu_item._type == "ENGINE") {
-            let engine_keyword = menu_item._term.trim();
-            this._search_dialog._set_engine(engine_keyword);
-        }
-        else {
-            let text = menu_item._text.trim();
-
-            if(menu_item._type == 'NAVIGATION') {
-                this._search_dialog._open_url(text, true);
-            }
-            else {
-                this._search_dialog._activate_search(text);
-            }
-        }
-
-        return true;
-    },
-
-    _on_active_changed: function(menu_item) {
-        if(menu_item._type != 'ENGINE') {
-            this._search_dialog.show_suggestions = false;
-            this._entry.set_text(menu_item._text);
-        }
-
-        return true;
-    },
-
-    add_suggestion: function(params) {
-        params = Params.parse(params, {
-            text: false,
-            type: 'QUERY',
-            relevance: 0,
-            term: ''
-        });
-
-        if(!params.text) {
-            return false;
-        }
-
-        let item = new SuggestionMenuItem(
-            params.text,
-            params.type,
-            params.relevance,
-            params.term
-        );
-        item.connect(
-            'activate',
-            Lang.bind(this, this._on_activated)
-        );
-        item.connect(
-            'active-changed',
-            Lang.bind(this, this._on_active_changed)
-        );
-        this.addMenuItem(item)
-
-        return true;
-    },
-
-    close: function() {
-        this._search_dialog._remove_delay_id();
-        this._entry.grab_key_focus();
-        this.parent();
-    }
-});
-
-const SearchHistoryManager = new Lang.Class({
-    Name: "SearchHistoryManager",
-
-    _init: function(params) {
-        this._settings = Utils.getSettings();
-
-        params = Params.parse(params, {
-            gsettings_key: Prefs.HISTORY_KEY,
-            limit: this._settings.get_int(Prefs.HISTORY_LIMIT_KEY)
-        });
-
-        this._key = params.gsettings_key;
-        this._limit = params.limit;
-
-        if(this._key) {
-            this._history = this._settings.get_strv(this._key);
-            this._settings.connect(
-                'changed::'+this._key,
-                Lang.bind(this, this._history_changed)
-            );
-        }
-        else {
-            this._history = [];
-        }
-
-        this._history_index = this._history.length;
-    },
-
-    _history_changed: function() {
-        this._history = this._settings.get_strv(this._key);
-        this._history_index = this._history.length;
-    },
-
-    prev_item: function(text) {
-        if(this._history_index <= 0) {
-            return text;
-        }
-
-        if(text) {
-            this._history[this._history_index] = text;
-        }
-
-        this._history_index--;
-
-        return this._index_changed();
-    },
-
-    next_item: function(text) {
-        if(this._history_index >= this._history.length) {
-            return text;
-        }
-
-        if(text) {
-            this._history[this._history_index] = text;
-        }
-
-        this._history_index++;
-
-        return this._index_changed();
-    },
-
-    last_item: function() {
-        if(this._history_index != this._history.length) {
-            this._history_index = this._history.length;
-            this._index_changed();
-        }
-
-        return this._history_index[this._history.length];
-    },
-
-    current_index: function() {
-        return this._history_index;
-    },
-
-    total_items: function() {
-        return this._history.length;
-    },
-
-    add_item: function(input) {
-        if(this._history.length == 0 ||
-            this._history[this._history.length - 1] != input) {
-
-            this._history.push(input);
-            this._save();
-        }
-        this._history_index = this._history.length;
-    },
-
-    get_best_matches: function(params) {
-        params = Params.parse(params, {
-            text: false,
-            min_score: 0.5,
-            limit: 5,
-            fuzziness: 0.5
-        });
-
-        if(params.text == false) {
-            return false;
-        }
-
-        let result = [];
-        let history = this._history;
-        let unique_history = history.filter(function(elem, pos) {
-            return history.indexOf(elem) == pos;
-        })
-
-        for(let i = 0; i < unique_history.length; i++) {
-            let score = Utils.string_score(
-                unique_history[i],
-                params.text,
-                params.fuzziness
-            );
-
-            if(score >= params.min_score) {
-                result.push([score, unique_history[i]]);
-            }
-        }
-
-        result.sort(function(a, b){return a[0] < b[0]});
-
-        return result.slice(0, params.limit);
-    },
-
-    _index_changed: function() {
-        let current = this._history[this._history_index] || '';
-
-        return current;
-    },
-
-    _save: function() {
-        if(this._history.length > this._limit) {
-            this._history.splice(0, this._history.length - this._limit);
-        }
-
-        if(this._key) {
-            this._settings.set_strv(this._key, this._history);
-        }
-    }
-});
+    "https://suggestqueries.google.com/complete/search?client=chrome&q=";
 
 const WebSearchDialog = new Lang.Class({
     Name: 'WebSearchDialog',
@@ -348,11 +34,14 @@ const WebSearchDialog = new Lang.Class({
             ? this._dialogLayout
             : this.dialogLayout
 
-        this._dialogLayout.set_style_class_name('search-dialog');
+        this._dialogLayout.set_style_class_name('');
+        this._dialogLayout.set_margin_bottom(300);
+        this.contentLayout.set_style_class_name('search-dialog');
 
         this._settings = Utils.getSettings();
         this._clipboard = St.Clipboard.get_default();
-        this._delay_suggestions_id = 0;
+        this._suggestions_delay_id = 0;
+        this._helper_delay_id = 0;
         this.show_suggestions = true;
         this.search_engine = false;
 
@@ -382,9 +71,13 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _remove_delay_id: function() {
-        if(this._delay_suggestions_id > 0) {
-            Mainloop.source_remove(this._delay_suggestions_id);
-            this._delay_suggestions_id = 0;
+        if(this._suggestions_delay_id > 0) {
+            Mainloop.source_remove(this._suggestions_delay_id);
+            this._suggestions_delay_id = 0;
+        }
+        if(this._helper_delay_id > 0) {
+            Mainloop.source_remove(this._helper_delay_id);
+            this._helper_delay_id = 0;
         }
     },
 
@@ -399,9 +92,10 @@ const WebSearchDialog = new Lang.Class({
         this.hint = new St.Label({
             style_class: 'search-hint'
         });
-        this._hint_box = new St.BoxLayout();
+        this._hint_box = new St.BoxLayout({
+            visible: false
+        });
         this._hint_box.add(this.hint);
-        this._hint_box.hide();
 
         this.search_engine_label = new St.Label({
             style_class: 'search-engine-label',
@@ -435,14 +129,15 @@ const WebSearchDialog = new Lang.Class({
             Lang.bind(this, this._on_search_text_changed)
         );
 
-        this.suggestions_box = new SuggestionsBox(this);
+        this.duckduckgo_helper = new Helper.DuckDuckGoHelper();
+        this.suggestions_box = new Suggestions.SuggestionsBox(this);
         this.suggestions_box.setSourceAlignment(0.02);
 
-        this.search_history = new SearchHistoryManager();
+        this.search_history = new HistoryManager.SearchHistoryManager();
 
         this._search_table = new St.Table({
             name: 'web_search_table'
-        })
+        });
         this._search_table.add(this.search_engine_label, {
             row: 0,
             col: 0
@@ -607,6 +302,8 @@ const WebSearchDialog = new Lang.Class({
         }
 
         if(this.show_suggestions) {
+            this._display_helper(text);
+
             if(this.search_engine.open_url) {
                 if(!Utils.is_matches_protocol(text)) {
                     text = 'http://'+text;
@@ -742,7 +439,6 @@ const WebSearchDialog = new Lang.Class({
             }
 
             hint_text += '\nPress "Tab" to switch search engine.';
-            this.show_suggestions = false;
             this.search_entry.set_text('');
             this._show_engine_label(this.search_engine.name+':');
 
@@ -931,6 +627,36 @@ const WebSearchDialog = new Lang.Class({
         });
     },
 
+    _display_helper: function(text) {
+        if(!this._settings.get_boolean(Prefs.HELPER_KEY)) {
+            return false;
+        }
+
+        this.suggestions_box.remove_all_by_types(['HELPER']);
+        this._helper_delay_id = Mainloop.timeout_add(
+            this._settings.get_int(Prefs.HELPER_DELAY_KEY),
+            Lang.bind(this, function() {
+                this.duckduckgo_helper.get_info(text,
+                    Lang.bind(this, function(result) {
+                        let abstract = result.abstract;
+                        let image = {
+                            url: result.image
+                        };
+                        let menu_item = 
+                            this.duckduckgo_helper.get_menu_item(
+                                abstract,
+                                image
+                            );
+                        this.suggestions_box.addMenuItem(menu_item, 0);
+                        this.suggestions_box.open();
+                    })
+                );
+            })
+        );
+
+        return true;
+    },
+
     _display_suggestions: function(text) {
         if(!this._settings.get_boolean(Prefs.SUGGESTIONS_KEY)) {
             return false;
@@ -945,15 +671,14 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
-        this._remove_delay_id();
         this.suggestions_box.open();
         text = text.trim();
 
-        this._delay_suggestions_id = Mainloop.timeout_add(
-            SUGGESTIONS_DELAY,
+        this._suggestions_delay_id = Mainloop.timeout_add(
+            this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
             Lang.bind(this, function() {
                 this._get_suggestions(text, function(suggestions) {
-                    this.suggestions_box.removeAll();
+                    this.suggestions_box.remove_all_by_types('ALL');
 
                     if(!suggestions) {
                         this.suggestions_box.close();
@@ -1011,14 +736,7 @@ const WebSearchDialog = new Lang.Class({
         });
 
         if(history_suggestions.length > 0) {
-            this.suggestions_box.addMenuItem(
-                new PopupMenu.PopupMenuItem('History:', {
-                    reactive: false,
-                    activate: false,
-                    hover: false,
-                    sensitive: false
-                })
-            );
+            this.suggestions_box.add_label('History:');
 
             for(let i = 0; i < history_suggestions.length; i++) {
                 this.suggestions_box.add_suggestion({

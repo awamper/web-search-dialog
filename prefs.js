@@ -13,6 +13,9 @@ const Utils = Me.imports.utils;
 
 const ENGINES_KEY = 'search-engines';
 const SUGGESTIONS_KEY = 'enable-suggestions';
+const SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
+const HELPER_KEY = 'enable-duckduckgo-helper';
+const HELPER_DELAY_KEY = 'helper-delay';
 const OPEN_URL_KEY = 'open-url-keyword';
 const OPEN_URL_LABEL = 'open-url-label';
 const HISTORY_KEY = 'search-history';
@@ -477,6 +480,36 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             SUGGESTIONS_KEY
         );
 
+        // suggestions delay
+        let suggestions_delay_adjustment = {
+            lower: 100,
+            upper: 1000,
+            step_increment: 10
+        };
+        let suggestions_delay = settings_grid.add_spin(
+            'Suggestions delay(ms):',
+            SUGGESTIONS_DELAY_KEY,
+            suggestions_delay_adjustment
+        );
+
+        // helper
+        let enable_helper = settings_grid.add_boolean(
+            'Duckduckgo.com helper:',
+            HELPER_KEY
+        );
+
+        // helper delay
+        let helper_delay_adjustment = {
+            lower: 250,
+            upper: 2000,
+            step_increment: 10
+        };
+        let helper_delay = settings_grid.add_spin(
+            'Helper delay(ms):',
+            HELPER_DELAY_KEY,
+            helper_delay_adjustment
+        );
+
         // history suggestions
         let enable_history_suggestions = settings_grid.add_boolean(
             'History suggestions:',
@@ -484,7 +517,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         );
 
         // history limit
-        let adjustment = {
+        let history_limit_adjustment = {
             lower: 10,
             upper: 1000,
             step_increment: 5
@@ -492,7 +525,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         let history_limit = settings_grid.add_spin(
             'History limit:',
             HISTORY_LIMIT_KEY,
-            adjustment
+            history_limit_adjustment
         );
 
         // open url keyword

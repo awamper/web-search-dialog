@@ -1,6 +1,6 @@
 .search-dialog {
     border-radius: 5px;
-    background-color: rgba(0.0, 0.0, 0.0, 0.7);
+    background-color: rgba(0.0, 0.0, 0.0, 0.8);
 
     padding-right: 5px;
     padding-left: 5px;
@@ -41,4 +41,23 @@
 .menu-item-icon {
     icon-size: 15px;
     color: #8d8f8a;
+}
+
+.helper-box {
+    border: 1px solid rgba(245,245,245,0.2);
+}
+
+.helper-text {
+    padding-top: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-bottom: 5px;
+    font-size: 15px;
+}
+
+.helper-icon-box {
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }

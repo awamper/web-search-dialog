@@ -4,7 +4,7 @@
   <schema path="/org/gnome/shell/extensions/web-search-dialog/" id="org.gnome.shell.extensions.web-search-dialog">
 
     <key type="as" name="open-web-search-dialog">
-      <default><![CDATA[['<Alt>F1']]]></default>
+      <default><![CDATA[['<Super>space']]]></default>
       <summary>Open web search.</summary>
     </key>
 
@@ -28,6 +28,18 @@
     <key type="b" name="enable-suggestions">
         <default>true</default>
         <summary>Enable suggetsions</summary>
+    </key>
+
+    <key type="i" name="suggestions-delay">
+        <default>150</default>
+    </key>
+
+    <key type="b" name="enable-duckduckgo-helper">
+        <default>true</default>
+    </key>
+
+    <key type="i" name="helper-delay">
+        <default>500</default>
     </key>
 
     <key type="b" name="enable-history-suggestions">

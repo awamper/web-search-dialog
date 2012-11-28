@@ -13,30 +13,22 @@ const Lang = imports.lang;
 const Params = imports.misc.params;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
+const Soup = imports.gi.Soup;
 
+const _httpSession = new Soup.SessionAsync();
+Soup.Session.prototype.add_feature.call(
+    _httpSession,
+    new Soup.ProxyResolverDefault()
+);
+_httpSession.user_agent = 'Gnome-Shell WebSearchDialog Extension';
 
-/**
- * initTranslations:
- * @domain: (optional): the gettext domain to use
- *
- * Initialize Gettext to load translations from extensionsdir/locale.
- * If @domain is not provided, it will be taken from metadata['gettext-domain']
- */
-function initTranslations(domain) {
-    let extension = ExtensionUtils.getCurrentExtension();
+const ICONS = {
+    information: 'dialog-information-symbolic',
+    error: 'dialog-error-symbolic',
+    find: 'edit-find-symbolic',
+    web: 'web-browser-symbolic'
+};
 
-    domain = domain || extension.metadata['gettext-domain'];
-
-    // check if this extension was built with "make zip-file", and thus
-    // has the locale files in a subfolder
-    // otherwise assume that extension has been installed in the
-    // same prefix as gnome-shell
-    let localeDir = extension.dir.get_child('locale');
-    if (localeDir.query_exists(null))
-        Gettext.bindtextdomain(domain, localeDir.get_path());
-    else
-        Gettext.bindtextdomain(domain, Config.LOCALEDIR);
-}
 
 /**
  * getSettings:
@@ -289,3 +281,17 @@ function string_score(string, abbreviation, fuzziness) {
   
   return final_score;
 };
+
+function wordwrap(str, width, brk, cut) {
+ 
+    brk = brk || '\n';
+    width = width || 75;
+    cut = cut || false;
+ 
+    if (!str) { return str; }
+ 
+    var regex = '.{1,' +width+ '}(\\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)');
+ 
+    return str.match( RegExp(regex, 'g') ).join( brk );
+ 
+}

@@ -1,0 +1,205 @@
+const St = imports.gi.St;
+const Lang = imports.lang;
+const Main = imports.ui.main;
+const Clutter = imports.gi.Clutter;
+const PopupMenu = imports.ui.popupMenu;
+const Params = imports.misc.params;
+const Soup = imports.gi.Soup;
+
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Utils = Me.imports.utils;
+
+const ICONS = Utils.ICONS;
+
+const SuggestionMenuItem = new Lang.Class({
+    Name: 'SuggestionMenuItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function(text, type, relevance, term, params) {
+        this.parent(params);
+
+        this._text = text.trim();
+        this._type = type;
+        this._relevance = relevance;
+        this._term = term.trim();
+
+        let highlight_text = Utils.escape_html(this._text).replace(
+            new RegExp(
+                '(.*?)('+Utils.escape_html(this._term)+')(.*?)',
+                "i"
+            ),
+            "$1<b>$2</b>$3"
+        );
+
+        let label = new St.Label({
+            text: highlight_text
+        });
+        label.clutter_text.use_markup = true;
+
+        let icon = new St.Icon({
+                style_class: 'menu-item-icon'
+        });
+
+        if(this._type == 'NAVIGATION') {
+            icon.icon_name = ICONS.web;
+        }
+        else {
+            icon.icon_name = ICONS.find;
+        }
+
+        this._box = new St.BoxLayout();
+        this._box.add(icon);
+        this._box.add(label);
+
+        this.addActor(this._box);
+        this.actor.label_actor = label;
+    },
+
+    _onKeyPressEvent: function(actor, event) {
+        let symbol = event.get_key_symbol();
+
+        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+            this.activate(event);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+});
+
+const SuggestionsBox = new Lang.Class({
+    Name: 'SuggestionsBox',
+    Extends: PopupMenu.PopupMenu,
+
+    _init: function(search_dialog) {
+        this._search_dialog = search_dialog;
+        this._entry = this._search_dialog.search_entry;
+
+        this.parent(this._entry, 0, St.Side.TOP);
+
+        Main.uiGroup.add_actor(this.actor);
+        this.actor.hide();
+    },
+
+    _onKeyPressEvent: function(actor, event) {
+        let symbol = event.get_key_symbol();
+
+        if(symbol == Clutter.Escape) {
+            this.close(true);
+            return true;
+        }
+        else if(symbol == Clutter.BackSpace) {
+            this._entry.grab_key_focus();
+            this._search_dialog.show_suggestions = false;
+            this._entry.set_text(this._entry.get_text().slice(0, -1));
+            return true;
+        }
+        else if(symbol == Clutter.KP_Space || symbol == Clutter.KEY_space) {
+            this._entry.grab_key_focus();
+            this._search_dialog.show_suggestions = false;
+            this._entry.set_text(this._entry.get_text() + ' ');
+            return true;
+        }
+        else {
+            return false;
+        }
+    },
+
+    _on_activated: function(menu_item) {
+        this._search_dialog._remove_delay_id();
+        this._search_dialog.suggestions_box.close(true);
+
+        if(menu_item._type == "ENGINE") {
+            let engine_keyword = menu_item._term.trim();
+            this._search_dialog._set_engine(engine_keyword);
+        }
+        else {
+            let text = menu_item._text.trim();
+
+            if(menu_item._type == 'NAVIGATION') {
+                this._search_dialog._open_url(text, true);
+            }
+            else {
+                this._search_dialog._activate_search(text);
+            }
+        }
+
+        return true;
+    },
+
+    _on_active_changed: function(menu_item) {
+        if(menu_item._type != 'ENGINE') {
+            this._search_dialog.show_suggestions = false;
+            this._entry.set_text(menu_item._text);
+        }
+
+        return true;
+    },
+
+    add_suggestion: function(params) {
+        params = Params.parse(params, {
+            text: false,
+            type: 'QUERY',
+            relevance: 0,
+            term: ''
+        });
+
+        if(!params.text) {
+            return false;
+        }
+
+        let item = new SuggestionMenuItem(
+            params.text,
+            params.type,
+            params.relevance,
+            params.term
+        );
+        item.connect(
+            'activate',
+            Lang.bind(this, this._on_activated)
+        );
+        item.connect(
+            'active-changed',
+            Lang.bind(this, this._on_active_changed)
+        );
+        this.addMenuItem(item)
+
+        return true;
+    },
+
+    add_label: function(text) {
+        let item = new PopupMenu.PopupMenuItem(text, {
+            reactive: false,
+            activate: false,
+            hover: false,
+            sensitive: false
+        });
+        item._type = 'LABEL';
+        this.addMenuItem(item);
+    },
+
+    remove_all_by_types: function(types_array) {
+        let children = this._getMenuItems();
+
+        for(let i = 0; i < children.length; i++) {
+            let item = children[i];
+            
+            if(types_array === 'ALL') {
+                item.destroy();
+            }
+            else if(types_array.indexOf(item._type) > -1) {
+                item.destroy();
+            }
+            else {
+                continue;
+            }
+        }
+    },
+
+    close: function() {
+        this._search_dialog._remove_delay_id();
+        this._entry.grab_key_focus();
+        this.parent();
+    }
+});
