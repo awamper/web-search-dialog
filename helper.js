@@ -23,8 +23,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
             reactive: false,
             activate: false,
             hover: false,
-            sensitive: false,
-            can_focus: false
+            sensitive: false
         });
         this._type = 'HELPER';
 
