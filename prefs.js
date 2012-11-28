@@ -16,6 +16,7 @@ const SUGGESTIONS_KEY = 'enable-suggestions';
 const SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
 const HELPER_KEY = 'enable-duckduckgo-helper';
 const HELPER_DELAY_KEY = 'helper-delay';
+const HELPER_POSITION_KEY = 'helper-position';
 const OPEN_URL_KEY = 'open-url-keyword';
 const OPEN_URL_LABEL = 'open-url-label';
 const HISTORY_KEY = 'search-history';
@@ -508,6 +509,12 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             'Helper delay(ms):',
             HELPER_DELAY_KEY,
             helper_delay_adjustment
+        );
+
+        // helper position
+        let helper_position = settings_grid.add_entry(
+            'Helper position(top or bottom):',
+            HELPER_POSITION_KEY
         );
 
         // history suggestions

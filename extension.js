@@ -647,7 +647,20 @@ const WebSearchDialog = new Lang.Class({
                                 abstract,
                                 image
                             );
-                        this.suggestions_box.addMenuItem(menu_item, 0);
+
+                        let position = 0;
+                        let set_position = this._settings.get_string(
+                            Prefs.HELPER_POSITION_KEY
+                        );
+
+                        if(set_position === 'bottom') {
+                            position = this.suggestions_box.numMenuItems;
+
+                            if(position > 0) {
+                                position += 1;
+                            }
+                        }
+                        this.suggestions_box.addMenuItem(menu_item, position);
                         this.suggestions_box.open();
                     })
                 );

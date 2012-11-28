@@ -42,6 +42,10 @@
         <default>500</default>
     </key>
 
+    <key type="s" name="helper-position">
+      <default>"bottom"</default>
+    </key>
+
     <key type="b" name="enable-history-suggestions">
       <default>true</default>
       <summary>Enable history suggestions.</summary>
