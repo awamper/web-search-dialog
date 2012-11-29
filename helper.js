@@ -43,15 +43,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
             name: 'helper_table',
             style_class: 'helper-box'
         });
-
-        let text = '';
-        if(data.definition) {text += '<i>'+data.definition.trim()+'</i>\n';}
-        if(data.abstract) {text += data.abstract.trim();}
-        let label = this._get_label(text, 'helper-abstract');
-        table.add(label, {
-            row: 0,
-            col: 0
-        });
+        let max_length = 80;
 
         if(icon) {
             table.add(icon, {
@@ -61,6 +53,18 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
                 y_fill: false
             });
         }
+        else {
+            max_length = 110;
+        }
+
+        let text = '';
+        if(data.definition) {text += '<i>'+data.definition.trim()+'</i>\n';}
+        if(data.abstract) {text += data.abstract.trim();}
+        let label = this._get_label(text, 'helper-abstract', max_length);
+        table.add(label, {
+            row: 0,
+            col: 0
+        });
 
         this.addActor(table);
 
@@ -106,12 +110,12 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         return this.icon_box;
     },
 
-    _get_label: function(text, class_name) {
+    _get_label: function(text, class_name, max_length) {
         if(Utils.is_blank(text)) {
             return false;
         }
 
-        text = Utils.wordwrap(text.trim(), 70);
+        text = Utils.wordwrap(text.trim(), max_length);
 
         let label = new St.Label({
             text: text,
