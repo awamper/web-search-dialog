@@ -302,8 +302,6 @@ const WebSearchDialog = new Lang.Class({
         }
 
         if(this.show_suggestions) {
-            this._display_helper(text);
-
             if(this.search_engine.open_url) {
                 if(!Utils.is_matches_protocol(text)) {
                     text = 'http://'+text;
@@ -318,6 +316,7 @@ const WebSearchDialog = new Lang.Class({
                 }
             }
             else {
+                this._display_helper(text);
                 this._display_suggestions(text);
             }
         }
@@ -439,6 +438,7 @@ const WebSearchDialog = new Lang.Class({
             }
 
             hint_text += '\nPress "Tab" to switch search engine.';
+            this.show_suggestions = false;
             this.search_entry.set_text('');
             this._show_engine_label(this.search_engine.name+':');
 
