@@ -152,13 +152,13 @@ const DuckDuckGoHelper = new Lang.Class({
         let result = {
             heading: Utils.is_blank(response.Heading)
                 ? false
-                : response.Heading.trim(),
+                : response.Heading.trim().replace(/<[^>]+>/g, ""),
             abstract: Utils.is_blank(response.Abstract)
                 ? false
-                : response.Abstract.trim(),
+                : response.AbstractText.trim().replace(/<[^>]+>/g, ""),
             definition: Utils.is_blank(response.Definition)
                 ? false
-                : response.Definition.trim(),
+                : response.Definition.trim().replace(/<[^>]+>/g, ""),
             image: Utils.is_blank(response.Image)
                 ? false
                 : response.Image.trim()
