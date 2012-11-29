@@ -21,6 +21,7 @@ Soup.Session.prototype.add_feature.call(
     new Soup.ProxyResolverDefault()
 );
 _httpSession.user_agent = 'Gnome-Shell WebSearchDialog Extension';
+_httpSession.timeout = 1;
 
 const ICONS = {
     information: 'dialog-information-symbolic',
