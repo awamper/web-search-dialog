@@ -638,15 +638,16 @@ const WebSearchDialog = new Lang.Class({
             Lang.bind(this, function() {
                 this.duckduckgo_helper.get_info(text,
                     Lang.bind(this, function(result) {
-                        let abstract = result.abstract;
                         let image = {
                             url: result.image
                         };
                         let menu_item = 
-                            this.duckduckgo_helper.get_menu_item(
-                                abstract,
-                                image
-                            );
+                            this.duckduckgo_helper.get_menu_item({
+                                heading: result.heading,
+                                definition: result.definition,
+                                abstract: result.abstract,
+                                icon: image
+                            });
 
                         let position = 0;
                         let set_position = this._settings.get_string(

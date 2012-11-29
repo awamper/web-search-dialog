@@ -28,19 +28,29 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         this._type = 'HELPER';
 
         data = Params.parse(data, {
-            text: '',
+            heading: '',
+            definition: '',
+            abstract: '',
             icon: ''
         });
 
-        if(Utils.is_blank(data.text)) {
+        if(Utils.is_blank(data.abstract) && Utils.is_blank(data.definition)) {
             return false;
         }
 
-        let label = this._get_label(data.text);
         let icon = this._get_icon(data.icon);
         let table = new St.Table({
             name: 'helper_table',
             style_class: 'helper-box'
+        });
+
+        let text = '';
+        if(data.definition) {text += '<i>'+data.definition.trim()+'</i>\n';}
+        if(data.abstract) {text += data.abstract.trim();}
+        let label = this._get_label(text, 'helper-abstract');
+        table.add(label, {
+            row: 0,
+            col: 0
         });
 
         if(icon) {
@@ -51,11 +61,6 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
                 y_fill: false
             });
         }
-
-        table.add(label, {
-            row: 0,
-            col: 0
-        });
 
         this.addActor(table);
 
@@ -101,7 +106,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         return this.icon_box;
     },
 
-    _get_label: function(text) {
+    _get_label: function(text, class_name) {
         if(Utils.is_blank(text)) {
             return false;
         }
@@ -110,7 +115,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
 
         let label = new St.Label({
             text: text,
-            style_class: 'helper-text'
+            style_class: class_name
         });
         label.clutter_text.use_markup = true;
         label.clutter_text.line_wrap = true;
@@ -145,12 +150,18 @@ const DuckDuckGoHelper = new Lang.Class({
         response = JSON.parse(response);
 
         let result = {
+            heading: Utils.is_blank(response.Heading)
+                ? false
+                : response.Heading.trim(),
             abstract: Utils.is_blank(response.Abstract)
                 ? false
-                : response.Abstract,
+                : response.Abstract.trim(),
+            definition: Utils.is_blank(response.Definition)
+                ? false
+                : response.Definition.trim(),
             image: Utils.is_blank(response.Image)
                 ? false
-                : response.Image
+                : response.Image.trim()
         };
 
         return result;
@@ -176,11 +187,14 @@ const DuckDuckGoHelper = new Lang.Class({
         return true;
     },
 
-    get_menu_item: function(text, icon_info) {
-        let menu_item = new DuckDuckGoHelperMenuItem({
-            text: text,
-            icon: icon_info
+    get_menu_item: function(data) {
+        data = Params.parse(data, {
+            heading: '',
+            definition: '',
+            abstract: '',
+            icon: false
         });
+        let menu_item = new DuckDuckGoHelperMenuItem(data);
 
         return menu_item;
     }
