@@ -198,8 +198,14 @@ const DuckDuckGoHelper = new Lang.Class({
             abstract: '',
             icon: false
         });
-        let menu_item = new DuckDuckGoHelperMenuItem(data);
 
-        return menu_item;
+        if(Utils.is_blank(data.abstract) && Utils.is_blank(data.definition)) {
+            return false;
+        }
+        else {
+            let menu_item = new DuckDuckGoHelperMenuItem(data);
+
+            return menu_item;
+        }
     }
 });
