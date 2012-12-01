@@ -32,7 +32,7 @@ const WebSearchDialog = new Lang.Class({
         this._dialogLayout = 
             typeof this.dialogLayout === "undefined"
             ? this._dialogLayout
-            : this.dialogLayout
+            : this.dialogLayout;
 
         this._dialogLayout.set_style_class_name('');
         this._dialogLayout.set_margin_bottom(300);
@@ -744,8 +744,15 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
+        let types = ['QUERY', 'NAVIGATION'];
+
+        if(this.search_engine.open_url) {
+            types = ['NAVIGATION'];
+        }
+
         let history_suggestions = this.search_history.get_best_matches({
             text: text,
+            types: types,
             min_score: 0.35,
             limit: 3,
             fuzziness: 0.5
@@ -756,8 +763,8 @@ const WebSearchDialog = new Lang.Class({
 
             for(let i = 0; i < history_suggestions.length; i++) {
                 this.suggestions_box.add_suggestion({
-                    text: history_suggestions[i][1],
-                    type: 'QUERY',
+                    text: history_suggestions[i][1].query,
+                    type: history_suggestions[i][1].type,
                     relevance: history_suggestions[i][0],
                     term: text
                 });
@@ -817,7 +824,10 @@ const WebSearchDialog = new Lang.Class({
             return false;
         }
 
-        this.search_history.add_item(text);
+        this.search_history.add_item({
+            query: text,
+            type: "QUERY"
+        });
 
         text = encodeURIComponent(text);
         let url = this.search_engine.url.replace('{term}', text);
@@ -842,7 +852,10 @@ const WebSearchDialog = new Lang.Class({
         }
 
         if(to_history === true) {
-            this.search_history.add_item(url);
+            this.search_history.add_item({
+                query: url,
+                type: "NAVIGATION"
+            });
         } 
 
         this.activate_window = true;

@@ -20,7 +20,7 @@ const SearchHistoryManager = new Lang.Class({
         this._limit = params.limit;
 
         if(this._key) {
-            this._history = this._settings.get_strv(this._key);
+            this._history = JSON.parse(this._settings.get_string(this._key));
             this._settings.connect(
                 'changed::'+this._key,
                 Lang.bind(this, this._history_changed)
@@ -34,7 +34,7 @@ const SearchHistoryManager = new Lang.Class({
     },
 
     _history_changed: function() {
-        this._history = this._settings.get_strv(this._key);
+        this._history = JSON.parse(this._settings.get_string(this._key));
         this._history_index = this._history.length;
     },
 
@@ -85,7 +85,8 @@ const SearchHistoryManager = new Lang.Class({
 
     add_item: function(input) {
         if(this._history.length == 0 ||
-            this._history[this._history.length - 1] != input) {
+            this._history[this._history.length - 1].query != input.query ||
+            this._history[this._history.length - 1].type != input.type) {
 
             this._history.push(input);
             this._save();
@@ -96,6 +97,7 @@ const SearchHistoryManager = new Lang.Class({
     get_best_matches: function(params) {
         params = Params.parse(params, {
             text: false,
+            types: ['QUERY', 'NAVIGATION'],
             min_score: 0.5,
             limit: 5,
             fuzziness: 0.5
@@ -107,19 +109,20 @@ const SearchHistoryManager = new Lang.Class({
 
         let result = [];
         let history = this._history;
-        let unique_history = history.filter(function(elem, pos) {
-            return history.indexOf(elem) == pos;
-        })
 
-        for(let i = 0; i < unique_history.length; i++) {
+        for(let i = 0; i < history.length; i++) {
+            if(params.types.indexOf(history[i].type) == -1) {
+                continue;
+            }
+
             let score = Utils.string_score(
-                unique_history[i],
+                history[i].query,
                 params.text,
                 params.fuzziness
             );
 
             if(score >= params.min_score) {
-                result.push([score, unique_history[i]]);
+                result.push([score, history[i]]);
             }
         }
 
@@ -140,7 +143,7 @@ const SearchHistoryManager = new Lang.Class({
         }
 
         if(this._key) {
-            this._settings.set_strv(this._key, this._history);
+            this._settings.set_string(this._key, JSON.stringify(this._history));
         }
     }
 });

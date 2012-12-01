@@ -8,8 +8,8 @@
       <summary>Open web search.</summary>
     </key>
 
-    <key type="as" name="search-history">
-      <default>[]</default>
+    <key type="s" name="search-history-data">
+      <default>"[]"</default>
     </key>
 
     <key type="as" name="search-engines">
