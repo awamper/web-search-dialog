@@ -160,7 +160,9 @@ const DuckDuckGoHelper = new Lang.Class({
             abstract: Utils.is_blank(response.Abstract)
                 ? false
                 : response.AbstractText.trim().replace(/<[^>]+>/g, ""),
-            definition: Utils.is_blank(response.Definition)
+            definition: 
+                Utils.is_blank(response.Definition) ||
+                response.Definition == response.Abstract
                 ? false
                 : response.Definition.trim().replace(/<[^>]+>/g, ""),
             image: Utils.is_blank(response.Image)
