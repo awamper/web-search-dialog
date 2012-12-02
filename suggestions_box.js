@@ -15,13 +15,14 @@ const SuggestionMenuItem = new Lang.Class({
     Name: 'SuggestionMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
-    _init: function(text, type, relevance, term, params) {
+    _init: function(text, type, relevance, term, item_id, params) {
         this.parent(params);
 
         this._text = text.trim();
         this._type = type;
         this._relevance = relevance;
         this._term = term.trim();
+        this._item_id = item_id;
 
         let highlight_text = Utils.escape_html(this._text).replace(
             new RegExp(
@@ -30,6 +31,15 @@ const SuggestionMenuItem = new Lang.Class({
             ),
             "$1<b>$2</b>$3"
         );
+
+        let id_label = false;
+
+        if(this._item_id > 0 && this._item_id <= 9) {
+            id_label = new St.Label({
+                text: '^'+this._item_id.toString(),
+                style_class: 'item-id-label'
+            });
+        }
 
         let label = new St.Label({
             text: highlight_text
@@ -48,6 +58,11 @@ const SuggestionMenuItem = new Lang.Class({
         }
 
         this._box = new St.BoxLayout();
+
+        if(id_label) {
+            this._box.add(id_label);
+        }
+
         this._box.add(icon);
         this._box.add(label);
 
@@ -137,6 +152,38 @@ const SuggestionsBox = new Lang.Class({
         return true;
     },
 
+    _get_next_id: function() {
+        let items = this._getMenuItems();
+        let types = ['NAVIGATION', 'QUERY'];
+        let count = 1;
+
+        for(let i = 0; i < items.length; i++) {
+            if(types.indexOf(items[i]._type) != -1) {
+                count++;
+
+                if(count >= 9) {
+                    return false;
+                }
+            }
+        }
+
+        return count;
+    },
+
+    activate_by_id: function(item_id) {
+        if(item_id < 1 || item_id > 9) return;
+
+        let items = this._getMenuItems();
+
+        for(let i = 0; i < items.length; i++) {
+            if(items[i]._item_id === item_id) {
+                items[i].activate();
+                break;
+            }
+        }
+
+    },
+
     add_suggestion: function(params) {
         params = Params.parse(params, {
             text: false,
@@ -153,7 +200,8 @@ const SuggestionsBox = new Lang.Class({
             params.text,
             params.type,
             params.relevance,
-            params.term
+            params.term,
+            this._get_next_id()
         );
         item.connect(
             'activate',

@@ -79,3 +79,10 @@
     padding-top: 5px;
     padding-bottom: 5px;
 }
+
+.item-id-label {
+    padding-top: 2px;
+    padding-right: 2px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 1);
+}

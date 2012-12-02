@@ -154,6 +154,7 @@ const WebSearchDialog = new Lang.Class({
 
     _on_key_press: function(o, e) {
         let symbol = e.get_key_symbol();
+        let control_mask = (e.get_state() & Clutter.ModifierType.CONTROL_MASK);
 
         if(symbol == Clutter.Escape) {
             this.close();
@@ -269,6 +270,26 @@ const WebSearchDialog = new Lang.Class({
                     return true;
                 }
             }));
+        }
+        else if(control_mask) {
+            let numbers_map = [
+                Clutter.KEY_0,
+                Clutter.KEY_1,
+                Clutter.KEY_2,
+                Clutter.KEY_3,
+                Clutter.KEY_4,
+                Clutter.KEY_5,
+                Clutter.KEY_6,
+                Clutter.KEY_7,
+                Clutter.KEY_8,
+                Clutter.KEY_9,
+            ];
+            
+            let item_id = numbers_map.indexOf(symbol);
+
+            if(item_id != -1) {
+                this.suggestions_box.activate_by_id(item_id);
+            }
         }
         else {
             // nothing
