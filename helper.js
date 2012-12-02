@@ -1,6 +1,7 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const PopupMenu = imports.ui.popupMenu;
+const Panel = imports.ui.panel;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
@@ -13,6 +14,39 @@ const _httpSession = Utils._httpSession;
 const DUCKDUCKGO_API_URL = 
     "https://api.duckduckgo.com/?format=json&no_redirect=1"+
     "&skip_disambig=1&q=";
+
+const HelperSpinnerMenuItem = Lang.Class({
+    Name: 'HelperSpinnerMenuItem',
+    Extends: PopupMenu.PopupBaseMenuItem,
+
+    _init: function(text) {
+        this.parent({
+            reactive: false,
+            activate: false,
+            hover: false,
+            sensitive: false
+        });
+        this._type = 'HELPER';
+
+        let spinner = new Panel.AnimatedIcon(
+            'process-working.svg',
+            24
+        );
+        spinner.actor.show();
+
+        let label = new St.Label({
+            text: Utils.is_blank(text) ? 'Checking helper...' : text
+        });
+
+        let box = new St.BoxLayout({
+            style_class: 'helper-title'
+        });
+        box.add(spinner.actor);
+        box.add(label);
+
+        this.addActor(box);
+    }
+});
 
 const DuckDuckGoHelperMenuItem = new Lang.Class({
     Name: 'DuckDuckGoHelperMenuItem',

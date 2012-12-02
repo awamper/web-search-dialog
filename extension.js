@@ -657,8 +657,12 @@ const WebSearchDialog = new Lang.Class({
         this._helper_delay_id = Mainloop.timeout_add(
             this._settings.get_int(Prefs.HELPER_DELAY_KEY),
             Lang.bind(this, function() {
+                this.suggestions_box.addMenuItem(
+                    new Helper.HelperSpinnerMenuItem()
+                );
                 this.duckduckgo_helper.get_info(text,
                     Lang.bind(this, function(result) {
+                        this.suggestions_box.remove_all_by_types(['HELPER']);
                         let image = {
                             url: result.image
                         };
@@ -746,11 +750,11 @@ const WebSearchDialog = new Lang.Class({
                         });
                     }
 
+                    this._display_history_suggestions(text);
+
                     if(this.suggestions_box.isEmpty()) {
                         this.suggestions_box.close();
                     }
-
-                    this._display_history_suggestions(text);
 
                     return true;
                 });

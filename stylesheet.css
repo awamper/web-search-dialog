@@ -47,13 +47,15 @@
     border: 1px solid rgba(245,245,245,0.2);
 }
 
-.helper-heading {
+.helper-title {
     font-style: bold;
-    padding-top: 5px;
-    padding-right: 5px;
-    padding-left: 5px;
-    padding-bottom: 5px;
-    font-size: 18px;
+    padding-top: 1px;
+    padding-right: 3px;
+    padding-left: 3px;
+    padding-bottom: 2px;
+    font-size: 17px;
+    color: black;
+    background-color: rgba(245,245,245,0.2);
 }
 
 .helper-abstract {
