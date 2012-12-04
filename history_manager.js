@@ -40,11 +40,7 @@ const SearchHistoryManager = new Lang.Class({
 
     prev_item: function(text) {
         if(this._history_index <= 0) {
-            return text;
-        }
-
-        if(text) {
-            this._history[this._history_index] = text;
+            return {query: text};
         }
 
         this._history_index--;
@@ -54,11 +50,7 @@ const SearchHistoryManager = new Lang.Class({
 
     next_item: function(text) {
         if(this._history_index >= this._history.length) {
-            return text;
-        }
-
-        if(text) {
-            this._history[this._history_index] = text;
+            return {query: text};
         }
 
         this._history_index++;
@@ -131,8 +123,14 @@ const SearchHistoryManager = new Lang.Class({
         return result.slice(0, params.limit);
     },
 
+    reset_index: function() {
+        this._history_index = this._history.length;
+    },
+
     _index_changed: function() {
-        let current = this._history[this._history_index] || '';
+        let current = this._history[this._history_index] || {
+            query: ''
+        };
 
         return current;
     },

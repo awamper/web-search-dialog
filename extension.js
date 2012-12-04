@@ -179,7 +179,7 @@ const WebSearchDialog = new Lang.Class({
                 this.show_suggestions = false;
                 let text = this.search_entry.get_text();
                 let item = this.search_history.next_item(text);
-                this.search_entry.set_text(item);
+                this.search_entry.set_text(item.query);
 
                 // let hint_text = 'History.\nCurrent item '+
                 //     this.search_history.current_index()+' of '+
@@ -195,7 +195,7 @@ const WebSearchDialog = new Lang.Class({
                 this.show_suggestions = false;
                 let text = this.search_entry.get_text();
                 let item = this.search_history.prev_item(text);
-                this.search_entry.set_text(item);
+                this.search_entry.set_text(item.query);
 
                 // let hint_text = 'History.\nCurrent item '+
                 //     this.search_history.current_index()+' of '+
@@ -909,6 +909,7 @@ const WebSearchDialog = new Lang.Class({
         this.search_entry.set_text('');
         this.search_engine = false;
         this.suggestions_box.close();
+        this.search_history.reset_index();
 
         this.parent();
     },
