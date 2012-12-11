@@ -110,11 +110,31 @@ const SuggestionsBox = new Lang.Class({
             this._entry.set_text(this._entry.get_text().slice(0, -1));
             return true;
         }
-        else if(symbol == Clutter.KP_Space || symbol == Clutter.KEY_space) {
-            this._entry.grab_key_focus();
-            this._search_dialog.show_suggestions = false;
-            this._entry.set_text(this._entry.get_text() + ' ');
-            return true;
+        else {
+            let skip_keys = (
+                symbol == Clutter.Up ||
+                symbol == Clutter.Down ||
+                symbol == Clutter.Tab
+            );
+
+            if(!skip_keys) {
+                let ch = this._get_unichar(symbol);
+                this._entry.grab_key_focus();
+
+                if(ch) {
+                    this._entry.set_text(this._entry.get_text() + ch);
+                }
+
+                return true;
+            }
+        }
+    },
+
+    _get_unichar: function(keyval) {
+        let ch = Clutter.keysym_to_unicode(keyval);
+
+        if(ch) {
+            return String.fromCharCode(ch);
         }
         else {
             return false;
