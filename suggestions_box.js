@@ -154,7 +154,7 @@ const SuggestionsBox = new Lang.Class({
 
     _get_next_id: function() {
         let items = this._getMenuItems();
-        let types = ['NAVIGATION', 'QUERY'];
+        let types = ['NAVIGATION', 'QUERY', 'ENGINE'];
         let count = 1;
 
         for(let i = 0; i < items.length; i++) {
