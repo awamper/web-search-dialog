@@ -102,13 +102,11 @@ const SuggestionsBox = new Lang.Class({
 
         if(symbol == Clutter.Escape) {
             this.close(true);
-            return true;
         }
         else if(symbol == Clutter.BackSpace) {
             this._entry.grab_key_focus();
             this._search_dialog.show_suggestions = false;
             this._entry.set_text(this._entry.get_text().slice(0, -1));
-            return true;
         }
         else {
             let skip_keys = (
@@ -124,8 +122,6 @@ const SuggestionsBox = new Lang.Class({
                 if(ch) {
                     this._entry.set_text(this._entry.get_text() + ch);
                 }
-
-                return true;
             }
         }
     },
