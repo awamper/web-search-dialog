@@ -782,6 +782,10 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _activate_first_suggestion: function(text) {
+        if(!this._settings.get_boolean(Prefs.ACTIVATE_FIRST_SUGGESTION)) {
+            return false;
+        }
+
         let item = this.suggestions_box.firstMenuItem;
 
         if(text.slice(-1) != ' ') {

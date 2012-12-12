@@ -24,6 +24,7 @@ const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
 const HISTORY_LIMIT_KEY = 'history-limit';
 const DEFAULT_ENGINE_KEY = 'default-search-engine';
 const OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
+const ACTIVATE_FIRST_SUGGESTION = 'activate-first-suggestion';
 
 const WebSearchDialogPrefsGrid = new GObject.Class({
     Name: 'WebSearchDialog.Prefs.Grid',
@@ -479,6 +480,12 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         let enable_suggestions = settings_grid.add_boolean(
             'Suggestions:',
             SUGGESTIONS_KEY
+        );
+
+        // activate first suggestion
+        let activate_first_suggestion = settings_grid.add_boolean(
+            'Always activate first suggestion:',
+            ACTIVATE_FIRST_SUGGESTION
         );
 
         // suggestions delay
