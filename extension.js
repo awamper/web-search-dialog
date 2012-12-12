@@ -789,7 +789,10 @@ const WebSearchDialog = new Lang.Class({
         let item = this.suggestions_box.firstMenuItem;
 
         if(text.slice(-1) != ' ') {
-            if(item._text.slice(0, text.length) != text) {
+            let suggestion_t = item._text.slice(0, text.length).toUpperCase();
+            let source_t = text.toUpperCase();
+
+            if(suggestion_t != source_t) {
                 return false;
             }
 
