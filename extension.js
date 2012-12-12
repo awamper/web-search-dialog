@@ -43,6 +43,7 @@ const WebSearchDialog = new Lang.Class({
         this._suggestions_delay_id = 0;
         this._helper_delay_id = 0;
         this.show_suggestions = true;
+        this.activate_first_suggestion = true;
         this.search_engine = false;
 
         this._create_search_dialog();
@@ -111,22 +112,15 @@ const WebSearchDialog = new Lang.Class({
         );
         this.search_entry.get_clutter_text().connect(
             'activate',
-            Lang.bind(this, function(text) {
-                text = text.get_text();
-
-                if(!Utils.is_blank(text)) {
-                    if(this.search_engine.open_url) {
-                        this._open_url(text, true);
-                    }
-                    else {
-                        this._activate_search(text);
-                    }
-                }
-            })
+            Lang.bind(this, this._on_text_activate)
         );
         this.search_entry.get_clutter_text().connect(
             'text-changed', 
             Lang.bind(this, this._on_search_text_changed)
+        );
+        this.search_entry.get_clutter_text().connect(
+            'key-press-event',
+            Lang.bind(this, this._on_text_key_press)
         );
 
         this.duckduckgo_helper = new Helper.DuckDuckGoHelper();
@@ -296,6 +290,36 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
+    },
+
+    _on_text_activate: function(text) {
+        text = text.get_text();
+
+        if(!Utils.is_blank(text)) {
+            if(this.search_engine.open_url) {
+                this._open_url(text, true);
+            }
+            else {
+                this._activate_search(text);
+            }
+        }
+    },
+
+    _on_text_key_press: function(o, e) {
+        let symbol = e.get_key_symbol();
+
+        if(symbol == Clutter.BackSpace) {
+            this.activate_first_suggestion = false;
+        }
+        else if(symbol == Clutter.Right) {
+            let sel = this.search_entry.clutter_text.get_selection_bound();
+
+            if(sel === -1) {
+                this.search_entry.clutter_text.set_cursor_position(
+                    this.search_entry.text.length
+                );
+            }
+        }
     },
 
     _on_search_text_changed: function() {
@@ -713,7 +737,7 @@ const WebSearchDialog = new Lang.Class({
         }
 
         this.suggestions_box.open();
-        text = text.trim();
+        // text = text.trim();
 
         this._suggestions_delay_id = Mainloop.timeout_add(
             this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
@@ -755,11 +779,41 @@ const WebSearchDialog = new Lang.Class({
                     if(this.suggestions_box.isEmpty()) {
                         this.suggestions_box.close();
                     }
+                    else {
+                        if(this.activate_first_suggestion) {
+                            this._activate_first_suggestion(text);
+                        }
+                        else {
+                            this.activate_first_suggestion = true;
+                        }
+                    }
 
                     return true;
                 });
             })
         );
+
+        return true;
+    },
+
+    _activate_first_suggestion: function(text) {
+        let item = this.suggestions_box.firstMenuItem;
+
+        if(text.slice(-1) != ' ') {
+            if(item._text.slice(0, text.length) != text) {
+                return false;
+            }
+
+            this.show_suggestions = false;
+            this.search_entry.set_text(item._text);
+            this.search_entry.clutter_text.set_selection(
+                text.length,
+                item._text.length
+            );
+            item.actor.add_style_pseudo_class('active');
+
+            this._display_helper(text);
+        }
 
         return true;
     },
