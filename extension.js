@@ -149,6 +149,7 @@ const WebSearchDialog = new Lang.Class({
     _on_key_press: function(o, e) {
         let symbol = e.get_key_symbol();
         let control_mask = (e.get_state() & Clutter.ModifierType.CONTROL_MASK);
+        let shift_mask = (e.get_state() & Clutter.ModifierType.SHIFT_MASK);
 
         if(symbol == Clutter.Escape) {
             this.close();
@@ -201,7 +202,7 @@ const WebSearchDialog = new Lang.Class({
             }
         }
         // Ctrl+V
-        else if(symbol == 118) {
+        else if(control_mask && symbol == 118) {
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
                 if (Utils.is_blank(text)) {
                     return false;
@@ -216,13 +217,13 @@ const WebSearchDialog = new Lang.Class({
             }));
         }
         // Ctrl+C
-        else if(symbol == 99) {
+        else if(control_mask && symbol == 99) {
             let clutter_text = this.search_entry.get_clutter_text();
             let selection = clutter_text.get_selection();
             this._clipboard.set_text(selection);
         }
         // Ctrl+Shift+V - paste and search
-        else if(symbol == 86) {
+        else if(control_mask && shift_mask && symbol == 86) {
             if(!this.search_engine) {
                 this._set_engine();
             }
@@ -244,7 +245,7 @@ const WebSearchDialog = new Lang.Class({
             }));
         }
         // Ctrl+Shift+G - paste and go
-        else if(symbol == 71) {
+        else if(control_mask && shift_mask && symbol == 71) {
             if(!this.search_engine) {
                 this._set_engine();
             }
