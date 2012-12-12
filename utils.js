@@ -14,6 +14,7 @@ const Params = imports.misc.params;
 const Config = imports.misc.config;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Soup = imports.gi.Soup;
+const Clutter = imports.gi.Clutter;
 
 const _httpSession = new Soup.SessionAsync();
 Soup.Session.prototype.add_feature.call(
@@ -30,6 +31,19 @@ const ICONS = {
     web: 'web-browser-symbolic'
 };
 
+
+const KEYBOARD_NUMBERS = [
+    Clutter.KEY_0,
+    Clutter.KEY_1,
+    Clutter.KEY_2,
+    Clutter.KEY_3,
+    Clutter.KEY_4,
+    Clutter.KEY_5,
+    Clutter.KEY_6,
+    Clutter.KEY_7,
+    Clutter.KEY_8,
+    Clutter.KEY_9,
+];
 
 /**
  * getSettings:

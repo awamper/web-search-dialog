@@ -266,25 +266,9 @@ const WebSearchDialog = new Lang.Class({
                 }
             }));
         }
-        else if(control_mask) {
-            let numbers_map = [
-                Clutter.KEY_0,
-                Clutter.KEY_1,
-                Clutter.KEY_2,
-                Clutter.KEY_3,
-                Clutter.KEY_4,
-                Clutter.KEY_5,
-                Clutter.KEY_6,
-                Clutter.KEY_7,
-                Clutter.KEY_8,
-                Clutter.KEY_9,
-            ];
-            
-            let item_id = numbers_map.indexOf(symbol);
-
-            if(item_id != -1) {
-                this.suggestions_box.activate_by_id(item_id);
-            }
+        else if(control_mask && Utils.KEYBOARD_NUMBERS.indexOf(symbol) != -1) {
+            let item_id = Utils.KEYBOARD_NUMBERS.indexOf(symbol);
+            this.suggestions_box.activate_by_id(item_id);
         }
         else {
             // nothing
