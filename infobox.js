@@ -771,7 +771,7 @@ const InfoboxManager = new Lang.Class({
 
     show_suggestions: function(search_engine, term) {
         if(Utils.is_blank(term)) {
-            if(this._box.helpers.is_empty()) this.close();
+            this.close();
             return;
         }
 
@@ -838,12 +838,7 @@ const InfoboxManager = new Lang.Class({
 
     show_helpers: function(search_engine, term) {
         if(Utils.is_blank(term)) {
-            this._box.helpers.hide();
-
-            if(this._box.helpers.is_empty() && this._box.numMenuItems < 2) {
-                this.close();
-            }
-
+            this.close();
             return;
         }
 
