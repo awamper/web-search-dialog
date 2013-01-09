@@ -1,5 +1,5 @@
 {
-    "description": "Search the web directly from Gnome Shell.\n\n<Super>+space triggers the dialog. From there, type your search query, click the ENTER key and your default browser will open with your search result.\n\nList of features include:\n\n*Instant result/definition (DuckDuckGo helper) with pictures within the dialog\n*Search Suggestions\n*History with configurable limit\n*Choose your default search engine\n*Add multiple seach engines\n*Tab key to view & choose from search engine list\n*Ctrl+Shift+V to Paste & Search\n*Ctrl+Shift+G to Paste & Go (Open URL)\n*Ctrl+(1-9) to trigger search suggestion or history item in list\n*Add keyword for each search engine\n*Add keyword to go to URL directly",
+    "description": "Super+space to open search dialog.\nCtrl+Shift+V - paste&search\nCtrl+Shift+G - paste&go",
     "name": "Web Search Dialog",
     "shell-version": [
         "3.4",

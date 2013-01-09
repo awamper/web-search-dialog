@@ -1,4 +1,5 @@
-/** Credit:
+/*
+ * Credit:
  *  based off prefs.js from the gnome shell extensions repository at
  *  git.gnome.org/browse/gnome-shell-extensions
  */
@@ -8,23 +9,30 @@ const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Params = imports.misc.params;
+
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
+const PrefsKeys = Me.imports.prefs_keys;
+const SearchEngines = Me.imports.search_engines;
 
-const ENGINES_KEY = 'search-engines';
-const SUGGESTIONS_KEY = 'enable-suggestions';
-const SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
-const HELPER_KEY = 'enable-duckduckgo-helper';
-const HELPER_DELAY_KEY = 'helper-delay';
-const HELPER_POSITION_KEY = 'helper-position';
-const OPEN_URL_KEY = 'open-url-keyword';
-const OPEN_URL_LABEL = 'open-url-label';
-const HISTORY_KEY = 'search-history-data';
-const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
-const HISTORY_LIMIT_KEY = 'history-limit';
-const DEFAULT_ENGINE_KEY = 'default-search-engine';
-const OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
-const ACTIVATE_FIRST_SUGGESTION = 'activate-first-suggestion';
+let search_engines = new SearchEngines.SearchEngines();
+
+function get_suggestions_combo() {
+    let files_list = Utils.get_files_in_dir(Me.path+'/suggestions')
+    let combo = new Gtk.ComboBoxText();
+
+    for(let i = 0; i < files_list.length; i++) {
+        let file_name = files_list[i];
+
+        if(!Utils.ends_with(file_name, '_suggestions.js')) continue;
+
+        let title = file_name.slice(0, -15);
+        let id = file_name;
+        combo.insert(-1, id, title);
+    }
+
+    return combo;
+}
 
 const WebSearchDialogPrefsGrid = new GObject.Class({
     Name: 'WebSearchDialog.Prefs.Grid',
@@ -40,7 +48,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
 
     add_entry: function(text, key) {
         let item = new Gtk.Entry({
-            hexpand: true
+            hexpand: false
         });
         item.text = this._settings.get_string(key);
         this._settings.bind(key, item, 'text', Gio.SettingsBindFlags.DEFAULT);
@@ -50,7 +58,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
 
     add_shortcut: function(text, settings_key) {
         let item = new Gtk.Entry({
-            hexpand: true
+            hexpand: false
         });
         item.set_text(this._settings.get_strv(settings_key)[0]);
         item.connect('changed', Lang.bind(this, function(entry) {
@@ -92,7 +100,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
             }
         }));
 
-        this.add_row(text, item);
+        return this.add_row(text, item);
     },
 
     add_spin: function(label, key, adjustment_properties, spin_properties) {
@@ -162,23 +170,27 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         this._settings.connect('changed', Lang.bind(this, this._refresh));
         this.set_orientation(Gtk.Orientation.VERTICAL);
 
-        this.columns = {
-            DISPLAY_NAME: 0,
-            KEYWORD: 1,
-            URL: 2
-        };
+        let scrolled_window = new Gtk.ScrolledWindow();
+        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
 
-        let engines_list_box = new Gtk.Box({
-            spacing: 30,
-            margin_left: 10,
-            margin_top: 10,
-            margin_right: 10
-        });
+        this.columns = {
+            ID: 0,
+            DISPLAY_NAME: 1,
+            KEYWORD: 2,
+            URL: 3,
+            ENABLE_SUGGESTIONS: 4,
+            ENABLE_HELPERS: 5,
+            SUGGESTIONS_ENGINE: 6
+        };
 
         this._store = new Gtk.ListStore();
         this._store.set_column_types([
+            GObject.TYPE_INT,
             GObject.TYPE_STRING,
             GObject.TYPE_STRING,
+            GObject.TYPE_STRING,
+            GObject.TYPE_BOOLEAN,
+            GObject.TYPE_BOOLEAN,
             GObject.TYPE_STRING
         ]);
 
@@ -188,6 +200,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             vexpand: true
         });
         this._tree_view.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
+        this._tree_view.connect('row-activated', Lang.bind(this, function() {
+            this._create_new(null, true);
+        }));
 
         //engine name
         let name_column = new Gtk.TreeViewColumn({
@@ -207,6 +222,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         //engine keyword
         let keyword_column = new Gtk.TreeViewColumn({
+            expand: false,
             title: 'Keyword',
             sort_column_id: this.columns.KEYWORD
         });
@@ -233,19 +249,20 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         );
         this._tree_view.append_column(url_column);
 
-        engines_list_box.add(this._tree_view);
+        scrolled_window.add(this._tree_view);
 
         // buttons
         let toolbar = new Gtk.Toolbar({
             hexpand: true,
-            margin_left: 10,
+            // margin_left: 10,
             margin_top: 10,
-            margin_right: 10
+            // margin_right: 10
         });
         toolbar.get_style_context().add_class(
             Gtk.STYLE_CLASS_INLINE_TOOLBAR
         );
 
+        // new button
         let new_button = new Gtk.ToolButton({
             stock_id: Gtk.STOCK_NEW,
             label: 'Add search engine',
@@ -256,33 +273,116 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         );
         toolbar.add(new_button);
 
+        // edit button
+        let edit_button = new Gtk.ToolButton({
+            stock_id: Gtk.STOCK_EDIT,
+            label: "Edit"
+        });
+        edit_button.connect('clicked', Lang.bind(this, function() {
+            this._create_new(null, true);
+        }));
+        toolbar.add(edit_button);
+
+        // delete button
         let delete_button = new Gtk.ToolButton({
-            stock_id: Gtk.STOCK_DELETE
+            stock_id: Gtk.STOCK_DELETE,
+            label: "Remove"
         });
         delete_button.connect('clicked',
             Lang.bind(this, this._delete_selected)
         );
         toolbar.add(delete_button);
 
-        this.add(engines_list_box);
+        this.add(scrolled_window);
         this.add(toolbar);
 
-        this._changed_permitted = true;
         this._refresh();
     },
 
-    _create_new: function() {
+    _get_helpers_list_box: function(engine_id) {
+        let scrolled_window = new Gtk.ScrolledWindow({
+            min_content_height: 100
+        });
+        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
+
+        let grid = new Gtk.Grid({
+            column_spacing: 2,
+            row_spacing: 2,
+            margin: 10
+        });
+
+        let files_list = Utils.get_files_in_dir(Me.path+'/helpers')
+        this._helpers_list = [];
+
+        let engine = search_engines.get_engine_by_property(engine_id, 'id');
+
+        for(let i = 0; i < files_list.length; i++) {
+            let file_name = files_list[i];
+
+            if(!Utils.ends_with(file_name, '_helper.js')) continue;
+
+            let name = new Gtk.Label({
+                label: files_list[i].slice(0, -10),
+                hexpand: true,
+                halign: Gtk.Align.START
+            });
+            let check = new Gtk.Switch();
+
+            if(engine && engine.allowed_helpers.indexOf(file_name) != -1) {
+                check.set_active(true);
+            }
+
+            grid.attach(name, 0, i, 1, 1);
+            grid.attach(check, 1, i, 1, 1);
+
+            this._helpers_list.push({
+                file_name: file_name,
+                check: check
+            });
+        }
+
+        scrolled_window.add_with_viewport(grid);
+        return scrolled_window;
+    },
+
+    _create_new: function(object, edit) {
+        let exists_id = 0;
+        let exists_name = '';
+        let exists_keyword = '';
+        let exists_url = '';
+        let enable_suggestions = true;
+        let enable_helpers = true;
+        let exists_suggestions_engine = 'default';
+
+        if(edit === true) {
+            let [any, model, iter] = 
+                this._tree_view.get_selection().get_selected();
+
+            if(any) {
+                exists_id = this._store.get_value(iter, this.columns.ID);
+                exists_name = this._store.get_value(iter, this.columns.DISPLAY_NAME);
+                exists_keyword = this._store.get_value(iter, this.columns.KEYWORD);
+                exists_url = this._store.get_value(iter, this.columns.URL);
+                exists_suggestions_engine =
+                    this._store.get_value(iter, this.columns.SUGGESTIONS_ENGINE);
+                enable_suggestions =
+                    this._store.get_value(iter, this.columns.ENABLE_SUGGESTIONS);
+                enable_helpers =
+                    this._store.get_value(iter, this.columns.ENABLE_HELPERS);
+            }
+        }
+
         let dialog = new Gtk.Dialog({
-            title: 'Add new search engine',
             transient_for: this.get_toplevel(),
             modal: true
         });
+        dialog.set_default_size(500, 300);
         dialog.add_button(
             Gtk.STOCK_CANCEL,
             Gtk.ResponseType.CANCEL
         );
         dialog.add_button(
-            Gtk.STOCK_ADD,
+            Gtk.STOCK_SAVE,
             Gtk.ResponseType.OK
         );
         dialog.set_default_response(
@@ -296,8 +396,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         });
 
         // Name
-        grid.attach(new Gtk.Label({ label: 'Name:' }), 0, 0, 1, 1);
+        grid.attach(new Gtk.Label({label: 'Name:'}), 0, 0, 1, 1);
         dialog._engine_name = new Gtk.Entry({
+            text: exists_name,
             hexpand: true
         });
         grid.attach(dialog._engine_name, 1, 0, 1, 1);
@@ -305,6 +406,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         // Keyword
         grid.attach(new Gtk.Label({ label: 'Keyword:' }), 0, 1, 1, 1);
         dialog._engine_keyword = new Gtk.Entry({
+            text: exists_keyword,
             hexpand: true
         });
         grid.attach(dialog._engine_keyword, 1, 1, 1, 1);
@@ -312,28 +414,95 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         // Url
         grid.attach(new Gtk.Label({ label: 'Url:' }), 0, 2, 1, 1);
         dialog._engine_url = new Gtk.Entry({
+            text: exists_url,
             hexpand: true
         });
         grid.attach(dialog._engine_url, 1, 2, 1, 1);
 
-        dialog.get_content_area().add(grid);
+        // helpers list
+        dialog._helpers_list_box = this._get_helpers_list_box(exists_id);
+        dialog._helpers_list_expander = new Gtk.Expander({
+            label: 'Helpers'
+        });
+        dialog._helpers_list_expander.set_sensitive(enable_helpers);
+        dialog._helpers_list_expander.set_expanded(enable_helpers);
+        dialog._helpers_list_expander.add(dialog._helpers_list_box);
+        grid.attach(dialog._helpers_list_expander, 1, 4, 1, 1);
 
+        // enable helpers
+        grid.attach(new Gtk.Label({label: 'Enable helpers:' }), 0, 3, 1, 1);
+        dialog._enable_helpers = new Gtk.Switch({
+            active: enable_helpers
+        });
+        dialog._enable_helpers.connect('notify::active',
+            Lang.bind(this, function(s) {
+                let active = s.get_active();
+                if(active) {
+                    dialog._helpers_list_expander.set_sensitive(true);
+                    dialog._helpers_list_expander.set_expanded(true);
+                }
+                else {
+                    dialog._helpers_list_expander.set_sensitive(false);
+                    dialog._helpers_list_expander.set_expanded(false)
+                }
+            })
+        );
+        grid.attach(dialog._enable_helpers, 1, 3, 1, 1);
+
+        // Suggestions engine
+        grid.attach(new Gtk.Label({label: 'Suggestion engine:' }), 0, 6, 1, 1);
+        dialog._suggestions_combo = get_suggestions_combo();
+        dialog._suggestions_combo.insert(-1, 'default', 'Default');
+        dialog._suggestions_combo.set_active_id(exists_suggestions_engine);
+        if(!enable_suggestions) dialog._suggestions_combo.sensitive = false;
+        grid.attach(dialog._suggestions_combo, 1, 6, 1, 1);
+
+        // enable suggestions
+        grid.attach(new Gtk.Label({label: 'Enable suggestions:' }), 0, 5, 1, 1);
+        dialog._enable_suggestions = new Gtk.Switch({
+            active: enable_suggestions
+        });
+        dialog._enable_suggestions.connect('notify::active',
+            Lang.bind(this, function(s) {
+                let active = s.get_active();
+                if(active) dialog._suggestions_combo.sensitive = true;
+                else dialog._suggestions_combo.sensitive = false;
+            })
+        );
+        grid.attach(dialog._enable_suggestions, 1, 5, 1, 1);
+
+        dialog.get_content_area().add(grid);
         dialog.connect('response', Lang.bind(this, function(dialog, id) {
             if(id != Gtk.ResponseType.OK) {
                 dialog.destroy();
                 return;
             }
 
+            let allowed_helpers = [];
+
+            for(let i = 0; i < this._helpers_list.length; i++) {
+                if(this._helpers_list[i].check.get_active() === true) {
+                    allowed_helpers.push(this._helpers_list[i].file_name);
+                }
+            }
+
             let name = dialog._engine_name.get_text();
             let keyword = dialog._engine_keyword.get_text();
             let url = dialog._engine_url.get_text();
+            let enable_helpers = dialog._enable_helpers.get_active();
+            let enable_suggestions = dialog._enable_suggestions.get_active();
+            let suggestions_engine = dialog._suggestions_combo.get_active_id();
             let new_item = {
                 name: name,
                 keyword: keyword,
-                url: url
+                url: url,
+                enable_helpers: enable_helpers,
+                allowed_helpers: allowed_helpers,
+                enable_suggestions: enable_suggestions,
+                suggestions_engine: suggestions_engine
             };
 
-            if(!this._append_item(new_item)) {
+            if(!this._append_item(new_item, exists_id)) {
                 return;
             }
 
@@ -348,8 +517,8 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             this._tree_view.get_selection().get_selected();
 
         if(any) {
-            let name = this._store.get_value(iter, this.columns.DISPLAY_NAME);
-            this._remove_item(name);
+            let id = this._store.get_value(iter, this.columns.ID);
+            this._remove_item(id);
             this._store.remove(iter);
         }
     },
@@ -357,89 +526,50 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
     _refresh: function() {
         this._store.clear();
 
-        let current_items = this._settings.get_strv(ENGINES_KEY);
-        let valid_items = [];
+        let engines_list = search_engines.get_engines();
 
-        for(let i = 0; i < current_items.length; i++) {
-            let item = JSON.parse(current_items[i]);
+        for(let i = 0; i < engines_list.length; i++) {
+            let engine = engines_list[i];
 
-            if(this._is_valid_item(item)) {
-                valid_items.push(current_items[i]);
+            if(!engine.is_open_url()) {
                 let iter = this._store.append();
                 this._store.set(iter,
-                    [this.columns.DISPLAY_NAME, this.columns.KEYWORD, this.columns.URL],
-                    [item.name, item.keyword, item.url]
+                    [
+                        this.columns.ID,
+                        this.columns.DISPLAY_NAME,
+                        this.columns.KEYWORD,
+                        this.columns.URL,
+                        this.columns.ENABLE_SUGGESTIONS,
+                        this.columns.ENABLE_HELPERS,
+                        this.columns.SUGGESTIONS_ENGINE
+                    ],
+                    [
+                        engine.id,
+                        engine.name,
+                        engine.keyword,
+                        engine.url,
+                        engine.enable_suggestions,
+                        engine.enable_helpers,
+                        engine.suggestions_engine
+                    ]
                 );
             }
         }
-
-        if(valid_items.length != current_items.length) {
-            // some items were filtered out
-            this._settings.set_strv(ENGINES_KEY, valid_items);
-        }
     },
 
-    _is_valid_item: function(item) {
-        if(Utils.is_blank(item.name)) {
-            return false;
-        }
-        else if(Utils.is_blank(item.keyword)) {
-            return false;
-        }
-        else if(Utils.is_blank(item.url)) {
-            return false;
+    _append_item: function(new_item, id) {
+        id = parseInt(id);
+
+        if(id > 0) {
+            return search_engines.edit_engine(id, new_item);
         }
         else {
-            return true;
+            return search_engines.add_engine(new_item);
         }
     },
 
-    _append_item: function(new_item) {
-        if(!this._is_valid_item(new_item)) {
-            return false;
-        }
-
-        let current_items = this._settings.get_strv(ENGINES_KEY);
-
-        for(let i = 0; i < current_items.length; i++) {
-            let info = JSON.parse(current_items[i]);
-
-            if(info.name == new_item.name) {
-                printerr("Already have an item for this name");
-                this._show_error('sda');
-                return false;
-            }
-            else if(info.keyword == new_item.keyword) {
-                printerr("Already have an item for this keyword");
-                return false;
-            }
-        }
-
-        current_items.push(JSON.stringify(new_item));
-        this._settings.set_strv(ENGINES_KEY, current_items);
-        return true;
-    },
-
-    _remove_item: function(name) {
-        if(Utils.is_blank(name)) {
-            return false;
-        }
-
-        let current_items = this._settings.get_strv(ENGINES_KEY);
-        let result = null;
-
-        for(let i = 0; i < current_items.length; i++) {
-            let info = JSON.parse(current_items[i]);
-
-            if(info.name == name) {
-                current_items.splice(i, 1);
-                result = true;
-                break;
-            }
-        }
-
-        this._settings.set_strv(ENGINES_KEY, current_items);
-        return result;
+    _remove_item: function(id) {
+        return search_engines.remove_engine(id);
     }
 });
 
@@ -452,115 +582,17 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         this.parent(params);
         this._settings = Utils.getSettings();
 
-        let settings_grid = new WebSearchDialogPrefsGrid(this._settings);
-        let settings_grid_label = new Gtk.Label({
-            label: "Settings"
-        });
-
-        // default engine
-        let engines_list = this._settings.get_strv(ENGINES_KEY);
-        let result_list = [];
-
-        for(let i = 0; i < engines_list.length; i++) {
-            let info = JSON.parse(engines_list[i]);
-            let result = {
-                title: info.name,
-                value: i
-            };
-            result_list.push(result);
-        }
-
-        let default_engine = settings_grid.add_combo(
-            'Default search engine:',
-            DEFAULT_ENGINE_KEY,
-            result_list
-        );
-
-        // suggestions
-        let enable_suggestions = settings_grid.add_boolean(
-            'Suggestions:',
-            SUGGESTIONS_KEY
-        );
-
-        // activate first suggestion
-        let activate_first_suggestion = settings_grid.add_boolean(
-            'Always activate first suggestion:',
-            ACTIVATE_FIRST_SUGGESTION
-        );
-
-        // suggestions delay
-        let suggestions_delay_adjustment = {
-            lower: 100,
-            upper: 1000,
-            step_increment: 10
-        };
-        let suggestions_delay = settings_grid.add_spin(
-            'Suggestions delay(ms):',
-            SUGGESTIONS_DELAY_KEY,
-            suggestions_delay_adjustment
-        );
-
-        // helper
-        let enable_helper = settings_grid.add_boolean(
-            'Duckduckgo.com helper:',
-            HELPER_KEY
-        );
-
-        // helper delay
-        let helper_delay_adjustment = {
-            lower: 250,
-            upper: 2000,
-            step_increment: 10
-        };
-        let helper_delay = settings_grid.add_spin(
-            'Helper delay(ms):',
-            HELPER_DELAY_KEY,
-            helper_delay_adjustment
-        );
-
-        // helper position
-        let helper_position = settings_grid.add_entry(
-            'Helper position(top or bottom):',
-            HELPER_POSITION_KEY
-        );
-
-        // history suggestions
-        let enable_history_suggestions = settings_grid.add_boolean(
-            'History suggestions:',
-            HISTORY_SUGGESTIONS_KEY
-        );
-
-        // history limit
-        let history_limit_adjustment = {
-            lower: 10,
-            upper: 1000,
-            step_increment: 5
-        }
-        let history_limit = settings_grid.add_spin(
-            'History limit:',
-            HISTORY_LIMIT_KEY,
-            history_limit_adjustment
-        );
-
-        // open url keyword
-        let open_url_keyword = settings_grid.add_entry(
-            'Open url keyword(empty to disable):',
-            OPEN_URL_KEY
-        );
-
-        // open url label
-        let open_url_label = settings_grid.add_entry(
-            'Open url label:',
-            OPEN_URL_LABEL
-        );
-
-        let engines_list = new WebSearchDialogPrefsEnginesList(this._settings);
-        let engines_list_label = new Gtk.Label({
-            label: "Search engines"
-        });
+        let main_page = this._get_main_page();
+        let suggestions_page = this._get_suggestions_page();
+        let helpers_page = this._get_helpers_page();
+        let history_page = this._get_history_page();
+        let open_url_page = this._get_open_url_page();
 
         let shortcuts = new WebSearchDialogPrefsGrid(this._settings);
-        shortcuts.add_shortcut('Open search dialog:', OPEN_SEARCH_DIALOG_KEY);
+        shortcuts.add_shortcut(
+            'Open search dialog:',
+            PrefsKeys.OPEN_SEARCH_DIALOG_KEY
+        );
         let shortcuts_label = new Gtk.Label({
             label: "Keyboard shortcuts"
         });
@@ -572,12 +604,253 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             margin_right: 5
         });
 
-        notebook.append_page(settings_grid, settings_grid_label);
-        notebook.append_page(engines_list, engines_list_label);
+        notebook.append_page(main_page.page, main_page.label);
+        notebook.append_page(suggestions_page.page, suggestions_page.label);
+        notebook.append_page(helpers_page.page, helpers_page.label);
+        notebook.append_page(open_url_page.page, open_url_page.label);
+        notebook.append_page(history_page.page, history_page.label);
         notebook.append_page(shortcuts, shortcuts_label);
 
         this.add(notebook);
-    }
+    },
+
+    _get_main_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Search engines'
+        });
+        let page = new WebSearchDialogPrefsGrid(this._settings);
+
+        // default engine
+        let engines_list = search_engines.get_engines();
+        let result_list = [];
+
+        for(let i = 0; i < engines_list.length; i++) {
+            let engine = engines_list[i];
+            let result = {
+                title: engine.name,
+                value: engine.id
+            };
+            result_list.push(result);
+        }
+
+        let combo = page.add_combo(
+            'Default search engine:',
+            PrefsKeys.DEFAULT_ENGINE_KEY,
+            result_list
+        );
+
+        let engines = new WebSearchDialogPrefsEnginesList(this._settings);
+        page.add_item(engines, 0, this._rownum, 1, 1);
+
+        let result = {
+            label: page_label,
+            page: page
+        };
+        return result;
+    },
+
+    _get_suggestions_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Suggestions'
+        });
+        let page = new WebSearchDialogPrefsGrid(this._settings);
+
+        // suggestions
+        let enable = page.add_boolean(
+            'Enable:',
+            PrefsKeys.SUGGESTIONS_KEY
+        );
+        enable.connect('notify::active', Lang.bind(this, function(s) {
+            let active = s.get_active();
+            combo.sensitive = active;
+            max_suggestions.sensitive = active;
+            delay.sensitive = active;
+        }));
+        // default
+        let combo = get_suggestions_combo();
+        combo.sensitive = enable.get_active();
+        combo.connect('changed', Lang.bind(this, function(c) {
+            let value = combo.get_active_id();
+            let key = PrefsKeys.DEFAULT_SUGGESTIONS_KEY
+
+            if(this._settings.get_string(key) !== value) {
+                this._settings.set_string(key, value);
+            }
+        }));
+        combo.set_active_id(
+            this._settings.get_string(PrefsKeys.DEFAULT_SUGGESTIONS_KEY)
+        );
+        page.add_row(
+            'Default suggestions:',
+            combo
+        );
+
+        // max suggestions
+        let max_suggestions_adjustment = {
+            lower: 1,
+            upper: 9,
+            step_increment: 1
+        };
+        let max_suggestions = page.add_spin(
+            'Max:',
+            PrefsKeys.MAX_SUGGESTIONS,
+            max_suggestions_adjustment
+        );
+        max_suggestions.sensitive = enable.get_active();
+        // suggestions delay
+        let suggestions_delay_adjustment = {
+            lower: 100,
+            upper: 1000,
+            step_increment: 10
+        };
+        let delay = page.add_spin(
+            'Delay(ms):',
+            PrefsKeys.SUGGESTIONS_DELAY_KEY,
+            suggestions_delay_adjustment
+        );
+        delay.sensitive = enable.get_active();
+
+        let result = {
+            label: page_label,
+            page: page
+        };
+        return result;
+    },
+
+    _get_history_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'History'
+        });
+        let page = new WebSearchDialogPrefsGrid(this._settings);
+
+        // history limit
+        let history_limit_adjustment = {
+            lower: 10,
+            upper: 1000,
+            step_increment: 5
+        }
+        let hisotry_limit = page.add_spin(
+            'History limit:',
+            PrefsKeys.HISTORY_LIMIT_KEY,
+            history_limit_adjustment
+        );
+
+        // history suggestions
+        let enable = page.add_boolean(
+            'History suggestions:',
+            PrefsKeys.HISTORY_SUGGESTIONS_KEY
+        );
+        enable.connect('notify::active', Lang.bind(this, function(s) {
+            let active = s.get_active();
+            max_history_suggestions.sensitive = active;
+        }));
+
+        // max history suggestions
+        let max_suggestions_adjustment = {
+            lower: 1,
+            upper: 9,
+            step_increment: 1
+        };
+        let max_history_suggestions = page.add_spin(
+            'Max history suggestions:',
+            PrefsKeys.MAX_HISTORY_SUGGESTIONS,
+            max_suggestions_adjustment
+        );
+        max_history_suggestions.sensitive = enable.get_active();
+
+        let result = {
+            label: page_label,
+            page: page
+        };
+        return result;
+    },
+
+    _get_helpers_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Helpers'
+        });
+        let page = new WebSearchDialogPrefsGrid(this._settings);
+
+        // enable
+        let enable = page.add_boolean(
+            'Enable:',
+            PrefsKeys.HELPER_KEY
+        );
+        enable.connect('notify::active', Lang.bind(this, function(s) {
+            let active = s.get_active();
+            delay.sensitive = active;
+            position.sensitive = active;
+        }));
+
+        // delay
+        let helper_delay_adjustment = {
+            lower: 250,
+            upper: 2000,
+            step_increment: 10
+        };
+        let delay = page.add_spin(
+            'Delay(ms):',
+            PrefsKeys.HELPER_DELAY_KEY,
+            helper_delay_adjustment
+        );
+        delay.sensitive = enable.get_active();
+
+        // position
+        let helpers_positions = [
+            {title: 'Top', value: 0},
+            {title: 'Bottom', value: 1}
+        ];
+        let position = page.add_combo(
+            'Helpers position:',
+            PrefsKeys.HELPER_POSITION_KEY,
+            helpers_positions
+        );
+        position.sensitive = enable.get_active();
+
+        let result = {
+            label: page_label,
+            page: page
+        };
+        return result;
+    },
+
+    _get_open_url_page: function() {
+        let page_label = new Gtk.Label({
+            label: 'Open URL'
+        });
+        let page = new WebSearchDialogPrefsGrid(this._settings);
+
+        // enable
+        let enable = page.add_boolean(
+            'Enable:',
+            PrefsKeys.ENABLE_OPEN_URL_KEY
+        );
+        enable.connect('notify::active', Lang.bind(this, function(s) {
+            let active = s.get_active();
+            keyword.sensitive = active;
+            label.sensitive = active;
+        }));
+
+        // open url keyword
+        let keyword = page.add_entry(
+            'Open url keyword:',
+            PrefsKeys.OPEN_URL_KEY
+        );
+        keyword.sensitive = enable.get_active();
+
+        // open url label
+        let label = page.add_entry(
+            'Open url label:',
+            PrefsKeys.OPEN_URL_LABEL
+        );
+        label.sensitive = enable.get_active();
+
+        let result = {
+            label: page_label,
+            page: page
+        };
+        return result;
+    },
 });
 
 function init(){

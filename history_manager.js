@@ -2,7 +2,7 @@ const Lang = imports.lang;
 const Params = imports.misc.params;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Prefs = Me.imports.prefs;
+const Prefs = Me.imports.prefs_keys;
 const Utils = Me.imports.utils;
 
 const SearchHistoryManager = new Lang.Class({
@@ -89,7 +89,7 @@ const SearchHistoryManager = new Lang.Class({
     get_best_matches: function(params) {
         params = Params.parse(params, {
             text: false,
-            types: ['QUERY', 'NAVIGATION'],
+            types: [],
             min_score: 0.5,
             limit: 5,
             fuzziness: 0.5

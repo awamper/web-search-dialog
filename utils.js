@@ -1,5 +1,3 @@
-/* -*- mode: js; js-basic-offset: 4; indent-tabs-mode: nil -*- */
-
 /*
  * Part of this file comes from gnome-shell-extensions:
  * http://git.gnome.org/browse/gnome-shell-extensions/
@@ -22,7 +20,7 @@ Soup.Session.prototype.add_feature.call(
     new Soup.ProxyResolverDefault()
 );
 _httpSession.user_agent = 'Gnome-Shell WebSearchDialog Extension';
-_httpSession.timeout = 1;
+_httpSession.timeout = 5;
 
 const ICONS = {
     information: 'dialog-information-symbolic',
@@ -31,19 +29,6 @@ const ICONS = {
     web: 'web-browser-symbolic'
 };
 
-
-const KEYBOARD_NUMBERS = [
-    Clutter.KEY_0,
-    Clutter.KEY_1,
-    Clutter.KEY_2,
-    Clutter.KEY_3,
-    Clutter.KEY_4,
-    Clutter.KEY_5,
-    Clutter.KEY_6,
-    Clutter.KEY_7,
-    Clutter.KEY_8,
-    Clutter.KEY_9,
-];
 
 /**
  * getSettings:
@@ -82,12 +67,58 @@ function getSettings(schema) {
     return new Gio.Settings({ settings_schema: schemaObj });
 }
 
+function get_files_in_dir(path) {
+    let dir = Gio.file_new_for_path(path);
+    let file_enum, info;
+    let result = [];
+
+    try {
+        file_enum = dir.enumerate_children(
+            'standard::*',
+            Gio.FileQueryInfoFlags.NONE,
+            null
+        );
+    }
+    catch(e) {
+        log(e);
+        return false;
+    }
+
+    while((info = file_enum.next_file(null)) != null) {
+        let file_type = info.get_file_type();
+
+        if(file_type != Gio.FileType.REGULAR) continue;
+
+        let file_name = info.get_name();
+        result.push(file_name);
+    }
+
+    file_enum.close(null);
+
+    return result;
+}
+
 function is_blank(str) {
     return (!str || /^\s*$/.test(str));
 }
 
 function starts_with(str1, str2) {
     return str1.slice(0, str2.length) == str2;
+}
+
+function ends_with(str1, str2) {
+  return str1.slice(-str2.length) == str2;
+}
+
+function get_unichar(keyval) {
+    let ch = Clutter.keysym_to_unicode(keyval);
+
+    if(ch) {
+        return String.fromCharCode(ch);
+    }
+    else {
+        return false;
+    }
 }
 
 // Helper function to translate launch parameters into a GAppLaunchContext
@@ -113,7 +144,7 @@ function escape_html(unsafe) {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
- }
+}
 
 function is_matches_protocol(text) {
     text = text.trim();
@@ -298,15 +329,14 @@ function string_score(string, abbreviation, fuzziness) {
 };
 
 function wordwrap(str, width, brk, cut) {
- 
     brk = brk || '\n';
     width = width || 75;
     cut = cut || false;
- 
-    if (!str) { return str; }
- 
-    var regex = '.{1,' +width+ '}(\\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)');
- 
-    return str.match( RegExp(regex, 'g') ).join( brk );
- 
+
+    if(!str) return str;
+
+    let regex =
+      '.{1,' +width+ '}(\\s|$)' + (cut ? '|.{' +width+ '}|.+$' : '|\\S+?(\\s|$)');
+
+    return str.match(RegExp(regex, 'g')).join(brk);
 }

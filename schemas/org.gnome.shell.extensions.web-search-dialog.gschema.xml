@@ -12,15 +12,66 @@
       <default>"[]"</default>
     </key>
 
-    <key type="as" name="search-engines">
+    <key type="s" name="search-engines">
       <default>
-        [
-          '{"name": "Google", "keyword": "g", "url": "http://google.com/search?q={term}"}',
-          '{"name": "DuckDuckGo", "keyword": "d", "url": "http://duckduckgo.com/?q={term}"}',
-          '{"name": "Yandex", "keyword": "y", "url": "http://yandex.com/yandsearch?text={term}"}',
-          '{"name": "Wikipedia", "keyword": "w", "url": "http://en.wikipedia.org/wiki/Special:Search?search={term}"}',
-          '{"name": "Bing", "keyword": "b", "url": "http://www.bing.com/search?q={term}"}'
-        ]
+        <![CDATA[
+          '{
+             "1":{
+                "name":"Google",
+                "keyword":"g",
+                "url":"http://google.com/search?q={term}",
+                "suggestions_engine":"google_suggestions.js",
+                "enable_suggestions":true,
+                "enable_helpers":true,
+                "allowed_helpers": ["duckduckgo_helper.js", "freebase_helper.js", "wikipedia_helper.js"]
+             },
+             "2":{
+                "name":"DuckDuckGo",
+                "keyword":"d",
+                "url":"http://duckduckgo.com/?q={term}",
+                "suggestions_engine":"default",
+                "enable_suggestions":true,
+                "enable_helpers":true,
+                "allowed_helpers": ["duckduckgo_helper.js"]
+             },
+             "3":{
+                "name":"Yandex",
+                "keyword":"y",
+                "url":"http://yandex.com/yandsearch?text={term}",
+                "suggestions_engine":"default",
+                "enable_suggestions":true,
+                "enable_helpers":true,
+                "allowed_helpers": ["duckduckgo_helper.js", "freebase_helper.js", "wikipedia_helper.js"]
+             },
+             "4":{
+                "name":"Wikipedia",
+                "keyword":"w",
+                "url":"http://en.wikipedia.org/wiki/Special:Search?search={term}",
+                "suggestions_engine":"default",
+                "enable_suggestions":true,
+                "enable_helpers":true,
+                "allowed_helpers": ["wikipedia_helper.js"]
+             },
+             "5":{
+                "name":"Bing",
+                "keyword":"b",
+                "url":"http://www.bing.com/search?q={term}",
+                "suggestions_engine":"default",
+                "enable_suggestions":true,
+                "enable_helpers":true,
+                "allowed_helpers": ["duckduckgo_helper.js", "freebase_helper.js", "wikipedia_helper.js"]
+             },
+             "6":{
+                "name":"Imdb",
+                "keyword":"i",
+                "url":"http://www.imdb.com/find?s=all&q={term}",
+                "suggestions_engine":"imdb_suggestions.js",
+                "enable_suggestions":true,
+                "enable_helpers":false,
+                "allowed_helpers": ["freebase_helper.js"]
+             }
+          }'
+        ]]>
       </default>
       <summary>Search engines.</summary>
     </key>
@@ -30,13 +81,16 @@
         <summary>Enable suggetsions</summary>
     </key>
 
-    <key type="b" name="activate-first-suggestion">
-        <default>true</default>
-        <summary>Always activate first suggestion</summary>
+    <key type="s" name="default-suggestions">
+        <default>'google_suggestions.js'</default>
     </key>
 
     <key type="i" name="suggestions-delay">
         <default>150</default>
+    </key>
+
+    <key type="i" name="max-suggestions">
+        <default>4</default>
     </key>
 
     <key type="b" name="enable-duckduckgo-helper">
@@ -47,8 +101,8 @@
         <default>500</default>
     </key>
 
-    <key type="s" name="helper-position">
-      <default>"bottom"</default>
+    <key type="i" name="helper-position">
+      <default>1</default>
     </key>
 
     <key type="b" name="enable-history-suggestions">
@@ -60,8 +114,16 @@
       <default>500</default>
     </key>
 
+    <key type="i" name="max-history-suggestions">
+        <default>2</default>
+    </key>
+
     <key type="i" name="default-search-engine">
-      <default>0</default>
+      <default>1</default>
+    </key>
+
+    <key type="b" name="enable-open-url">
+        <default>true</default>
     </key>
 
     <key type="s" name="open-url-label">
@@ -71,5 +133,6 @@
     <key type="s" name="open-url-keyword">
       <default>"url"</default>
     </key>
+
   </schema>
 </schemalist>
