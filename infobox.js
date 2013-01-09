@@ -477,7 +477,7 @@ const InfoboxManager = new Lang.Class({
         this.show_suggestions_trigger = true;
         this.select_first_suggestion_trigger = true;
 
-        this._timeout_ids = [];
+        this._timeout_ids = {};
         this._timeout_ids[TIMEOUT_NAMES.SUGGESTIONS] = 0;
         this._timeout_ids[TIMEOUT_NAMES.HELPERS] = 0;
     },
@@ -491,9 +491,11 @@ const InfoboxManager = new Lang.Class({
                 }
             }
         }
-        else if(ids_array instanceof String && this._timeout_ids[ids_array] > 0) {
-            Mainloop.source_remove(this._timeout_ids[ids_array]);
-            this._timeout_ids[ids_array] = 0;
+        else if(typeof ids_array === 'string' || ids_array instanceof String) {
+            if(this._timeout_ids[ids_array] > 0) {
+                Mainloop.source_remove(this._timeout_ids[ids_array]);
+                this._timeout_ids[ids_array] = 0;
+            }
         }
         else if(ids_array instanceof Array) {
             if(ids_array.length > 0) {
