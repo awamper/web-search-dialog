@@ -641,6 +641,195 @@ const InfoboxManager = new Lang.Class({
         }
     },
 
+    _get_suggestions: function(suggestions_engine, term, limit) {
+        this._box.remove_all_by_types([
+            INFOBOX_TYPES.SEARCH_ENGINE,
+            INFOBOX_TYPES.SUGGESTIONS_QUERY,
+            INFOBOX_TYPES.SUGGESTIONS_NAVIGATION,
+            INFOBOX_TYPES.HISTORY_NAVIGATION,
+            INFOBOX_TYPES.HISTORY_QUERY
+        ]);
+
+        let spinner_id = 'suggestions_spinner';
+        let spinner_timeout_id = Mainloop.timeout_add(250, Lang.bind(this, function() {
+            this._box.show_spinner('Loading suggestions...', spinner_id, 0);
+        }));
+
+        suggestions_engine.get_suggestions(term, limit,
+            Lang.bind(this, function(suggestions) {
+                if(spinner_timeout_id > 0) {
+                    Mainloop.source_remove(spinner_timeout_id);
+                    this._box.hide_spinner(spinner_id);
+                    spinner_timeout_id = 0;
+                }
+
+                if(!suggestions || suggestions.length < 1) {
+                    return;
+                }
+
+                for(let i = 0; i < suggestions.length; i++) {
+                    if(suggestions[i].term !== this._entry.get_text()) continue;
+
+                    let menu_item = suggestions_engine.get_menu_item(
+                        suggestions[i]
+                    );
+                    this._box.addMenuItem(menu_item);
+                    this._connect_menu_item_signals(menu_item);
+                }
+
+                this.emit('suggestions-recieved');
+                this._select_first_suggestion(term);
+            })
+        );
+    },
+
+    _get_helpers: function(search_engine, term) {
+        this._box.helpers.clear();
+        let all_helpers = this._helpers_system.get_helpers();
+        let helpers = [];
+
+        if(search_engine.allowed_helpers.length > 0) {
+            for(let i = 0; i < all_helpers.length; i++) {
+                let helper_name = all_helpers[i].file_name;
+
+                if(search_engine.allowed_helpers.indexOf(helper_name) !== -1) {
+                    helpers.push(all_helpers[i]);
+                }
+            }
+        }
+        else {
+            helpers = false;
+        }
+
+        let temp = helpers;
+
+        if(!helpers || helpers.length < 1) {
+            this._box.helpers.hide();
+            return;
+        }
+
+        let spinner_timeout_id = Mainloop.timeout_add(500, Lang.bind(this, function() {
+            this._box.open();
+            this._box.helpers.show();
+            this._box.helpers.show_spinner();
+        }));
+
+        for(let i = 0; i < helpers.length; i++) {
+            let helper = helpers[i];
+
+            if(!helper.is_valid_query(term)) {
+                temp.splice(temp.indexOf(helper), 1);
+                continue;
+            }
+
+            helper.get_info(term, Lang.bind(this, function(helper_data) {
+                temp.splice(temp.indexOf(helper), 1);
+
+                if(helper_data !== false) {
+                    let helper_box = helper.get_helper_box(helper_data);
+                    this._box.helpers.add_helper(helper_box);
+                }
+
+                if(temp.length === 0) {
+                    this.emit('helpers-recieved');
+
+                    if(spinner_timeout_id > 0) {
+                        Mainloop.source_remove(spinner_timeout_id);
+                        this._box.helpers.hide_spinner();
+                        spinner_timeout_id = 0;
+                    }
+                }
+            }));
+        }
+    },
+
+    show_suggestions: function(search_engine, term) {
+        if(Utils.is_blank(term)) {
+            if(this._box.helpers.is_empty()) this.close();
+            return;
+        }
+
+        if(this.show_suggestions_trigger && search_engine.enable_suggestions) {
+            if(term.slice(-1) == ' ') return;
+
+            if(this._box.is_open() && !this._box.is_empty()) {
+                let item = this._box.firstMenuItem;
+
+                if(SUGGESTIONS_TYPES.indexOf(item.type) === -1) {
+                    item = null;
+                    let items = this._box._getMenuItems();
+
+                    for(let i = 0; i < items.length; i++) {
+                        if(SUGGESTIONS_TYPES.indexOf(items[i].type) != -1) {
+                            item = items[i];
+                            break;
+                        }
+                    }
+                }
+
+                if(item === null) return;
+
+                let current_term = term.toUpperCase();
+                let suggestion_text =
+                    item.text.slice(0, current_term.length).toUpperCase();
+
+                if(suggestion_text == current_term) {
+                    this._highlight_suggestions(current_term);
+                    return;
+                }
+            }
+
+            this._remove_timeout_ids();
+            this._suggestions_timeout_id = Mainloop.timeout_add(
+                this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
+                Lang.bind(this, function() {
+                    let suggestions_engine;
+
+                    if(search_engine.suggestions_engine === 'default') {
+                        suggestions_engine =
+                            this._suggestions_system.get_default_engine();
+                    }
+                    else {
+                        suggestions_engine =
+                            this._suggestions_system.get_engine_by_property(
+                                search_engine.suggestions_engine,
+                                'file_name'
+                            );
+                        suggestions_engine = !suggestions_engine
+                            ? this._suggestions_system.get_default_engine()
+                            : suggestions_engine
+                    }
+
+                    let limit = this._settings.get_int(Prefs.MAX_SUGGESTIONS);
+                    this._get_suggestions(suggestions_engine, term, limit);
+                })
+            )
+        }
+        else {
+            this.show_suggestions_trigger = true;
+        }
+    },
+
+    show_helpers: function(search_engine, term) {
+        if(Utils.is_blank(term)) {
+            if(this._box.is_empty()) this.close();
+            return;
+        }
+
+        if(this.show_helpers_trigger && search_engine.enable_helpers) {
+            // this._remove_timeout_ids();
+            this._helpers_timeout_id = Mainloop.timeout_add(
+                this._settings.get_int(Prefs.HELPER_DELAY_KEY),
+                Lang.bind(this, function() {
+                    this._get_helpers(search_engine, term);
+                })
+            )
+        }
+        else {
+            this.show_helpers_trigger = true;
+        }
+    },
+
     update_helpers_position: function() {
         if(this._box.helpers.is_empty() || !this._box.helpers.is_open()) return;
 
@@ -684,114 +873,13 @@ const InfoboxManager = new Lang.Class({
         item.setActive(true);
     },
 
-    show_suggestions: function(suggestions_engine, term, limit) {
-        this._box.remove_all_by_types([
-            INFOBOX_TYPES.SEARCH_ENGINE,
-            INFOBOX_TYPES.SUGGESTIONS_QUERY,
-            INFOBOX_TYPES.SUGGESTIONS_NAVIGATION,
-            INFOBOX_TYPES.HISTORY_NAVIGATION,
-            INFOBOX_TYPES.HISTORY_QUERY
-        ]);
-
-        let spinner_id = 'suggestions_spinner';
-        let spinner_timeout_id = Mainloop.timeout_add(250, Lang.bind(this, function() {
-            this._box.show_spinner('Loading suggestions...', spinner_id, 0);
-        }));
-
-        suggestions_engine.get_suggestions(term, limit,
-            Lang.bind(this, function(suggestions) {
-                if(spinner_timeout_id > 0) {
-                    Mainloop.source_remove(spinner_timeout_id);
-                    this._box.hide_spinner(spinner_id);
-                    spinner_timeout_id = 0;
-                }
-
-                if(!suggestions || suggestions.length < 1) {
-                    return;
-                }
-
-                for(let i = 0; i < suggestions.length; i++) {
-                    if(suggestions[i].term !== this._entry.get_text()) continue;
-
-                    let menu_item = suggestions_engine.get_menu_item(
-                        suggestions[i]
-                    );
-                    this._box.addMenuItem(menu_item);
-                    this._connect_menu_item_signals(menu_item);
-                }
-
-                this.emit('suggestions-recieved');
-                this._select_first_suggestion(term);
-            })
-        );
-    },
-
     show_history_suggestions: function(term) {
         let suggestions_engine = this._suggestions_system.get_engine_by_property(
             'HistorySuggestions',
             'name'
         );
         let limit = this._settings.get_int(Prefs.MAX_HISTORY_SUGGESTIONS);
-        this.show_suggestions(suggestions_engine, term, limit);
-    },
-
-    show_helpers: function(search_engine, term) {
-        this._box.helpers.clear();
-        let all_helpers = this._helpers_system.get_helpers();
-        let helpers = [];
-
-        if(search_engine.allowed_helpers.length > 0) {
-            for(let i = 0; i < all_helpers.length; i++) {
-                let helper_name = all_helpers[i].file_name;
-
-                if(search_engine.allowed_helpers.indexOf(helper_name) !== -1) {
-                    helpers.push(all_helpers[i]);
-                }
-            }
-        }
-        else {
-            helpers = false;
-        }
-
-        let temp = helpers;
-
-        if(!helpers || helpers.length < 1) {
-            this._box.helpers.hide();
-            return;
-        }
-
-        let spinner_timeout_id = Mainloop.timeout_add(500, Lang.bind(this, function() {
-            this._box.helpers.show();
-            this._box.helpers.show_spinner();
-        }));
-
-        for(let i = 0; i < helpers.length; i++) {
-            let helper = helpers[i];
-
-            if(!helper.is_valid_query(term)) {
-                temp.splice(temp.indexOf(helper), 1);
-                continue;
-            }
-
-            helper.get_info(term, Lang.bind(this, function(helper_data) {
-                temp.splice(temp.indexOf(helper), 1);
-
-                if(helper_data !== false) {
-                    let helper_box = helper.get_helper_box(helper_data);
-                    this._box.helpers.add_helper(helper_box);
-                }
-
-                if(temp.length === 0) {
-                    this.emit('helpers-recieved');
-
-                    if(spinner_timeout_id > 0) {
-                        Mainloop.source_remove(spinner_timeout_id);
-                        this._box.helpers.hide_spinner();
-                        spinner_timeout_id = 0;
-                    }
-                }
-            }));
-        }
+        this._get_suggestions(suggestions_engine, term, limit);
     },
 
     show_engines_list: function(exclude_engine) {
@@ -825,71 +913,7 @@ const InfoboxManager = new Lang.Class({
         });
 
         if(params.suggestions) {
-            if(Utils.is_blank(term)) {
-                this.close();
-                return;
-            }
-
-            if(this.show_suggestions_trigger && search_engine.enable_suggestions) {
-                if(term.slice(-1) == ' ') return;
-
-                if(this._box.is_open() && !this._box.is_empty()) {
-                    let item = this._box.firstMenuItem;
-
-                    if(SUGGESTIONS_TYPES.indexOf(item.type) === -1) {
-                        item = null;
-                        let items = this._box._getMenuItems();
-
-                        for(let i = 0; i < items.length; i++) {
-                            if(SUGGESTIONS_TYPES.indexOf(items[i].type) != -1) {
-                                item = items[i];
-                                break;
-                            }
-                        }
-                    }
-
-                    if(item === null) return;
-
-                    let current_term = term.toUpperCase();
-                    let suggestion_text =
-                        item.text.slice(0, current_term.length).toUpperCase();
-
-                    if(suggestion_text == current_term) {
-                        this._highlight_suggestions(current_term);
-                        return;
-                    }
-                }
-
-                this._remove_timeout_ids();
-                this._suggestions_timeout_id = Mainloop.timeout_add(
-                    this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
-                    Lang.bind(this, function() {
-                        let suggestions_engine;
-
-                        if(search_engine.suggestions_engine === 'default') {
-                            suggestions_engine =
-                                this._suggestions_system.get_default_engine();
-                        }
-                        else {
-                            suggestions_engine =
-                                this._suggestions_system.get_engine_by_property(
-                                    search_engine.suggestions_engine,
-                                    'file_name'
-                                );
-                            suggestions_engine = !suggestions_engine
-                                ? this._suggestions_system.get_default_engine()
-                                : suggestions_engine
-                        }
-
-                        let limit = this._settings.get_int(Prefs.MAX_SUGGESTIONS);
-                        this.show_suggestions(suggestions_engine, term, limit);
-                    })
-                )
-                // this.show_history_suggestions(term);
-            }
-            else {
-                this.show_suggestions_trigger = true;
-            }
+            this.show_suggestions(search_engine, term);
         }
 
         if(params.engines) {
@@ -901,18 +925,7 @@ const InfoboxManager = new Lang.Class({
         }
 
         if(params.helpers) {
-            if(this.show_helpers_trigger && search_engine.enable_helpers) {
-                // this._remove_timeout_ids();
-                this._helpers_timeout_id = Mainloop.timeout_add(
-                    this._settings.get_int(Prefs.HELPER_DELAY_KEY),
-                    Lang.bind(this, function() {
-                        this.show_helpers(search_engine, term);
-                    })
-                )
-            }
-            else {
-                this.show_helpers_trigger = true;
-            }
+            this.show_helpers(search_engine, term);
         }
     },
 
