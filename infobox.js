@@ -812,7 +812,12 @@ const InfoboxManager = new Lang.Class({
 
     show_helpers: function(search_engine, term) {
         if(Utils.is_blank(term)) {
-            if(this._box.is_empty()) this.close();
+            this._box.helpers.hide();
+
+            if(this._box.helpers.is_empty() && this._box.numMenuItems < 2) {
+                this.close();
+            }
+
             return;
         }
 
