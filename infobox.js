@@ -426,6 +426,10 @@ const Infobox = new Lang.Class({
     },
 });
 
+const TIMEOUT_NAMES = {
+    SUGGESTIONS: 'suggestions_timeout_id',
+    HELPERS: 'helpers_timeout_id'
+};
 const InfoboxManager = new Lang.Class({
     Name: 'InfoboxManager',
 
@@ -473,18 +477,36 @@ const InfoboxManager = new Lang.Class({
         this.show_suggestions_trigger = true;
         this.select_first_suggestion_trigger = true;
 
-        this._suggestions_timeout_id = 0;
-        this._helpers_timeout_id = 0;
+        this._timeout_ids = [];
+        this._timeout_ids[TIMEOUT_NAMES.SUGGESTIONS] = 0;
+        this._timeout_ids[TIMEOUT_NAMES.HELPERS] = 0;
     },
 
-    _remove_timeout_ids: function() {
-        if(this._suggestions_timeout_id > 0) {
-            Mainloop.source_remove(this._suggestions_timeout_id);
-            this._suggestions_timeout_id = 0;
+    _remove_timeout_ids: function(ids_array) {
+        if(ids_array === undefined) {
+            for(let key in this._timeout_ids) {
+                if(this._timeout_ids[key] > 0) {
+                    Mainloop.source_remove(this._timeout_ids[key]);
+                    this._timeout_ids[key] = 0;
+                }
+            }
         }
-        if(this._helpers_timeout_id > 0) {
-            Mainloop.source_remove(this._helpers_timeout_id);
-            this._helpers_timeout_id = 0;
+        else if(ids_array instanceof String && this._timeout_ids[ids_array] > 0) {
+            Mainloop.source_remove(this._timeout_ids[ids_array]);
+            this._timeout_ids[ids_array] = 0;
+        }
+        else if(ids_array instanceof Array) {
+            if(ids_array.length > 0) {
+                for(let i = 0; i < ids_array.length; i++) {
+                    if(this._timeout_ids[ids_array[i]] > 0) {
+                        Mainloop.source_remove(this._timeout_ids[ids_array[i]]);
+                        this._timeout_ids[ids_array[i]] = 0;
+                    }
+                }
+            }
+        }
+        else {
+            // nothing
         }
     },
 
@@ -779,8 +801,8 @@ const InfoboxManager = new Lang.Class({
                 }
             }
 
-            this._remove_timeout_ids();
-            this._suggestions_timeout_id = Mainloop.timeout_add(
+            this._remove_timeout_ids(TIMEOUT_NAMES.SUGGESTIONS);
+            this._timeout_ids[TIMEOUT_NAMES.SUGGESTIONS] = Mainloop.timeout_add(
                 this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
                 Lang.bind(this, function() {
                     let suggestions_engine;
@@ -822,8 +844,8 @@ const InfoboxManager = new Lang.Class({
         }
 
         if(this.show_helpers_trigger && search_engine.enable_helpers) {
-            // this._remove_timeout_ids();
-            this._helpers_timeout_id = Mainloop.timeout_add(
+            this._remove_timeout_ids(TIMEOUT_NAMES.HELPERS);
+            this._timeout_ids[TIMEOUT_NAMES.HELPERS] = Mainloop.timeout_add(
                 this._settings.get_int(Prefs.HELPER_DELAY_KEY),
                 Lang.bind(this, function() {
                     this._get_helpers(search_engine, term);
