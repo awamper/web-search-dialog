@@ -657,6 +657,8 @@ const InfoboxManager = new Lang.Class({
         let suggestions = this._box._getMenuItems();
 
         for(let i = 0; i < suggestions.length; i++) {
+            if(SUGGESTIONS_TYPES.indexOf(suggestions[i].type) === -1) continue;
+
             let clutter_text = suggestions[i].label.clutter_text;
             let highlighted_text = suggestions[i].highlight_text(term);
             clutter_text.set_markup(highlighted_text);
