@@ -773,9 +773,9 @@ const InfoboxManager = new Lang.Class({
             return;
         }
 
-        if(this.show_suggestions_trigger && search_engine.enable_suggestions) {
-            if(term.slice(-1) == ' ') return;
+        if(term.slice(-1) == ' ') return;
 
+        if(this.show_suggestions_trigger && search_engine.enable_suggestions) {
             if(this._box.is_open() && !this._box.is_empty()) {
                 let item = this._box.firstMenuItem;
 
@@ -844,6 +844,8 @@ const InfoboxManager = new Lang.Class({
 
             return;
         }
+
+        if(term.slice(-1) == ' ') return;
 
         if(this.show_helpers_trigger && search_engine.enable_helpers) {
             this._remove_timeout_ids(TIMEOUT_NAMES.HELPERS);
