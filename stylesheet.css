@@ -115,3 +115,9 @@
     color: black;
     background-color: rgba(245, 245, 245, 0.2);
 }
+
+.settings-icon {
+    padding-right: 3px;
+    icon-size: 25px;
+    color: #8d8f8a;
+}

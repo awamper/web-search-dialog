@@ -26,7 +26,8 @@ const ICONS = {
     information: 'dialog-information-symbolic',
     error: 'dialog-error-symbolic',
     find: 'edit-find-symbolic',
-    web: 'web-browser-symbolic'
+    web: 'web-browser-symbolic',
+    settings: 'emblem-system-symbolic'
 };
 
 

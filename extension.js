@@ -7,6 +7,7 @@ const Gio = imports.gi.Gio;
 const Params = imports.misc.params;
 const ModalDialog = imports.ui.modalDialog;
 const Tweener = imports.ui.tweener;
+const Shell = imports.gi.Shell;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -18,6 +19,13 @@ const Prefs = Me.imports.prefs_keys;
 
 const ICONS = Utils.ICONS;
 const INFOBOX_TYPES = Infobox.INFOBOX_TYPES;
+
+function launch_extension_prefs(uuid) {
+    let appSys = Shell.AppSystem.get_default();
+    let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
+    app.launch(global.display.get_current_time_roundtrip(),
+               ['extension:///' + uuid], -1, null);
+}
 
 ExtensionUtils.get_web_search_dialog_extension = function() {
     return Me;
@@ -51,9 +59,18 @@ const WebSearchDialogModal = new Lang.Class({
             text: 'Web Search:'
         });
 
+        let secondary_icon = new St.Icon({
+            icon_name: ICONS.settings,
+            style_class: 'settings-icon'
+        });
         this.entry = new St.Entry({
             style_class: 'search-entry'
         });
+        this.entry.set_secondary_icon(secondary_icon);
+        this.entry.connect('secondary-icon-clicked', Lang.bind(this, function() {
+            this.close();
+            launch_extension_prefs(Me.uuid);
+        }));
 
         this._search_table = new St.Table({
             name: 'web_search_table'
