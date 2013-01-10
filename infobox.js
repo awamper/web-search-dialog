@@ -227,7 +227,7 @@ const HelpersBox = new Lang.Class({
     },
 
     is_open: function() {
-        this.actor.visible;
+        return this.actor.visible;
     },
 
     add_helper: function(helper_box) {
