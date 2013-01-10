@@ -859,16 +859,25 @@ const InfoboxManager = new Lang.Class({
     },
 
     update_helpers_position: function() {
-        if(this._box.helpers.is_empty() || !this._box.helpers.is_open()) return;
+        if(!this._box.helpers.is_open()) {
+            return;
+        }
 
         let choosed_position = this._settings.get_int(
             Prefs.HELPER_POSITION_KEY
         );
+        let items = this._box._getMenuItems();
+
+        if(choosed_position == HELPER_POSITIONS.BOTTOM) {
+            if(items.slice(-1).type === INFOBOX_TYPES.HELPER) return;
+        }
+        else {
+            if(items[0].type === INFOBOX_TYPES.HELPER) return;
+        }
+
         let position = 0;
 
         if(choosed_position === HELPER_POSITIONS.BOTTOM) {
-            let items = this._box._getMenuItems();
-
             for(let i = 0; i < items.length; i++) {
                 if(items[i].type != INFOBOX_TYPES.HELPER) position++;
             }
