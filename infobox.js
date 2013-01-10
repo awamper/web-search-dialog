@@ -125,11 +125,12 @@ const HelpersBox = new Lang.Class({
         this.actor = new St.Table({
             style_class: 'helpers-box'
         });
-        this.actor.hide();
 
         this._helpers_box = new St.BoxLayout();
 
-        this._name_label = new St.Label();
+        this._name_label = new St.Label({
+            text: 'Checking helpers...'
+        });
         this._helpers_counter_label = new St.Label();
         this._title_box = new St.BoxLayout({
             style_class: 'helper-title'
@@ -210,7 +211,7 @@ const HelpersBox = new Lang.Class({
         this.spinner = new Panel.AnimatedIcon('process-working.svg', 24);
 
         if(this.is_empty()) {
-            this._name_label.set_text('Checking helpers');
+            this._name_label.set_text('Checking helpers...');
         }
         
         this._title_box.add(this.spinner.actor);
