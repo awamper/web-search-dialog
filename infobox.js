@@ -517,6 +517,9 @@ const InfoboxManager = new Lang.Class({
         if(this._box.helpers.is_empty()) {
             this._box.helpers.hide();
         }
+        else {
+            this.update_helpers_position();
+        }
     },
 
     _on_suggestions_recieved: function() {
