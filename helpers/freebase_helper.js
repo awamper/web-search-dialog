@@ -42,8 +42,7 @@ const HelperBox = new Lang.Class({
         label.clutter_text.use_markup = true;
 
         let box = new St.BoxLayout({
-            vertical: true,
-            height: 150
+            vertical: true
         });
         box.add(label, {
             x_fill: true,
@@ -51,7 +50,9 @@ const HelperBox = new Lang.Class({
             x_align: St.Align.END,
             y_align: St.Align.START
         });
-        let scroll = new St.ScrollView();
+        let scroll = new St.ScrollView({
+            height: 150
+        });
         scroll.add_actor(box);
 
         table.add(scroll, {
