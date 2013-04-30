@@ -20,6 +20,7 @@ const Prefs = Me.imports.prefs;
 const _httpSession = Utils._httpSession;
 const ICONS = Utils.ICONS;
 
+const MAX_SUGGESTIONS = 3;
 const SUGGESTIONS_URL = 
     "https://suggestqueries.google.com/complete/search?client=chrome&q=";
 
@@ -739,7 +740,7 @@ const WebSearchDialog = new Lang.Class({
 
                     if(!suggestions){return false;}
 
-                    for(let i = 0; i < suggestions.length; i++) {
+                    for(let i = 0; i < MAX_SUGGESTIONS; i++) {
                         let suggestion = suggestions[i];
 
                         if(this.search_engine.open_url && 
