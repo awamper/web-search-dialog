@@ -30,9 +30,9 @@
         <summary>Enable suggetsions</summary>
     </key>
 
-    <key type="b" name="activate-first-suggestion">
+    <key type="b" name="select-first-suggestion">
         <default>true</default>
-        <summary>Always activate first suggestion</summary>
+        <summary>Always select first suggestion</summary>
     </key>
 
     <key type="i" name="suggestions-delay">
