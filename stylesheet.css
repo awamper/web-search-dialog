@@ -88,3 +88,9 @@
     font-size: 10px;
     color: rgba(255, 255, 255, 1);
 }
+
+.settings-icon {
+    padding-right: 3px;
+    icon-size: 25px;
+    color: #8d8f8a;
+}

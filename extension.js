@@ -9,6 +9,7 @@ const Soup = imports.gi.Soup;
 const Params = imports.misc.params;
 const ModalDialog = imports.ui.modalDialog;
 const Tweener = imports.ui.tweener;
+const Shell = imports.gi.Shell;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Suggestions = Me.imports.suggestions_box;
@@ -24,12 +25,23 @@ const MAX_SUGGESTIONS = 3;
 const SUGGESTIONS_URL = 
     "https://suggestqueries.google.com/complete/search?client=chrome&q=";
 
+const SETTINGS_ICON = 'emblem-system-symbolic';
+
+function launch_extension_prefs(uuid) {
+    let appSys = Shell.AppSystem.get_default();
+    let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
+    app.launch(global.display.get_current_time_roundtrip(),
+               ['extension:///' + uuid], -1, null);
+}
+
 const WebSearchDialog = new Lang.Class({
     Name: 'WebSearchDialog',
     Extends: ModalDialog.ModalDialog,
 
     _init: function() {
-        this.parent();
+        this.parent({
+            destroyOnClose: false
+        });
         this._dialogLayout = 
             typeof this.dialogLayout === "undefined"
             ? this._dialogLayout
@@ -44,7 +56,7 @@ const WebSearchDialog = new Lang.Class({
         this._suggestions_delay_id = 0;
         this._helper_delay_id = 0;
         this.show_suggestions = true;
-        this.activate_first_suggestion = true;
+        this.select_first_suggestion = true;
         this.search_engine = false;
 
         this._create_search_dialog();
@@ -124,6 +136,18 @@ const WebSearchDialog = new Lang.Class({
             Lang.bind(this, this._on_text_key_press)
         );
 
+        let secondary_icon = new St.Icon({
+            icon_name: SETTINGS_ICON,
+            style_class: 'settings-icon'
+        });
+        this.search_entry.set_secondary_icon(secondary_icon);
+        this.search_entry.connect('secondary-icon-clicked',
+            Lang.bind(this, function() {
+                this.close();
+                launch_extension_prefs(Me.uuid);
+            }
+        ));
+
         this.duckduckgo_helper = new Helper.DuckDuckGoHelper();
         this.suggestions_box = new Suggestions.SuggestionsBox(this);
         this.suggestions_box.setSourceAlignment(0.02);
@@ -169,7 +193,17 @@ const WebSearchDialog = new Lang.Class({
         }
         else if(symbol == Clutter.Down) {
             if(this.suggestions_box.isOpen) {
-                this.suggestions_box.firstMenuItem.setActive(true);
+                if(this._settings.get_boolean(Prefs.SELECT_FIRST_SUGGESTION)) {
+                    let items = this.suggestions_box._getMenuItems();
+
+                    if(items.length > 1) {
+                        items[0].actor.remove_style_pseudo_class('active');
+                        items[1].setActive(true);
+                    }
+                }
+                else {
+                    this.suggestions_box.firstMenuItem.setActive(true);
+                }
             }
             else {
                 this.show_suggestions = false;
@@ -295,7 +329,7 @@ const WebSearchDialog = new Lang.Class({
         let symbol = e.get_key_symbol();
 
         if(symbol == Clutter.BackSpace) {
-            this.activate_first_suggestion = false;
+            this.select_first_suggestion = false;
         }
         else if(symbol == Clutter.Right) {
             let sel = this.search_entry.clutter_text.get_selection_bound();
@@ -635,8 +669,7 @@ const WebSearchDialog = new Lang.Class({
     },
 
     _get_suggestions: function(text, callback) {
-        text = encodeURIComponent(text);
-        let url = SUGGESTIONS_URL+text;
+        let url = SUGGESTIONS_URL+encodeURIComponent(text);
         let here = this;
 
         let request = Soup.Message.new('GET', url);
@@ -646,14 +679,14 @@ const WebSearchDialog = new Lang.Class({
                 let result = JSON.parse(request.response_body.data);
 
                 if(result[1].length < 1) {
-                    callback.call(here, false);
+                    callback.call(here, text, false);
                 }
                 else {
-                    callback.call(here, result);
+                    callback.call(here, text, result);
                 }
             }
             else {
-                callback.call(here, false);
+                callback.call(here, text, false);
             }
         });
     },
@@ -728,13 +761,15 @@ const WebSearchDialog = new Lang.Class({
         this._suggestions_delay_id = Mainloop.timeout_add(
             this._settings.get_int(Prefs.SUGGESTIONS_DELAY_KEY),
             Lang.bind(this, function() {
-                this._get_suggestions(text, function(suggestions) {
+                this._get_suggestions(text, function(term, suggestions) {
                     this.suggestions_box.remove_all_by_types('ALL');
 
                     if(!suggestions) {
                         this.suggestions_box.close();
                         return false;
                     }
+
+                    if(this.search_entry.text != term) return false;
 
                     suggestions = this._parse_suggestions(suggestions);
 
@@ -766,11 +801,11 @@ const WebSearchDialog = new Lang.Class({
                         this.suggestions_box.close();
                     }
                     else {
-                        if(this.activate_first_suggestion) {
-                            this._activate_first_suggestion(text);
+                        if(this.select_first_suggestion) {
+                            this._select_first_suggestion(text);
                         }
                         else {
-                            this.activate_first_suggestion = true;
+                            this.select_first_suggestion = true;
                         }
                     }
 
@@ -782,31 +817,28 @@ const WebSearchDialog = new Lang.Class({
         return true;
     },
 
-    _activate_first_suggestion: function(text) {
-        if(!this._settings.get_boolean(Prefs.ACTIVATE_FIRST_SUGGESTION)) {
-            return false;
-        }
+    _select_first_suggestion: function(text) {
+        if(!this._settings.get_boolean(Prefs.SELECT_FIRST_SUGGESTION)) return false;
+        if(text.slice(-1) == ' ') return false;
 
         let item = this.suggestions_box.firstMenuItem;
 
-        if(text.slice(-1) != ' ') {
-            let suggestion_t = item._text.slice(0, text.length).toUpperCase();
-            let source_t = text.toUpperCase();
+        let suggestion_t = item._text.slice(0, text.length).toUpperCase();
+        let source_t = text.toUpperCase();
 
-            if(suggestion_t != source_t) {
-                return false;
-            }
-
-            this.show_suggestions = false;
-            this.search_entry.set_text(item._text);
-            this.search_entry.clutter_text.set_selection(
-                text.length,
-                item._text.length
-            );
-            item.actor.add_style_pseudo_class('active');
-
-            this._display_helper(text);
+        if(suggestion_t != source_t) {
+            return false;
         }
+
+        this.show_suggestions = false;
+        this.search_entry.set_text(item._text);
+        this.search_entry.clutter_text.set_selection(
+            text.length,
+            item._text.length
+        );
+        item.actor.add_style_pseudo_class('active');
+
+        this._display_helper(text);
 
         return true;
     },
@@ -962,19 +994,22 @@ const WebSearchDialog = new Lang.Class({
     },
 
     enable: function() {
-        global.display.add_keybinding(
+        Main.wm.addKeybinding(
             Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
             Meta.KeyBindingFlags.NONE,
+            Shell.KeyBindingMode.NORMAL |
+            Shell.KeyBindingMode.MESSAGE_TRAY |
+            Shell.KeyBindingMode.OVERVIEW,
             Lang.bind(this, function() {
-                this.open();
+                this.open()
             })
         );
     },
 
     disable: function() {
         this._remove_delay_id();
-        global.display.remove_keybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
+        Main.wm.removeKeybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
         global.display.disconnect(this._window_handler_id);
     }
 });

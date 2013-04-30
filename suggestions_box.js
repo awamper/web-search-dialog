@@ -95,6 +95,7 @@ const SuggestionsBox = new Lang.Class({
 
         Main.uiGroup.add_actor(this.actor);
         this.actor.hide();
+        this.actor.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
     },
 
     _onKeyPressEvent: function(actor, event) {

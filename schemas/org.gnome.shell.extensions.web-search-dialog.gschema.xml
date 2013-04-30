@@ -4,7 +4,7 @@
   <schema path="/org/gnome/shell/extensions/web-search-dialog/" id="org.gnome.shell.extensions.web-search-dialog">
 
     <key type="as" name="open-web-search-dialog">
-      <default><![CDATA[['<Super>space']]]></default>
+      <default><![CDATA[['<Ctrl>space']]]></default>
       <summary>Open web search.</summary>
     </key>
 
@@ -30,9 +30,9 @@
         <summary>Enable suggetsions</summary>
     </key>
 
-    <key type="b" name="activate-first-suggestion">
+    <key type="b" name="select-first-suggestion">
         <default>true</default>
-        <summary>Always activate first suggestion</summary>
+        <summary>Always select first suggestion</summary>
     </key>
 
     <key type="i" name="suggestions-delay">
