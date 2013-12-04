@@ -1,7 +1,7 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const PopupMenu = imports.ui.popupMenu;
-const Panel = imports.ui.panel;
+const Animation = imports.ui.animation;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
@@ -24,15 +24,16 @@ const HelperSpinnerMenuItem = Lang.Class({
             reactive: false,
             activate: false,
             hover: false,
-            sensitive: false
+            can_focus: false
         });
         this._type = 'HELPER';
 
-        let spinner = new Panel.AnimatedIcon(
-            'process-working.svg',
+        let spinner = new Animation.AnimatedIcon(
+            global.datadir + '/theme/process-working.svg',
             24
         );
         spinner.actor.show();
+        spinner.play();
 
         let label = new St.Label({
             text: Utils.is_blank(text) ? 'Checking helper...' : text
@@ -44,7 +45,7 @@ const HelperSpinnerMenuItem = Lang.Class({
         box.add(spinner.actor);
         box.add(label);
 
-        this.addActor(box);
+        this.actor.add_child(box);
     }
 });
 
@@ -57,7 +58,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
             reactive: false,
             activate: false,
             hover: false,
-            sensitive: false
+            can_focus: false
         });
         this._type = 'HELPER';
 
@@ -100,7 +101,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
             col: 0
         });
 
-        this.addActor(table);
+        this.actor.add_child(table);
 
         return true;
     },

@@ -66,7 +66,7 @@ const SuggestionMenuItem = new Lang.Class({
         this._box.add(icon);
         this._box.add(label);
 
-        this.addActor(this._box);
+        this.actor.add_child(this._box);
         this.actor.label_actor = label;
     },
 
@@ -238,7 +238,7 @@ const SuggestionsBox = new Lang.Class({
             reactive: false,
             activate: false,
             hover: false,
-            sensitive: false
+            can_focus: false
         });
         item._type = 'LABEL';
         this.addMenuItem(item);
