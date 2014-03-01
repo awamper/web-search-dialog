@@ -30,8 +30,12 @@ const SETTINGS_ICON = 'emblem-system-symbolic';
 function launch_extension_prefs(uuid) {
     let appSys = Shell.AppSystem.get_default();
     let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-    app.launch(global.display.get_current_time_roundtrip(),
-               ['extension:///' + uuid], -1, null);
+    let info = app.get_app_info();
+    let timestamp = global.display.get_current_time_roundtrip();
+    info.launch_uris(
+        ['extension:///' + uuid],
+        global.create_app_launch_context(timestamp, -1)
+    );
 }
 
 const WebSearchDialog = new Lang.Class({

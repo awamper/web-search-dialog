@@ -94,14 +94,10 @@ function starts_with(str1, str2) {
 function _makeLaunchContext(params) {
     params = Params.parse(params, {
         workspace: -1,
-        timestamp: 0
+        timestamp: global.display.get_current_time_roundtrip()
     });
 
-    let launchContext = global.create_app_launch_context();
-    if (params.workspace != -1)
-        launchContext.set_desktop(params.workspace);
-    if (params.timestamp != 0)
-        launchContext.set_timestamp(params.timestamp);
+    let launchContext = global.create_app_launch_context(params.timestamp, params.workspace);
 
     return launchContext;
 }
