@@ -117,11 +117,13 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
             return false;
         }
 
+        let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let textureCache = St.TextureCache.get_default();
         let icon = textureCache.load_uri_async(
             info.url,
             info.width,
-            info.height
+            info.height,
+            scale_factor
         );
 
         this.icon_box = new St.BoxLayout({
