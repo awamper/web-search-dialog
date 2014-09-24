@@ -1,4 +1,4 @@
-.search-dialog {
+.web-search-dialog {
     border-radius: 5px;
     background-color: rgba(0.0, 0.0, 0.0, 0.8);
 
@@ -8,7 +8,7 @@
     padding-top: 5px;
 }
 
-.search-entry {
+.web-search-entry {
     width: 800px;
     height: 35px;
     font-size: 35px;

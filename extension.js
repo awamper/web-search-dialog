@@ -53,7 +53,7 @@ const WebSearchDialog = new Lang.Class({
 
         this._dialogLayout.set_style_class_name('');
         this._dialogLayout.set_margin_bottom(300);
-        this.contentLayout.set_style_class_name('search-dialog');
+        this.contentLayout.set_style_class_name('web-search-dialog');
 
         this._settings = Utils.getSettings();
         this._clipboard = St.Clipboard.get_default();
@@ -121,7 +121,7 @@ const WebSearchDialog = new Lang.Class({
         });
 
         this.search_entry = new St.Entry({
-            style_class: 'search-entry'
+            style_class: 'web-search-entry'
         });
         this.search_entry.connect(
             'key-press-event',
