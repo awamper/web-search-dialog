@@ -484,7 +484,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
         // select first suggestion
         let select_first_suggestion = settings_grid.add_boolean(
-            'Always select first suggestion:',
+            'Autocomplete with first suggestion:',
             SELECT_FIRST_SUGGESTION
         );
 

@@ -30,8 +30,12 @@ const SETTINGS_ICON = 'emblem-system-symbolic';
 function launch_extension_prefs(uuid) {
     let appSys = Shell.AppSystem.get_default();
     let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
-    app.launch(global.display.get_current_time_roundtrip(),
-               ['extension:///' + uuid], -1, null);
+    let info = app.get_app_info();
+    let timestamp = global.display.get_current_time_roundtrip();
+    info.launch_uris(
+        ['extension:///' + uuid],
+        global.create_app_launch_context(timestamp, -1)
+    );
 }
 
 const WebSearchDialog = new Lang.Class({
@@ -39,7 +43,9 @@ const WebSearchDialog = new Lang.Class({
     Extends: ModalDialog.ModalDialog,
 
     _init: function() {
-        this.parent();
+        this.parent({
+            destroyOnClose: false
+        });
         this._dialogLayout = 
             typeof this.dialogLayout === "undefined"
             ? this._dialogLayout
@@ -768,6 +774,8 @@ const WebSearchDialog = new Lang.Class({
                     }
                     if(this.search_entry.text != term) return false;
 
+                    if(this.search_entry.text != term) return false;
+
                     suggestions = this._parse_suggestions(suggestions);
 
                     if(!suggestions){return false;}
@@ -991,19 +999,22 @@ const WebSearchDialog = new Lang.Class({
     },
 
     enable: function() {
-        global.display.add_keybinding(
+        Main.wm.addKeybinding(
             Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
             Meta.KeyBindingFlags.NONE,
+            Shell.KeyBindingMode.NORMAL |
+            Shell.KeyBindingMode.MESSAGE_TRAY |
+            Shell.KeyBindingMode.OVERVIEW,
             Lang.bind(this, function() {
-                this.open();
+                this.open()
             })
         );
     },
 
     disable: function() {
         this._remove_delay_id();
-        global.display.remove_keybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
+        Main.wm.removeKeybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
         global.display.disconnect(this._window_handler_id);
     }
 });

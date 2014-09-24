@@ -66,7 +66,7 @@ const SuggestionMenuItem = new Lang.Class({
         this._box.add(icon);
         this._box.add(label);
 
-        this.addActor(this._box);
+        this.actor.add_child(this._box);
         this.actor.label_actor = label;
     },
 
@@ -95,6 +95,7 @@ const SuggestionsBox = new Lang.Class({
 
         Main.uiGroup.add_actor(this.actor);
         this.actor.hide();
+        this.actor.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
     },
 
     _onKeyPressEvent: function(actor, event) {
@@ -237,7 +238,7 @@ const SuggestionsBox = new Lang.Class({
             reactive: false,
             activate: false,
             hover: false,
-            sensitive: false
+            can_focus: false
         });
         item._type = 'LABEL';
         this.addMenuItem(item);
