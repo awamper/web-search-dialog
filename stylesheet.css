@@ -16,6 +16,8 @@
     border: 1px solid rgba(245,245,245,0.2);
     selection-background-color: white;
     selected-color: black;
+    padding: 1px;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .search-engine-label {

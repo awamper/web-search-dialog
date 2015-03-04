@@ -5,6 +5,7 @@ const Animation = imports.ui.animation;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
+const Gio = imports.gi.Gio;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
@@ -28,10 +29,10 @@ const HelperSpinnerMenuItem = Lang.Class({
         });
         this._type = 'HELPER';
 
-        let spinner = new Animation.AnimatedIcon(
-            global.datadir + '/theme/process-working.svg',
-            24
+        let spinner_icon = Gio.File.new_for_uri(
+            'resource:///org/gnome/shell/theme/process-working.svg'
         );
+        let spinner = new Animation.AnimatedIcon(spinner_icon, 24);
         spinner.actor.show();
         spinner.play();
 
@@ -119,8 +120,9 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
 
         let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
         let textureCache = St.TextureCache.get_default();
-        let icon = textureCache.load_uri_async(
-            info.url,
+        let image_file = Gio.file_new_for_uri(info.url);
+        let icon = textureCache.load_file_async(
+            image_file,
             info.width,
             info.height,
             scale_factor

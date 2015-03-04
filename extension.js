@@ -1003,9 +1003,9 @@ const WebSearchDialog = new Lang.Class({
             Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
             Meta.KeyBindingFlags.NONE,
-            Shell.KeyBindingMode.NORMAL |
-            Shell.KeyBindingMode.MESSAGE_TRAY |
-            Shell.KeyBindingMode.OVERVIEW,
+            Shell.ActionMode.NORMAL |
+            Shell.ActionMode.MESSAGE_TRAY |
+            Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
                 this.open()
             })
