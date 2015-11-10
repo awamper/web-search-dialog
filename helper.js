@@ -1,7 +1,6 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const PopupMenu = imports.ui.popupMenu;
-const Animation = imports.ui.animation;
 const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
@@ -29,13 +28,6 @@ const HelperSpinnerMenuItem = Lang.Class({
         });
         this._type = 'HELPER';
 
-        let spinner_icon = Gio.File.new_for_uri(
-            'resource:///org/gnome/shell/theme/process-working.svg'
-        );
-        let spinner = new Animation.AnimatedIcon(spinner_icon, 24);
-        spinner.actor.show();
-        spinner.play();
-
         let label = new St.Label({
             text: Utils.is_blank(text) ? 'Checking helper...' : text
         });
@@ -43,7 +35,6 @@ const HelperSpinnerMenuItem = Lang.Class({
         let box = new St.BoxLayout({
             style_class: 'helper-title'
         });
-        box.add(spinner.actor);
         box.add(label);
 
         this.actor.add_child(box);
