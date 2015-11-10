@@ -3,7 +3,8 @@
     "name": "Web Search Dialog",
     "shell-version": [
         "3.15.90",
-        "3.16"
+        "3.16",
+        "3.18"
     ],
     "url": "http://github.com/awamper/web-search-dialog",
     "uuid": "web_search_dialog@awamper.gmail.com",
