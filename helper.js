@@ -75,19 +75,16 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         }
 
         let icon = this._get_icon(data.icon);
-        let table = new St.Table({
+        let table = new St.Widget({
             name: 'helper_table',
-            style_class: 'helper-box'
+            style_class: 'helper-box',
+            layout_manager: new Clutter.TableLayout()
         });
+        let table_layout = table.layout;
         let max_length = 80;
 
         if(icon) {
-            table.add(icon, {
-                row: 0,
-                col: 1,
-                x_fill: false,
-                y_fill: false
-            });
+            table_layout.pack(icon, 1, 0);
         }
         else {
             max_length = 110;
@@ -97,10 +94,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         if(data.definition) {text += '<i>'+data.definition.trim()+'</i>\n';}
         if(data.abstract) {text += data.abstract.trim();}
         let label = this._get_label(text, 'helper-abstract', max_length);
-        table.add(label, {
-            row: 0,
-            col: 0
-        });
+        table_layoutpack(label, 0, 0);
 
         this.actor.add_child(table);
 
