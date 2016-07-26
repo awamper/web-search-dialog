@@ -158,17 +158,13 @@ const WebSearchDialog = new Lang.Class({
 
         this.search_history = new HistoryManager.SearchHistoryManager();
 
-        this._search_table = new St.Table({
-            name: 'web_search_table'
+        this._search_table = new St.Widget({
+            name: 'web_search_table',
+            layout_manager: new Clutter.TableLayout()
         });
-        this._search_table.add(this.search_engine_label, {
-            row: 0,
-            col: 0
-        });
-        this._search_table.add(this.search_entry, {
-            row: 0,
-            col: 1
-        });
+        let search_table_layout = this._search_table.layout_manager;
+        search_table_layout.pack(this.search_engine_label, 0, 0);
+        search_table_layout.pack(this.search_entry, 1, 0);
         this._search_table.show();
 
         this.contentLayout.add(this._search_table);
