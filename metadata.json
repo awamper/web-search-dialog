@@ -2,8 +2,6 @@
     "description": "Search the web directly from Gnome Shell.\n\n<Ctrl>+space triggers the dialog. From there, type your search query, click the ENTER key and your default browser will open with your search result.\n\nList of features include:\n\n*Instant result/definition (DuckDuckGo helper) with pictures within the dialog\n*Search Suggestions\n*History with configurable limit\n*Choose your default search engine\n*Add multiple seach engines\n*Tab key to view & choose from search engine list\n*Ctrl+Shift+V to Paste & Search\n*Ctrl+Shift+G to Paste & Go (Open URL)\n*Ctrl+(1-9) to trigger search suggestion or history item in list\n*Add keyword for each search engine\n*Add keyword to go to URL directly",
     "name": "Web Search Dialog",
     "shell-version": [
-        "3.15.90",
-        "3.16",
         "3.18"
     ],
     "url": "http://github.com/awamper/web-search-dialog",
