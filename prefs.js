@@ -458,11 +458,11 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         });
 
         // default engine
-        let engines_list = this._settings.get_strv(ENGINES_KEY);
+        let engine_list = this._settings.get_strv(ENGINES_KEY);
         let result_list = [];
 
-        for(let i = 0; i < engines_list.length; i++) {
-            let info = JSON.parse(engines_list[i]);
+        for(let i = 0; i < engine_list.length; i++) {
+            let info = JSON.parse(engine_list[i]);
             let result = {
                 title: info.name,
                 value: i
