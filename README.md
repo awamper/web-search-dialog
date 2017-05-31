@@ -22,6 +22,9 @@ List of features include:
 
 After the installation, restart GNOME Shell (`Alt`+`F2`, `r`, `Enter`) and enable the extension through *gnome-tweak-tool*.
 
+### Install older version
+Navigate into the extension directory (e.g. `~/.local/share/gnome-shell/extensions/web_search_dialog@awamper.gmail.com`) and run ` git co X` Replace X with your GNOME Shell version (e.g. 3.20).
+
 ## Through extensions.gnome.org (Local installation)
 
 Go on the [Web Search Dialog ](https://extensions.gnome.org/extension/549/web-search-dialog/) extension page on extensions.gnome.org, click on the switch ("OFF" => "ON"), click on the install button.
