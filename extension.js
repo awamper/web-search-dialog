@@ -1000,7 +1000,6 @@ const WebSearchDialog = new Lang.Class({
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL |
-            Shell.ActionMode.MESSAGE_TRAY |
             Shell.ActionMode.OVERVIEW,
             Lang.bind(this, function() {
                 this.open()
