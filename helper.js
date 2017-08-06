@@ -5,6 +5,7 @@ const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
 const Gio = imports.gi.Gio;
+const Clutter = imports.gi.Clutter;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
@@ -66,16 +67,19 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         }
 
         let icon = this._get_icon(data.icon);
-        let table = new St.Widget({
+
+        let grid_layout = new Clutter.GridLayout();
+        let grid = new St.Widget({
             name: 'helper_table',
             style_class: 'helper-box',
-            layout_manager: new Clutter.TableLayout()
+            layout_manager: grid_layout,
+            visible: true
         });
-        let table_layout = table.layout;
+
         let max_length = 80;
 
         if(icon) {
-            table_layout.pack(icon, 1, 0);
+            grid_layout.attach(icon, 0, 0, 1, 1);
         }
         else {
             max_length = 110;
@@ -85,9 +89,9 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
         if(data.definition) {text += '<i>'+data.definition.trim()+'</i>\n';}
         if(data.abstract) {text += data.abstract.trim();}
         let label = this._get_label(text, 'helper-abstract', max_length);
-        table_layoutpack(label, 0, 0);
 
-        this.actor.add_child(table);
+        grid_layout.attach(label, 1, 0, 1, 1);
+        this.actor.add_child(grid);
 
         return true;
     },
