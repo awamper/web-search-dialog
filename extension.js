@@ -72,6 +72,25 @@ const WebSearchDialog = new Lang.Class({
         );
     },
 
+    _resize: function() {
+        let monitor = Main.layoutManager.currentMonitor;
+        let is_primary = monitor.index === Main.layoutManager.primaryIndex;
+
+        let available_width = monitor.width;
+        let available_height = monitor.height;
+        if(is_primary) available_height -= Main.panel.actor.height;
+
+        let width = Math.round(available_width / 100 * 85);
+
+        this._dialogLayout.set_width(width);
+    },
+
+    _reposition: function() {
+        let monitor = Main.layoutManager.currentMonitor;
+        this._dialogLayout.x = Math.round(monitor.width / 2 - this._dialogLayout.width / 2);
+        this._dialogLayout.y = 100;
+    },
+
     _get_main_hint: function() {
         let default_engine = this._get_default_engine();
         let hint = 
@@ -981,6 +1000,9 @@ const WebSearchDialog = new Lang.Class({
             text: this._get_main_hint(),
             icon_name: ICONS.information
         });
+
+        this._resize();
+        this._reposition();
     },
 
     close: function() {
