@@ -10,8 +10,8 @@
 
 .web-search-entry {
     width: 800px;
-    height: 35px;
-    font-size: 35px;
+    height: 33pt;
+    font-size: 30pt;
     color: rgb(128, 128, 128);
     border: 1px solid rgba(245,245,245,0.2);
     selection-background-color: white;
@@ -23,14 +23,14 @@
 .search-engine-label {
     border: 1px solid rgba(245,245,245,0.2);
     background-color: rgba(0.0, 0.0, 0.0, 0.0);
-    font-size: 35px;
+    font-size: 30pt;
 }
 
 .search-hint {
     padding-left: 5px;
     padding-top: 2px;
     font-weight: bold;
-    font-size: 10px;
+    font-size: 7pt;
     color: rgba(255, 255, 255, 1);
 }
 .hint-icon {
@@ -41,7 +41,7 @@
 }
 
 .menu-item-icon {
-    icon-size: 15px;
+    icon-size: 15pt;
     color: #8d8f8a;
 }
 
@@ -55,7 +55,7 @@
     padding-right: 3px;
     padding-left: 3px;
     padding-bottom: 2px;
-    font-size: 17px;
+    font-size: 17pt;
     color: black;
     background-color: rgba(245,245,245,0.2);
 }
@@ -65,7 +65,7 @@
     padding-right: 5px;
     padding-left: 5px;
     padding-bottom: 5px;
-    font-size: 15px;
+    font-size: 15pt;
 }
 
 .helper-definition {
@@ -74,7 +74,7 @@
     padding-right: 5px;
     padding-left: 5px;
     padding-bottom: 5px;
-    font-size: 15px;
+    font-size: 15pt;
 }
 
 .helper-icon-box {
@@ -87,12 +87,12 @@
 .item-id-label {
     padding-top: 2px;
     padding-right: 2px;
-    font-size: 10px;
+    font-size: 10pt;
     color: rgba(255, 255, 255, 1);
 }
 
 .settings-icon {
     padding-right: 3px;
-    icon-size: 25px;
+    icon-size: 25pt;
     color: #8d8f8a;
 }
