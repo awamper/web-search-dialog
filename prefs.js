@@ -1,14 +1,28 @@
-/** Credit:
- *  based off prefs.js from the gnome shell extensions repository at
- *  git.gnome.org/browse/gnome-shell-extensions
- */
+/*
+    Copyright 2017 Ivan awamper@gmail.com
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License as
+    published by the Free Software Foundation; either version 2 of
+    the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 const GObject = imports.gi.GObject;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const Lang = imports.lang;
 const Params = imports.misc.params;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
 const ENGINES_KEY = 'search-engines';
@@ -26,9 +40,134 @@ const DEFAULT_ENGINE_KEY = 'default-search-engine';
 const OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
 const SELECT_FIRST_SUGGESTION = 'select-first-suggestion';
 
-const WebSearchDialogPrefsGrid = new GObject.Class({
-    Name: 'WebSearchDialog.Prefs.Grid',
-    GTypeName: 'WebSearchDialogPrefsGrid',
+
+const KeybindingsWidget = new GObject.Class({
+    Name: 'Keybindings.Widget',
+    GTypeName: 'KeybindingsWidget',
+    Extends: Gtk.Box,
+
+    _init: function(keybindings, settings) {
+        this.parent();
+        this.set_orientation(Gtk.Orientation.VERTICAL);
+
+        this._settings = settings;
+        this._keybindings = keybindings;
+
+        let scrolled_window = new Gtk.ScrolledWindow();
+        scrolled_window.set_policy(
+            Gtk.PolicyType.AUTOMATIC,
+            Gtk.PolicyType.AUTOMATIC
+        );
+
+        this._columns = {
+            NAME: 0,
+            ACCEL_NAME: 1,
+            MODS: 2,
+            KEY: 3
+        };
+
+        this._store = new Gtk.ListStore();
+        this._store.set_column_types([
+            GObject.TYPE_STRING,
+            GObject.TYPE_STRING,
+            GObject.TYPE_INT,
+            GObject.TYPE_INT
+        ]);
+
+        this._tree_view = new Gtk.TreeView({
+            model: this._store,
+            hexpand: true,
+            vexpand: true
+        });
+        this._tree_view.get_selection().set_mode(Gtk.SelectionMode.SINGLE);
+
+        let action_renderer = new Gtk.CellRendererText();
+        let action_column = new Gtk.TreeViewColumn({
+            'title': 'Action',
+            'expand': true
+        });
+        action_column.pack_start(action_renderer, true);
+        action_column.add_attribute(action_renderer, 'text', 1);
+        this._tree_view.append_column(action_column);
+
+        let keybinding_renderer = new Gtk.CellRendererAccel({
+            'editable': true,
+            'accel-mode': Gtk.CellRendererAccelMode.GTK
+        });
+        keybinding_renderer.connect('accel-edited',
+            Lang.bind(this, function(renderer, iter, key, mods) {
+                let value = Gtk.accelerator_name(key, mods);
+                let [success, iterator ] =
+                    this._store.get_iter_from_string(iter);
+
+                if(!success) {
+                    printerr("Can't change keybinding");
+                }
+
+                let name = this._store.get_value(iterator, 0);
+
+                this._store.set(
+                    iterator,
+                    [this._columns.MODS, this._columns.KEY],
+                    [mods, key]
+                );
+                this._settings.set_strv(name, [value]);
+            })
+        );
+
+        let keybinding_column = new Gtk.TreeViewColumn({
+            'title': 'Modify'
+        });
+        keybinding_column.pack_end(keybinding_renderer, false);
+        keybinding_column.add_attribute(
+            keybinding_renderer,
+            'accel-mods',
+            this._columns.MODS
+        );
+        keybinding_column.add_attribute(
+            keybinding_renderer,
+            'accel-key',
+            this._columns.KEY
+        );
+        this._tree_view.append_column(keybinding_column);
+
+        scrolled_window.add(this._tree_view);
+        this.add(scrolled_window);
+
+        this._refresh();
+    },
+
+    _refresh: function() {
+        this._store.clear();
+
+        for(let settings_key in this._keybindings) {
+            let [key, mods] = Gtk.accelerator_parse(
+                this._settings.get_strv(settings_key)[0]
+            );
+
+            let iter = this._store.append();
+            this._store.set(iter,
+                [
+                    this._columns.NAME,
+                    this._columns.ACCEL_NAME,
+                    this._columns.MODS,
+                    this._columns.KEY
+                ],
+                [
+                    settings_key,
+                    this._keybindings[settings_key],
+                    mods,
+                    key
+                ]
+            );
+        }
+    }
+});
+
+
+const PrefsGrid = new GObject.Class({
+    Name: 'Prefs.Grid',
+    GTypeName: 'PrefsGrid',
     Extends: Gtk.Grid,
 
     _init: function(settings, params) {
@@ -40,7 +179,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
 
     add_entry: function(text, key) {
         let item = new Gtk.Entry({
-            hexpand: true
+            hexpand: false
         });
         item.text = this._settings.get_string(key);
         this._settings.bind(key, item, 'text', Gio.SettingsBindFlags.DEFAULT);
@@ -50,7 +189,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
 
     add_shortcut: function(text, settings_key) {
         let item = new Gtk.Entry({
-            hexpand: true
+            hexpand: false
         });
         item.set_text(this._settings.get_strv(settings_key)[0]);
         item.connect('changed', Lang.bind(this, function(entry) {
@@ -74,7 +213,7 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
         return this.add_row(text, item);
     },
 
-    add_combo: function(text, key, list) {
+    add_combo: function(text, key, list, type) {
         let item = new Gtk.ComboBoxText();
 
         for(let i = 0; i < list.length; i++) {
@@ -83,19 +222,34 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
             item.insert(-1, id, title);
         }
 
-        item.set_active_id(this._settings.get_int(key).toString());
-        item.connect('changed', Lang.bind(this, function(combo) {
-            let value = parseInt(combo.get_active_id(), 10);
+        if(type === 'string') {
+            item.set_active_id(this._settings.get_string(key));
+        }
+        else {
+            item.set_active_id(this._settings.get_int(key).toString());
+        }
 
-            if(this._settings.get_int(key) !== value) {
-                this._settings.set_int(key, value);
+        item.connect('changed', Lang.bind(this, function(combo) {
+            let value = combo.get_active_id();
+
+            if(type === 'string') {
+                if(this._settings.get_string(key) !== value) {
+                    this._settings.set_string(key, value);
+                }
+            }
+            else {
+                value = parseInt(value, 10);
+
+                if(this._settings.get_int(key) !== value) {
+                    this._settings.set_int(key, value);
+                }
             }
         }));
 
-        this.add_row(text, item);
+        return this.add_row(text, item);
     },
 
-    add_spin: function(label, key, adjustment_properties, spin_properties) {
+    add_spin: function(label, key, adjustment_properties, type, spin_properties) {
         adjustment_properties = Params.parse(adjustment_properties, {
             lower: 0,
             upper: 100,
@@ -110,16 +264,33 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
         }, true);
         let spin_button = new Gtk.SpinButton(spin_properties);
 
-        spin_button.set_value(this._settings.get_int(key));
-        spin_button.connect('value-changed', Lang.bind(this, function(spin) {
-            let value = spin.get_value_as_int();
+        if(type !== 'int') spin_button.set_digits(2);
 
-            if(this._settings.get_int(key) !== value) {
-                this._settings.set_int(key, value);
+        let get_method = type === 'int' ? 'get_int' : 'get_double';
+        let set_method = type === 'int' ? 'set_int' : 'set_double';
+
+        spin_button.set_value(this._settings[get_method](key));
+        spin_button.connect('value-changed', Lang.bind(this, function(spin) {
+            let value
+
+            if(type === 'int') value = spin.get_value_as_int();
+            else value = spin.get_value();
+
+            if(this._settings[get_method](key) !== value) {
+                this._settings[set_method](key, value);
             }
         }));
 
         return this.add_row(label, spin_button, true);
+    },
+
+    add_button: function(label, callback) {
+        let item = new Gtk.Button({
+            label: label
+        });
+        item.connect('clicked', callback);
+
+        return this.add_item(item);
     },
 
     add_row: function(text, widget, wrap) {
@@ -148,8 +319,92 @@ const WebSearchDialogPrefsGrid = new GObject.Class({
         this._rownum++;
 
         return widget;
+    },
+
+    add_range: function(label, key, range_properties) {
+        range_properties = Params.parse(range_properties, {
+            min: 0,
+            max: 100,
+            step: 10,
+            mark_position: 0,
+            add_mark: false,
+            size: 200,
+            draw_value: true
+        });
+
+        let range = Gtk.Scale.new_with_range(
+            Gtk.Orientation.HORIZONTAL,
+            range_properties.min,
+            range_properties.max,
+            range_properties.step
+        );
+        range.set_value(this._settings.get_int(key));
+        range.set_draw_value(range_properties.draw_value);
+
+        if(range_properties.add_mark) {
+            range.add_mark(
+                range_properties.mark_position,
+                Gtk.PositionType.BOTTOM,
+                null
+            );
+        }
+
+        range.set_size_request(range_properties.size, -1);
+
+        range.connect('value-changed', Lang.bind(this, function(slider) {
+            this._settings.set_int(key, slider.get_value());
+        }));
+
+        label = new Gtk.Label({
+            label: label,
+            hexpand: true,
+            halign: Gtk.Align.START
+        });
+        label.set_line_wrap(false);
+
+        let box = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL
+        });
+        box.pack_start(label, true, false, 0);
+        box.pack_start(range, true, false, 0);
+
+        return this.add_item(box);
+    },
+
+    add_separator: function() {
+        let separator = new Gtk.Separator({
+            orientation: Gtk.Orientation.HORIZONTAL
+        });
+
+        this.add_item(separator, 0, 2, 1);
+    },
+
+    add_levelbar: function(params) {
+        params = Params.parse(params, {
+            min_value: 0,
+            max_value: 100,
+            value: 0,
+            mode: Gtk.LevelBarMode.CONTINUOUS,
+            inverted: false
+        });
+        let item = new Gtk.LevelBar(params);
+        return this.add_item(item);
+    },
+
+    add_label: function(text, markup=null) {
+        let label = new Gtk.Label({
+            hexpand: true,
+            halign: Gtk.Align.START
+        });
+        label.set_line_wrap(true);
+
+        if(markup) label.set_markup(markup);
+        else label.set_text(text);
+
+        return this.add_item(label);
     }
 });
+
 
 const WebSearchDialogPrefsEnginesList = new GObject.Class({
     Name: 'WebSearchDialog.Prefs.EnginesList',
@@ -264,7 +519,10 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         );
         toolbar.add(delete_button);
 
-        this.add(engines_list_box);
+        let scrolled_window = new Gtk.ScrolledWindow();
+        scrolled_window.add(engines_list_box);
+
+        this.add(scrolled_window);
         this.add(toolbar);
 
         this._changed_permitted = true;
@@ -443,6 +701,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
     }
 });
 
+
 const WebSearchDialogPrefsWidget = new GObject.Class({
     Name: 'WebSearchDialog.Prefs.Widget',
     GTypeName: 'WebSearchDialogPrefsWidget',
@@ -450,14 +709,60 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
     _init: function(params) {
         this.parent(params);
+        this.set_orientation(Gtk.Orientation.VERTICAL);
         this._settings = Utils.getSettings();
 
-        let settings_grid = new WebSearchDialogPrefsGrid(this._settings);
+        let main = this._get_main_page();
+        let keybindings = this._get_keybindings_page();
+
+        let settings_grid = new PrefsGrid(this._settings);
         let settings_grid_label = new Gtk.Label({
             label: "Settings"
         });
 
-        // default engine
+        let engines = {
+            page: new WebSearchDialogPrefsEnginesList(this._settings),
+            name: 'Search engines'
+        }
+
+        let stack = new Gtk.Stack({
+            transition_type: Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
+            transition_duration: 500
+        });
+        let stack_switcher = new Gtk.StackSwitcher({
+            margin_left: 5,
+            margin_top: 5,
+            margin_bottom: 5,
+            margin_right: 5,
+            stack: stack
+        });
+        stack.add_titled(main.page, main.name, main.name);
+        stack.add_titled(engines.page, engines.name, engines.name);
+        stack.add_titled(keybindings.page, keybindings.name, keybindings.name);
+
+        this.add(stack);
+
+        this.connect('realize',
+            Lang.bind(this, function() {
+                let headerbar = this.get_toplevel().get_titlebar();
+                headerbar.set_custom_title(stack_switcher);
+                headerbar.show_all();
+                this.get_toplevel().resize(700, 250);
+            })
+        );
+    },
+
+    _get_main_page: function() {
+        let settings = Utils.getSettings();
+        let name = 'Main';
+        let page = new PrefsGrid(settings);
+
+        let spin_properties = {
+            lower: 0,
+            upper: 0,
+            step_increment: 0
+        };
+
         let engine_list = this._settings.get_strv(ENGINES_KEY);
         let result_list = [];
 
@@ -470,119 +775,115 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             result_list.push(result);
         }
 
-        let default_engine = settings_grid.add_combo(
+        page.add_combo(
             'Default search engine:',
             DEFAULT_ENGINE_KEY,
-            result_list
+            result_list,
+            'int'
         );
 
-        // suggestions
-        let enable_suggestions = settings_grid.add_boolean(
-            'Suggestions:',
-            SUGGESTIONS_KEY
-        );
+        page.add_separator();
 
-        // select first suggestion
-        let select_first_suggestion = settings_grid.add_boolean(
-            'Autocomplete with first suggestion:',
-            SELECT_FIRST_SUGGESTION
-        );
-
-        // suggestions delay
-        let suggestions_delay_adjustment = {
-            lower: 100,
-            upper: 1000,
-            step_increment: 10
-        };
-        let suggestions_delay = settings_grid.add_spin(
-            'Suggestions delay(ms):',
-            SUGGESTIONS_DELAY_KEY,
-            suggestions_delay_adjustment
-        );
-
-        // helper
-        let enable_helper = settings_grid.add_boolean(
+        page.add_boolean(
             'Duckduckgo.com helper:',
             HELPER_KEY
         );
-
-        // helper delay
-        let helper_delay_adjustment = {
-            lower: 250,
-            upper: 2000,
-            step_increment: 10
-        };
-        let helper_delay = settings_grid.add_spin(
-            'Helper delay(ms):',
-            HELPER_DELAY_KEY,
-            helper_delay_adjustment
+        page.add_boolean(
+            'Suggestions:',
+            SUGGESTIONS_KEY
         );
-
-        // helper position
-        let helper_position = settings_grid.add_entry(
-            'Helper position(top or bottom):',
-            HELPER_POSITION_KEY
+        page.add_boolean(
+            'Autocomplete with first suggestion:',
+            SELECT_FIRST_SUGGESTION
         );
-
-        // history suggestions
-        let enable_history_suggestions = settings_grid.add_boolean(
+        page.add_boolean(
             'History suggestions:',
             HISTORY_SUGGESTIONS_KEY
         );
 
-        // history limit
-        let history_limit_adjustment = {
-            lower: 10,
-            upper: 1000,
-            step_increment: 5
-        }
-        let history_limit = settings_grid.add_spin(
+        page.add_separator();
+
+        spin_properties.lower = 10;
+        spin_properties.upper = 1000;
+        spin_properties.step_increment = 5;
+        page.add_spin(
             'History limit:',
             HISTORY_LIMIT_KEY,
-            history_limit_adjustment
+            spin_properties,
+            'int'
         );
 
-        // open url keyword
-        let open_url_keyword = settings_grid.add_entry(
+        spin_properties.lower = 200;
+        spin_properties.upper = 1000;
+        spin_properties.step_increment = 100;
+        page.add_spin(
+            'Suggestions delay(ms):',
+            SUGGESTIONS_DELAY_KEY,
+            spin_properties,
+            'int'
+        );
+
+        spin_properties.lower = 250;
+        spin_properties.upper = 2000;
+        spin_properties.step_increment = 50;
+        page.add_spin(
+            'Helper delay(ms):',
+            HELPER_DELAY_KEY,
+            spin_properties,
+            'int'
+        );
+        
+        let options = [
+            {title: 'Top', value: 'top'},
+            {title: 'Bottom', value: 'bottom'}
+        ];
+        page.add_combo(
+            'Helper position(top or bottom):',
+            HELPER_POSITION_KEY,
+            options,
+            'string'
+        );
+
+        page.add_separator();
+
+        page.add_entry(
             'Open url keyword(empty to disable):',
             OPEN_URL_KEY
         );
-
-        // open url label
-        let open_url_label = settings_grid.add_entry(
+        page.add_entry(
             'Open url label:',
             OPEN_URL_LABEL
         );
 
-        let engines_list = new WebSearchDialogPrefsEnginesList(this._settings);
-        let engines_list_label = new Gtk.Label({
-            label: "Search engines"
-        });
+        return {
+            page: page,
+            name: name
+        };
+    },
 
-        let shortcuts = new WebSearchDialogPrefsGrid(this._settings);
-        shortcuts.add_shortcut('Open search dialog:', OPEN_SEARCH_DIALOG_KEY);
-        let shortcuts_label = new Gtk.Label({
-            label: "Keyboard shortcuts"
-        });
+    _get_keybindings_page: function() {
+        let settings = Utils.getSettings();
+        let name = 'Keybindings';
+        let page = new PrefsGrid(settings);
 
-        let notebook = new Gtk.Notebook({
-            margin_left: 5,
-            margin_top: 5,
-            margin_bottom: 5,
-            margin_right: 5
-        });
+        let keybindings = {};
+        keybindings[OPEN_SEARCH_DIALOG_KEY] = 'Open search dialog:';
 
-        notebook.append_page(settings_grid, settings_grid_label);
-        notebook.append_page(engines_list, engines_list_label);
-        notebook.append_page(shortcuts, shortcuts_label);
+        let keybindings_widget = new KeybindingsWidget(keybindings, settings);
+        page.add_item(keybindings_widget)
 
-        this.add(notebook);
-    }
+        return {
+            page: page,
+            name: name
+        };
+    },
 });
+
 
 function init(){
     // nothing
 }
+
 
 function buildPrefsWidget() {
     let widget = new WebSearchDialogPrefsWidget();
