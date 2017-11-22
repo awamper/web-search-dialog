@@ -25,20 +25,20 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
-const ENGINES_KEY = 'search-engines';
-const SUGGESTIONS_KEY = 'enable-suggestions';
-const SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
-const HELPER_KEY = 'enable-duckduckgo-helper';
-const HELPER_DELAY_KEY = 'helper-delay';
-const HELPER_POSITION_KEY = 'helper-position';
-const OPEN_URL_KEY = 'open-url-keyword';
-const OPEN_URL_LABEL = 'open-url-label';
-const HISTORY_KEY = 'search-history-data';
-const HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
-const HISTORY_LIMIT_KEY = 'history-limit';
-const DEFAULT_ENGINE_KEY = 'default-search-engine';
-const OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
-const SELECT_FIRST_SUGGESTION = 'select-first-suggestion';
+var ENGINES_KEY = 'search-engines';
+var SUGGESTIONS_KEY = 'enable-suggestions';
+var SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
+var HELPER_KEY = 'enable-duckduckgo-helper';
+var HELPER_DELAY_KEY = 'helper-delay';
+var HELPER_POSITION_KEY = 'helper-position';
+var OPEN_URL_KEY = 'open-url-keyword';
+var OPEN_URL_LABEL = 'open-url-label';
+var HISTORY_KEY = 'search-history-data';
+var HISTORY_SUGGESTIONS_KEY = 'enable-history-suggestions'
+var HISTORY_LIMIT_KEY = 'history-limit';
+var DEFAULT_ENGINE_KEY = 'default-search-engine';
+var OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
+var SELECT_FIRST_SUGGESTION = 'select-first-suggestion';
 
 
 const KeybindingsWidget = new GObject.Class({

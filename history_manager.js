@@ -5,7 +5,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Prefs = Me.imports.prefs;
 const Utils = Me.imports.utils;
 
-const SearchHistoryManager = new Lang.Class({
+var SearchHistoryManager = new Lang.Class({
     Name: "SearchHistoryManager",
 
     _init: function(params) {

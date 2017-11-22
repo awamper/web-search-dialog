@@ -16,7 +16,7 @@ const DUCKDUCKGO_API_URL =
     "https://api.duckduckgo.com/?format=json&no_redirect=1"+
     "&skip_disambig=1&q=";
 
-const HelperSpinnerMenuItem = Lang.Class({
+var HelperSpinnerMenuItem = Lang.Class({
     Name: 'HelperSpinnerMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
@@ -42,7 +42,7 @@ const HelperSpinnerMenuItem = Lang.Class({
     }
 });
 
-const DuckDuckGoHelperMenuItem = new Lang.Class({
+var DuckDuckGoHelperMenuItem = new Lang.Class({
     Name: 'DuckDuckGoHelperMenuItem',
     Extends: PopupMenu.PopupBaseMenuItem,
 
@@ -156,7 +156,7 @@ const DuckDuckGoHelperMenuItem = new Lang.Class({
     }
 });
 
-const DuckDuckGoHelper = new Lang.Class({
+var DuckDuckGoHelper = new Lang.Class({
     Name: 'DuckDuckGoHelper',
 
     _init: function() {

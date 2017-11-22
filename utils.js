@@ -16,7 +16,7 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Soup = imports.gi.Soup;
 const Clutter = imports.gi.Clutter;
 
-const _httpSession = new Soup.SessionAsync();
+var _httpSession = new Soup.SessionAsync();
 Soup.Session.prototype.add_feature.call(
     _httpSession,
     new Soup.ProxyResolverDefault()
@@ -24,7 +24,7 @@ Soup.Session.prototype.add_feature.call(
 _httpSession.user_agent = 'Gnome-Shell WebSearchDialog Extension';
 _httpSession.timeout = 1;
 
-const ICONS = {
+var ICONS = {
     information: 'dialog-information-symbolic',
     error: 'dialog-error-symbolic',
     find: 'edit-find-symbolic',
@@ -32,7 +32,7 @@ const ICONS = {
 };
 
 
-const KEYBOARD_NUMBERS = [
+var KEYBOARD_NUMBERS = [
     Clutter.KEY_0,
     Clutter.KEY_1,
     Clutter.KEY_2,

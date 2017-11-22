@@ -83,7 +83,7 @@ const SuggestionMenuItem = new Lang.Class({
     }
 });
 
-const SuggestionsBox = new Lang.Class({
+var SuggestionsBox = new Lang.Class({
     Name: 'SuggestionsBox',
     Extends: PopupMenu.PopupMenu,
 
