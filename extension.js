@@ -1033,19 +1033,24 @@ const WebSearchDialog = new Lang.Class({
         this._remove_delay_id();
         Main.wm.removeKeybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
         global.display.disconnect(this._window_handler_id);
+        this.destroy();
     }
 });
 
-let search_dialog;
+let search_dialog = null;
 
 function init() {
-    search_dialog = new WebSearchDialog();
+    // nothing
 }
 
 function enable() {
-    search_dialog.enable();
+    if(search_dialog === null) {
+        search_dialog = new WebSearchDialog();
+        search_dialog.enable();
+    }
 }
 
 function disable() {
     search_dialog.disable();
+    search_dialog = null;
 }
