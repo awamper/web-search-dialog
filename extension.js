@@ -1029,16 +1029,20 @@ const WebSearchDialog = new Lang.Class({
         this.parent();
     },
 
+    toggleOpen: function() {
+      !this._is_open ? this.open() : this.close();
+      this._is_open = !this._is_open;
+    },
+
     enable: function() {
         Main.wm.addKeybinding(
             Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL |
-            Shell.ActionMode.OVERVIEW,
-            Lang.bind(this, function() {
-                this.open()
-            })
+            Shell.ActionMode.OVERVIEW |
+            Shell.ActionMode.SYSTEM_MODAL, // required to make the toggle work when the search dialog is open
+            Lang.bind(this, this.toggleOpen)
         );
     },
 
