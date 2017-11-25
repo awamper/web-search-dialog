@@ -450,8 +450,8 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             sort_column_id: this.columns.DISPLAY_NAME,
             title: 'Name'
         });
-
-        let name_renderer = new Gtk.CellRendererText();
+        let name_renderer = new Gtk.CellRendererText({ editable: true });
+        name_renderer.connect('edited', this._make_on_item_edited('name'));
         name_column.pack_start(name_renderer, true);
         name_column.add_attribute(
             name_renderer,
@@ -465,7 +465,8 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             title: 'Keyword',
             sort_column_id: this.columns.KEYWORD
         });
-        let keyword_renderer = new Gtk.CellRendererText();
+        let keyword_renderer = new Gtk.CellRendererText({ editable: true });
+        keyword_renderer.connect('edited', this._make_on_item_edited('keyword'));
         keyword_column.pack_start(keyword_renderer, true);
         keyword_column.add_attribute(
             keyword_renderer,
@@ -479,7 +480,8 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             title: 'Url',
             sort_column_id: this.columns.URL
         });
-        let url_renderer = new Gtk.CellRendererText();
+        let url_renderer = new Gtk.CellRendererText({ editable: true });
+        url_renderer.connect('edited', this._make_on_item_edited('url'));
         url_column.pack_start(url_renderer, true);
         url_column.add_attribute(
             url_renderer,
@@ -527,6 +529,16 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         this._changed_permitted = true;
         this._refresh();
+    },
+
+    _make_on_item_edited: function (column) {
+        return Lang.bind(this, function (renderer, rowIndex, newVal) {
+            let [any, model, iter] = this._tree_view.get_selection().get_selected();
+            let name = this._store.get_value(iter, this.columns.DISPLAY_NAME);
+            let update = {};
+            update[column] = newVal;
+            return this._update_item(name, update);
+        });
     },
 
     _create_new: function() {
@@ -602,7 +614,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
     },
 
     _delete_selected: function() {
-        let [any, model, iter] = 
+        let [any, model, iter] =
             this._tree_view.get_selection().get_selected();
 
         if(any) {
@@ -652,30 +664,61 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         }
     },
 
-    _append_item: function(new_item) {
-        if(!this._is_valid_item(new_item)) {
-            return false;
-        }
-
+    _is_duplicate_item: function(item, ignoreIndex) {
         let current_items = this._settings.get_strv(ENGINES_KEY);
 
         for(let i = 0; i < current_items.length; i++) {
+            if (i === ignoreIndex) continue;
+
             let info = JSON.parse(current_items[i]);
 
-            if(info.name == new_item.name) {
+            if(info.name == item.name) {
                 printerr("Already have an item for this name");
-                this._show_error('sda');
                 return false;
             }
-            else if(info.keyword == new_item.keyword) {
+            else if(info.keyword == item.keyword) {
                 printerr("Already have an item for this keyword");
                 return false;
             }
         }
 
+        return true;
+    },
+
+    _append_item: function(new_item) {
+        if(!this._is_valid_item(new_item) || !this._is_duplicate_item(new_item)) {
+            return false;
+        }
+
+        let current_items = this._settings.get_strv(ENGINES_KEY);
+
         current_items.push(JSON.stringify(new_item));
         this._settings.set_strv(ENGINES_KEY, current_items);
         return true;
+    },
+
+    _update_item: function(name, update) {
+        let current_items = this._settings.get_strv(ENGINES_KEY);
+
+        for(let i = 0; i < current_items.length; i++) {
+            let info = JSON.parse(current_items[i]);
+
+            if(info.name == name) {
+                for (let key of Object.keys(update)) {
+                    info[key] = update[key];
+                }
+
+                if(!this._is_valid_item(info) || !this._is_duplicate_item(info, i)) {
+                    return false;
+                }
+
+                current_items[i] = JSON.stringify(info);
+                this._settings.set_strv(ENGINES_KEY, current_items);
+                return true;
+            }
+        }
+
+        return false;
     },
 
     _remove_item: function(name) {
@@ -832,7 +875,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             spin_properties,
             'int'
         );
-        
+
         let options = [
             {title: 'Top', value: 'top'},
             {title: 'Bottom', value: 'bottom'}
