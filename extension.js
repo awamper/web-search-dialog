@@ -356,7 +356,8 @@ const WebSearchDialog = new Lang.Class({
             this._set_engine(false);
             this._on_search_text_changed(); // trigger update of hint
         }
-        else if(symbol == Clutter.BackSpace) {            this.select_first_suggestion = false;
+        else if(symbol == Clutter.BackSpace) {
+            this.select_first_suggestion = false;
         }
         else if(symbol == Clutter.Right) {
             let sel = this.search_entry.clutter_text.get_selection_bound();
@@ -1042,7 +1043,7 @@ const WebSearchDialog = new Lang.Class({
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL |
             Shell.ActionMode.OVERVIEW |
-            Shell.ActionMode.SYSTEM_MODAL, // required to make the toggle work when the search dialog is open
+            Shell.ActionMode.SYSTEM_MODAL,
             Lang.bind(this, this.toggleOpen)
         );
     },
