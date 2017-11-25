@@ -347,7 +347,16 @@ const WebSearchDialog = new Lang.Class({
     _on_text_key_press: function(o, e) {
         let symbol = e.get_key_symbol();
 
-        if(symbol == Clutter.BackSpace) {
+        // reset the search engine on backspace with empty search text
+        if(
+            symbol == Clutter.BackSpace &&
+            !this.search_entry.text.length &&
+            !this.search_engine._default
+        ) {
+            this._set_engine(false);
+            this._on_search_text_changed(); // trigger update of hint
+        }
+        else if(symbol == Clutter.BackSpace) {
             this.select_first_suggestion = false;
         }
         else if(symbol == Clutter.Right) {
@@ -488,8 +497,7 @@ const WebSearchDialog = new Lang.Class({
         this._remove_delay_id();
 
         let engine_info = this._get_engine(keyword);
-        let engine = '';
-        this.search_engine = {};
+        let engine = {};
 
         if(engine_info) {
             engine = engine_info;
@@ -497,19 +505,27 @@ const WebSearchDialog = new Lang.Class({
         }
         else {
             engine = this._get_default_engine();
-            this.search_engine._default = true;
+            engine._default = true;
         }
 
-        if(engine.keyword == this.search_engine.keyword) {
+        if(
+            engine.keyword === this.search_engine.keyword ||
+            this.search_engine._default && engine._default
+        ) {
             return false;
         }
 
+        this.search_engine = {};
+        this.search_engine._default = engine._default;
         this.search_engine.keyword = engine.keyword.trim();
         this.search_engine.open_url = engine.open_url;
         this.search_engine.name = engine.name.trim();
         this.search_engine.url = !engine.open_url
             ? engine.url.trim()
             : null
+        
+        // update the label any time we set an engine
+        this._show_engine_label(this.search_engine.name+':');
 
         if(!this.search_engine._default) {
             let hint_text;
@@ -524,8 +540,6 @@ const WebSearchDialog = new Lang.Class({
             hint_text += '\nPress "Tab" to switch search engine.';
             this.show_suggestions = false;
             this.search_entry.set_text('');
-            this._show_engine_label(this.search_engine.name+':');
-
             this._show_hint({
                 text: hint_text,
                 icon_name: ICONS.information
@@ -995,7 +1009,7 @@ const WebSearchDialog = new Lang.Class({
     open: function() {
         this.parent();
         this.search_entry.grab_key_focus();
-
+        this._set_engine();
         this._show_hint({
             text: this._get_main_hint(),
             icon_name: ICONS.information
@@ -1003,6 +1017,7 @@ const WebSearchDialog = new Lang.Class({
 
         this._resize();
         this._reposition();
+        this._is_open = true;
     },
 
     close: function() {
@@ -1012,8 +1027,13 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine = false;
         this.suggestions_box.close();
         this.search_history.reset_index();
+        this._is_open = false;
 
         this.parent();
+    },
+
+    toggleOpen: function() {
+      this._is_open ? this.close() : this.open();
     },
 
     enable: function() {
@@ -1022,10 +1042,9 @@ const WebSearchDialog = new Lang.Class({
             this._settings,
             Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL |
-            Shell.ActionMode.OVERVIEW,
-            Lang.bind(this, function() {
-                this.open()
-            })
+            Shell.ActionMode.OVERVIEW |
+            Shell.ActionMode.SYSTEM_MODAL,
+            Lang.bind(this, this.toggleOpen)
         );
     },
 
