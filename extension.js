@@ -496,8 +496,7 @@ const WebSearchDialog = new Lang.Class({
         this._remove_delay_id();
 
         let engine_info = this._get_engine(keyword);
-        let engine = '';
-        this.search_engine = {};
+        let engine = {};
 
         if(engine_info) {
             engine = engine_info;
@@ -505,13 +504,18 @@ const WebSearchDialog = new Lang.Class({
         }
         else {
             engine = this._get_default_engine();
-            this.search_engine._default = true;
+            engine._default = true;
         }
 
-        if(engine.keyword == this.search_engine.keyword) {
+        if(
+            engine.keyword === this.search_engine.keyword ||
+            this.search_engine._default && engine._default
+        ) {
             return false;
         }
 
+        this.search_engine = {};
+        this.search_engine._default = engine._default;
         this.search_engine.keyword = engine.keyword.trim();
         this.search_engine.open_url = engine.open_url;
         this.search_engine.name = engine.name.trim();
