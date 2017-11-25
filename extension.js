@@ -347,8 +347,16 @@ const WebSearchDialog = new Lang.Class({
     _on_text_key_press: function(o, e) {
         let symbol = e.get_key_symbol();
 
-        if(symbol == Clutter.BackSpace) {
-            this.select_first_suggestion = false;
+        // reset the search engine on backspace with empty search text
+        if(
+            symbol == Clutter.BackSpace &&
+            !this.search_entry.text.length &&
+            !this.search_engine._default
+        ) {
+            this._set_engine(false);
+            this._on_search_text_changed(); // trigger update of hint
+        }
+        else if(symbol == Clutter.BackSpace) {            this.select_first_suggestion = false;
         }
         else if(symbol == Clutter.Right) {
             let sel = this.search_entry.clutter_text.get_selection_bound();
@@ -510,6 +518,9 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine.url = !engine.open_url
             ? engine.url.trim()
             : null
+        
+        // update the label any time we set an engine
+        this._show_engine_label(this.search_engine.name+':');
 
         if(!this.search_engine._default) {
             let hint_text;
@@ -524,8 +535,6 @@ const WebSearchDialog = new Lang.Class({
             hint_text += '\nPress "Tab" to switch search engine.';
             this.show_suggestions = false;
             this.search_entry.set_text('');
-            this._show_engine_label(this.search_engine.name+':');
-
             this._show_hint({
                 text: hint_text,
                 icon_name: ICONS.information
@@ -995,7 +1004,7 @@ const WebSearchDialog = new Lang.Class({
     open: function() {
         this.parent();
         this.search_entry.grab_key_focus();
-
+        this._set_engine();
         this._show_hint({
             text: this._get_main_hint(),
             icon_name: ICONS.information
