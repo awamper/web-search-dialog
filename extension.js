@@ -1016,6 +1016,7 @@ const WebSearchDialog = new Lang.Class({
 
         this._resize();
         this._reposition();
+        this._is_open = true;
     },
 
     close: function() {
@@ -1025,13 +1026,13 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine = false;
         this.suggestions_box.close();
         this.search_history.reset_index();
+        this._is_open = false;
 
         this.parent();
     },
 
     toggleOpen: function() {
-      !this._is_open ? this.open() : this.close();
-      this._is_open = !this._is_open;
+      this._is_open ? this.close() : this.open();
     },
 
     enable: function() {
