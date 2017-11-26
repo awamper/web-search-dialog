@@ -16,12 +16,13 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Soup = imports.gi.Soup;
 const Clutter = imports.gi.Clutter;
 
+var DEFAULT_USER_AGENT = 'WebSearchDialog extension (GNOME Shell)';
 var _httpSession = new Soup.SessionAsync();
 Soup.Session.prototype.add_feature.call(
     _httpSession,
     new Soup.ProxyResolverDefault()
 );
-_httpSession.user_agent = 'Gnome-Shell WebSearchDialog Extension';
+_httpSession.user_agent = DEFAULT_USER_AGENT;
 _httpSession.timeout = 1;
 
 var ICONS = {

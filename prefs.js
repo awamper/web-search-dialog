@@ -39,6 +39,7 @@ var HISTORY_LIMIT_KEY = 'history-limit';
 var DEFAULT_ENGINE_KEY = 'default-search-engine';
 var OPEN_SEARCH_DIALOG_KEY = 'open-web-search-dialog';
 var SELECT_FIRST_SUGGESTION = 'select-first-suggestion';
+var LANGUAGE_CODE = 'language-code';
 
 
 const KeybindingsWidget = new GObject.Class({
@@ -830,6 +831,10 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         page.add_boolean(
             'Duckduckgo.com helper:',
             HELPER_KEY
+        );
+        page.add_entry(
+            'Helper language code (e.g. ru, de, fr)',
+            LANGUAGE_CODE
         );
         page.add_boolean(
             'Suggestions:',

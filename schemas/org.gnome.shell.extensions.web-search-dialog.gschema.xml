@@ -71,5 +71,10 @@
     <key type="s" name="open-url-keyword">
       <default>"url"</default>
     </key>
+
+    <key type="s" name="language-code">
+      <default>'en'</default>
+    </key>
+
   </schema>
 </schemalist>

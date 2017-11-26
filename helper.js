@@ -9,8 +9,8 @@ const Clutter = imports.gi.Clutter;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
+const Prefs = Me.imports.prefs;
 
-const _httpSession = Utils._httpSession;
 
 const DUCKDUCKGO_API_URL = 
     "https://api.duckduckgo.com/?format=json&no_redirect=1"+
@@ -160,14 +160,30 @@ var DuckDuckGoHelper = new Lang.Class({
     Name: 'DuckDuckGoHelper',
 
     _init: function() {
-        // nothing
+        this._settings = Utils.getSettings();
+        this._http_session = this._create_session();
+    },
+
+    _create_session: function() {
+        let http_session = new Soup.Session({
+            user_agent: Utils.DEFAULT_USER_AGENT,
+            timeout: 5,
+            accept_language: 'en'
+        });
+        Soup.Session.prototype.add_feature.call(
+            http_session,
+            new Soup.ProxyResolverDefault()
+        );
+
+        return http_session;
     },
 
     _get_data_async: function(url, callback) {
         let request = Soup.Message.new('GET', url);
 
-        _httpSession.queue_message(request,
-            Lang.bind(this, function(_httpSession, message) {
+        this._http_session.accept_language = this._settings.get_string(Prefs.LANGUAGE_CODE);
+        this._http_session.queue_message(request,
+            Lang.bind(this, function(http_session, message) {
                 if(message.status_code === 200) {
                     callback.call(this, request.response_body.data);
                 }
