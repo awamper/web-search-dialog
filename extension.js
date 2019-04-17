@@ -22,7 +22,7 @@ const _httpSession = Utils._httpSession;
 const ICONS = Utils.ICONS;
 
 const MAX_SUGGESTIONS = 3;
-const SUGGESTIONS_URL = 
+const SUGGESTIONS_URL =
     "https://suggestqueries.google.com/complete/search?client=chrome&q=";
 
 const SETTINGS_ICON = 'emblem-system-symbolic';
@@ -37,16 +37,12 @@ function launch_extension_prefs(uuid) {
         global.create_app_launch_context(timestamp, -1)
     );
 }
-
-const WebSearchDialog = new Lang.Class({
-    Name: 'WebSearchDialog',
-    Extends: ModalDialog.ModalDialog,
-
-    _init: function() {
-        this.parent({
+const WebSearchDialog = class WebSearchDialog extends ModalDialog.ModalDialog {
+    constructor() {
+        super({
             destroyOnClose: false
         });
-        this._dialogLayout = 
+        this._dialogLayout =
             typeof this.dialogLayout === "undefined"
             ? this._dialogLayout
             : this.dialogLayout;
@@ -70,9 +66,9 @@ const WebSearchDialog = new Lang.Class({
             'window-demands-attention',
             Lang.bind(this, this._on_window_demands_attention)
         );
-    },
+    }
 
-    _resize: function() {
+    _resize() {
         let monitor = Main.layoutManager.currentMonitor;
         let is_primary = monitor.index === Main.layoutManager.primaryIndex;
 
@@ -83,17 +79,17 @@ const WebSearchDialog = new Lang.Class({
         let width = Math.round(available_width / 100 * 85);
 
         this._dialogLayout.set_width(width);
-    },
+    }
 
-    _reposition: function() {
+    _reposition() {
         let monitor = Main.layoutManager.currentMonitor;
         this._dialogLayout.x = Math.round(monitor.width / 2 - this._dialogLayout.width / 2);
         this._dialogLayout.y = 100;
-    },
+    }
 
-    _get_main_hint: function() {
+    _get_main_hint() {
         let default_engine = this._get_default_engine();
-        let hint = 
+        let hint =
             'Type to search in '+default_engine.name+' or enter '+
             'a keyword and press "space".';
 
@@ -105,9 +101,9 @@ const WebSearchDialog = new Lang.Class({
         hint += '\nPress "Tab" for available search engines.';
 
         return hint;
-    },
+    }
 
-    _remove_delay_id: function() {
+    _remove_delay_id() {
         if(this._suggestions_delay_id > 0) {
             Mainloop.source_remove(this._suggestions_delay_id);
             this._suggestions_delay_id = 0;
@@ -116,16 +112,16 @@ const WebSearchDialog = new Lang.Class({
             Mainloop.source_remove(this._helper_delay_id);
             this._helper_delay_id = 0;
         }
-    },
+    }
 
-    _on_window_demands_attention: function(display, window) {
+    _on_window_demands_attention(display, window) {
         if(this.activate_window) {
             this.activate_window = false;
             Main.activateWindow(window);
         }
-    },
+    }
 
-    _create_search_dialog: function() {
+    _create_search_dialog() {
         this.hint = new St.Label({
             style_class: 'search-hint'
         });
@@ -151,7 +147,7 @@ const WebSearchDialog = new Lang.Class({
             Lang.bind(this, this._on_text_activate)
         );
         this.search_entry.get_clutter_text().connect(
-            'text-changed', 
+            'text-changed',
             Lang.bind(this, this._on_search_text_changed)
         );
         this.search_entry.get_clutter_text().connect(
@@ -188,9 +184,9 @@ const WebSearchDialog = new Lang.Class({
 
         this.contentLayout.add(this._search_table);
         this.contentLayout.add(this._hint_box);
-    },
+    }
 
-    _on_key_press: function(o, e) {
+    _on_key_press(o, e) {
         let symbol = e.get_key_symbol();
         let control_mask = (e.get_state() & Clutter.ModifierType.CONTROL_MASK);
         let shift_mask = (e.get_state() & Clutter.ModifierType.SHIFT_MASK);
@@ -329,9 +325,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
-    _on_text_activate: function(text) {
+    _on_text_activate(text) {
         text = text.get_text();
 
         if(!Utils.is_blank(text)) {
@@ -342,9 +338,9 @@ const WebSearchDialog = new Lang.Class({
                 this._activate_search(text);
             }
         }
-    },
+    }
 
-    _on_text_key_press: function(o, e) {
+    _on_text_key_press(o, e) {
         let symbol = e.get_key_symbol();
 
         // reset the search engine on backspace with empty search text
@@ -368,9 +364,9 @@ const WebSearchDialog = new Lang.Class({
                 );
             }
         }
-    },
+    }
 
-    _on_search_text_changed: function() {
+    _on_search_text_changed() {
         this._remove_delay_id();
         let text = this.search_entry.get_text();
 
@@ -418,9 +414,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
-    _get_open_url_keyword: function() {
+    _get_open_url_keyword() {
         let key = this._settings.get_string(Prefs.OPEN_URL_KEY);
 
         if(Utils.is_blank(key)) {
@@ -429,9 +425,9 @@ const WebSearchDialog = new Lang.Class({
         else {
             return key.trim();
         }
-    },
+    }
 
-    _get_keyword: function(text) {
+    _get_keyword(text) {
         let result = false;
         let web_search_query_regexp = /^(.+?)\s$/;
 
@@ -445,22 +441,22 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return result;
-    },
+    }
 
-    _get_default_engine: function() {
+    _get_default_engine() {
         let engines = this._settings.get_strv(Prefs.ENGINES_KEY);
         let index = this._settings.get_int(Prefs.DEFAULT_ENGINE_KEY);
         let engine = JSON.parse(engines[index]);
-        
+
         if(!Utils.is_blank(engine.url)) {
             return engine;
         }
         else {
             return false;
         }
-    },
+    }
 
-    _get_engine: function(key) {
+    _get_engine(key) {
         if(Utils.is_blank(key)) {
             return false;
         }
@@ -491,9 +487,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return false;
-    },
+    }
 
-    _set_engine: function(keyword) {
+    _set_engine(keyword) {
         this._remove_delay_id();
 
         let engine_info = this._get_engine(keyword);
@@ -523,7 +519,7 @@ const WebSearchDialog = new Lang.Class({
         this.search_engine.url = !engine.open_url
             ? engine.url.trim()
             : null
-        
+
         // update the label any time we set an engine
         this._show_engine_label(this.search_engine.name+':');
 
@@ -547,9 +543,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
-    _show_hint: function(params) {
+    _show_hint(params) {
         params = Params.parse(params, {
             text: null,
             icon_name: ICONS.information
@@ -595,9 +591,9 @@ const WebSearchDialog = new Lang.Class({
         });
 
         return true;
-    },
+    }
 
-    _hide_hint: function() {
+    _hide_hint() {
         if(this._hint_box.visible) {
             Tweener.addTween(this._hint_box, {
                 opacity: 0,
@@ -614,9 +610,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return false;
-    },
+    }
 
-    _show_engine_label: function(text) {
+    _show_engine_label(text) {
         if(Utils.is_blank(text)) {
             return false;
         }
@@ -651,9 +647,9 @@ const WebSearchDialog = new Lang.Class({
         });
 
         return true;
-    },
+    }
 
-    _hide_engine_label: function() {
+    _hide_engine_label() {
         if(!this.search_engine_label.visible) {
             return false;
         }
@@ -670,9 +666,9 @@ const WebSearchDialog = new Lang.Class({
         })
 
         return true;
-    },
+    }
 
-    _parse_suggestions: function(suggestions_source) {
+    _parse_suggestions(suggestions_source) {
         if(suggestions_source[1].length < 1) {
             return false;
         }
@@ -699,9 +695,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return result.length > 0 ? result : false;
-    },
+    }
 
-    _get_suggestions: function(text, callback) {
+    _get_suggestions(text, callback) {
         let url = SUGGESTIONS_URL+encodeURIComponent(text);
         let here = this;
 
@@ -722,9 +718,9 @@ const WebSearchDialog = new Lang.Class({
                 callback.call(here, text, false);
             }
         });
-    },
+    }
 
-    _display_helper: function(text) {
+    _display_helper(text) {
         if(!this._settings.get_boolean(Prefs.HELPER_KEY)) {
             return false;
         }
@@ -742,7 +738,7 @@ const WebSearchDialog = new Lang.Class({
                         let image = {
                             url: result.image
                         };
-                        let menu_item = 
+                        let menu_item =
                             this.duckduckgo_helper.get_menu_item({
                                 heading: result.heading,
                                 definition: result.definition,
@@ -772,9 +768,9 @@ const WebSearchDialog = new Lang.Class({
         );
 
         return true;
-    },
+    }
 
-    _display_suggestions: function(text) {
+    _display_suggestions(text) {
         if(!this._settings.get_boolean(Prefs.SUGGESTIONS_KEY)) {
             return false;
         }
@@ -812,9 +808,9 @@ const WebSearchDialog = new Lang.Class({
                     for(let i = 0; i < MAX_SUGGESTIONS; i++) {
                         let suggestion = suggestions[i];
 
-                        if(this.search_engine.open_url && 
+                        if(this.search_engine.open_url &&
                             suggestion.type != 'NAVIGATION') {
-                            
+
                             continue;
                         }
                         if(suggestion.text == text) {
@@ -849,9 +845,9 @@ const WebSearchDialog = new Lang.Class({
         );
 
         return true;
-    },
+    }
 
-    _select_first_suggestion: function(text) {
+    _select_first_suggestion(text) {
         if(!this._settings.get_boolean(Prefs.SELECT_FIRST_SUGGESTION)) return false;
         if(text.slice(-1) == ' ') return false;
 
@@ -875,9 +871,9 @@ const WebSearchDialog = new Lang.Class({
         this._display_helper(text);
 
         return true;
-    },
+    }
 
-    _display_history_suggestions: function(text) {
+    _display_history_suggestions(text) {
         if(!this._settings.get_boolean(Prefs.HISTORY_SUGGESTIONS_KEY)) {
             return false;
         }
@@ -910,9 +906,9 @@ const WebSearchDialog = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
-    _display_engines: function() {
+    _display_engines() {
         this._remove_delay_id();
 
         this.suggestions_box.removeAll();
@@ -948,9 +944,9 @@ const WebSearchDialog = new Lang.Class({
         if(!this.suggestions_box.isEmpty()) {
             this.suggestions_box.open();
         }
-    },
+    }
 
-    _activate_search: function(text) {
+    _activate_search(text) {
         this.suggestions_box.close();
 
         if(Utils.is_blank(text)) {
@@ -972,9 +968,9 @@ const WebSearchDialog = new Lang.Class({
         this._open_url(url);
 
         return true;
-    },
+    }
 
-    _open_url: function(url, to_history) {
+    _open_url(url, to_history) {
         url = Utils.get_url(url);
 
         if(!url) {
@@ -994,7 +990,7 @@ const WebSearchDialog = new Lang.Class({
                 query: url,
                 type: "NAVIGATION"
             });
-        } 
+        }
 
         this.activate_window = true;
 
@@ -1004,10 +1000,10 @@ const WebSearchDialog = new Lang.Class({
         );
 
         return true;
-    },
+    }
 
-    open: function() {
-        this.parent();
+    open() {
+        super.open();
         this.search_entry.grab_key_focus();
         this._set_engine();
         this._show_hint({
@@ -1018,9 +1014,9 @@ const WebSearchDialog = new Lang.Class({
         this._resize();
         this._reposition();
         this._is_open = true;
-    },
+    }
 
-    close: function() {
+    close() {
         this._remove_delay_id();
         this._hide_engine_label();
         this.search_entry.set_text('');
@@ -1029,14 +1025,14 @@ const WebSearchDialog = new Lang.Class({
         this.search_history.reset_index();
         this._is_open = false;
 
-        this.parent();
-    },
+        super.close();
+    }
 
-    toggleOpen: function() {
+    toggleOpen() {
       this._is_open ? this.close() : this.open();
-    },
+    }
 
-    enable: function() {
+    enable() {
         Main.wm.addKeybinding(
             Prefs.OPEN_SEARCH_DIALOG_KEY,
             this._settings,
@@ -1046,15 +1042,15 @@ const WebSearchDialog = new Lang.Class({
             Shell.ActionMode.SYSTEM_MODAL,
             Lang.bind(this, this.toggleOpen)
         );
-    },
+    }
 
-    disable: function() {
+    disable() {
         this._remove_delay_id();
         Main.wm.removeKeybinding(Prefs.OPEN_SEARCH_DIALOG_KEY);
         global.display.disconnect(this._window_handler_id);
         this.destroy();
     }
-});
+};
 
 let search_dialog = null;
 

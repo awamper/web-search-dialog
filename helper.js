@@ -12,16 +12,13 @@ const Utils = Me.imports.utils;
 const Prefs = Me.imports.prefs;
 
 
-const DUCKDUCKGO_API_URL = 
+const DUCKDUCKGO_API_URL =
     "https://api.duckduckgo.com/?format=json&no_redirect=1"+
     "&skip_disambig=1&q=";
 
-var HelperSpinnerMenuItem = Lang.Class({
-    Name: 'HelperSpinnerMenuItem',
-    Extends: PopupMenu.PopupBaseMenuItem,
-
-    _init: function(text) {
-        this.parent({
+var HelperSpinnerMenuItem = class HelperSpinnerMenuItem extends PopupMenu.PopupBaseMenuItem {
+    constructor(text) {
+        super({
             reactive: false,
             activate: false,
             hover: false,
@@ -40,14 +37,11 @@ var HelperSpinnerMenuItem = Lang.Class({
 
         this.actor.add_child(box);
     }
-});
+}
 
-var DuckDuckGoHelperMenuItem = new Lang.Class({
-    Name: 'DuckDuckGoHelperMenuItem',
-    Extends: PopupMenu.PopupBaseMenuItem,
-
-    _init: function(data) {
-        this.parent({
+var DuckDuckGoHelperMenuItem = class DuckDuckGoHelperMenuItem extends PopupMenu.PopupBaseMenuItem {
+    constructor(data) {
+        super({
             reactive: false,
             activate: false,
             hover: false,
@@ -94,9 +88,9 @@ var DuckDuckGoHelperMenuItem = new Lang.Class({
         this.actor.add_child(grid);
 
         return true;
-    },
+    }
 
-    _get_icon: function(icon_info) {
+    _get_icon(icon_info) {
         let info = Params.parse(icon_info, {
             url: false,
             width: 120,
@@ -136,9 +130,9 @@ var DuckDuckGoHelperMenuItem = new Lang.Class({
         }));
 
         return this.icon_box;
-    },
+    }
 
-    _get_label: function(text, class_name, max_length) {
+    _get_label(text, class_name, max_length) {
         if(Utils.is_blank(text)) {
             return false;
         }
@@ -154,17 +148,15 @@ var DuckDuckGoHelperMenuItem = new Lang.Class({
 
         return label;
     }
-});
+};
 
-var DuckDuckGoHelper = new Lang.Class({
-    Name: 'DuckDuckGoHelper',
-
-    _init: function() {
+var DuckDuckGoHelper = class DuckDuckGoHelper {
+    constructor() {
         this._settings = Utils.getSettings();
         this._http_session = this._create_session();
-    },
+    }
 
-    _create_session: function() {
+    _create_session() {
         let http_session = new Soup.Session({
             user_agent: Utils.DEFAULT_USER_AGENT,
             timeout: 5,
@@ -176,9 +168,9 @@ var DuckDuckGoHelper = new Lang.Class({
         );
 
         return http_session;
-    },
+    }
 
-    _get_data_async: function(url, callback) {
+    _get_data_async(url, callback) {
         let request = Soup.Message.new('GET', url);
 
         this._http_session.accept_language = this._settings.get_string(Prefs.LANGUAGE_CODE);
@@ -192,9 +184,9 @@ var DuckDuckGoHelper = new Lang.Class({
                 }
             })
         );
-    },
+    }
 
-    _parse_response: function(response) {
+    _parse_response(response) {
         response = JSON.parse(response);
 
         let result = {
@@ -204,7 +196,7 @@ var DuckDuckGoHelper = new Lang.Class({
             abstract: Utils.is_blank(response.Abstract)
                 ? false
                 : response.AbstractText.trim().replace(/<[^>]+>/g, ""),
-            definition: 
+            definition:
                 Utils.is_blank(response.Definition) ||
                 response.Definition == response.Abstract
                 ? false
@@ -215,9 +207,9 @@ var DuckDuckGoHelper = new Lang.Class({
         };
 
         return result;
-    },
+    }
 
-    get_info: function(query, callback) {
+    get_info(query, callback) {
         query = query.trim();
 
         if(Utils.is_blank(query)) {
@@ -235,9 +227,9 @@ var DuckDuckGoHelper = new Lang.Class({
         }));
 
         return true;
-    },
+    }
 
-    get_menu_item: function(data) {
+    get_menu_item(data) {
         data = Params.parse(data, {
             heading: '',
             definition: '',
@@ -254,4 +246,4 @@ var DuckDuckGoHelper = new Lang.Class({
             return menu_item;
         }
     }
-});
+};

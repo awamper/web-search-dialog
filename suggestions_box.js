@@ -11,12 +11,9 @@ const Utils = Me.imports.utils;
 
 const ICONS = Utils.ICONS;
 
-const SuggestionMenuItem = new Lang.Class({
-    Name: 'SuggestionMenuItem',
-    Extends: PopupMenu.PopupBaseMenuItem,
-
-    _init: function(text, type, relevance, term, item_id, params) {
-        this.parent(params);
+const SuggestionMenuItem = class SuggestionMenuItem extends PopupMenu.PopupBaseMenuItem {
+    constructor(text, type, relevance, term, item_id, params) {
+        super(params);
 
         this._text = text.trim();
         this._type = type;
@@ -68,9 +65,9 @@ const SuggestionMenuItem = new Lang.Class({
 
         this.actor.add_child(this._box);
         this.actor.label_actor = label;
-    },
+    }
 
-    _onKeyPressEvent: function(actor, event) {
+    _onKeyPressEvent(actor, event) {
         let symbol = event.get_key_symbol();
 
         if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
@@ -81,24 +78,21 @@ const SuggestionMenuItem = new Lang.Class({
             return false;
         }
     }
-});
+};
 
-var SuggestionsBox = new Lang.Class({
-    Name: 'SuggestionsBox',
-    Extends: PopupMenu.PopupMenu,
-
-    _init: function(search_dialog) {
+var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {
+    constructor(search_dialog) {
+        super(search_dialog.search_entry, 0, St.Side.TOP);
         this._search_dialog = search_dialog;
         this._entry = this._search_dialog.search_entry;
 
-        this.parent(this._entry, 0, St.Side.TOP);
 
         Main.uiGroup.add_actor(this.actor);
         this.actor.hide();
         this.actor.connect('key-press-event', Lang.bind(this, this._onKeyPressEvent));
-    },
+    }
 
-    _onKeyPressEvent: function(actor, event) {
+    _onKeyPressEvent(actor, event) {
         let symbol = event.get_key_symbol();
 
         if(symbol == Clutter.Escape) {
@@ -125,9 +119,9 @@ var SuggestionsBox = new Lang.Class({
                 }
             }
         }
-    },
+    }
 
-    _get_unichar: function(keyval) {
+    _get_unichar(keyval) {
         let ch = Clutter.keysym_to_unicode(keyval);
 
         if(ch) {
@@ -136,9 +130,9 @@ var SuggestionsBox = new Lang.Class({
         else {
             return false;
         }
-    },
+    }
 
-    _on_activated: function(menu_item) {
+    _on_activated(menu_item) {
         this._search_dialog._remove_delay_id();
         this._search_dialog.suggestions_box.close(true);
 
@@ -158,18 +152,18 @@ var SuggestionsBox = new Lang.Class({
         }
 
         return true;
-    },
+    }
 
-    _on_active_changed: function(menu_item) {
+    _on_active_changed(menu_item) {
         if(menu_item._type != 'ENGINE') {
             this._search_dialog.show_suggestions = false;
             this._entry.set_text(menu_item._text);
         }
 
         return true;
-    },
+    }
 
-    _get_next_id: function() {
+    _get_next_id() {
         let items = this._getMenuItems();
         let types = ['NAVIGATION', 'QUERY', 'ENGINE'];
         let count = 1;
@@ -185,9 +179,9 @@ var SuggestionsBox = new Lang.Class({
         }
 
         return count;
-    },
+    }
 
-    activate_by_id: function(item_id) {
+    activate_by_id(item_id) {
         if(item_id < 1 || item_id > 9) return;
 
         let items = this._getMenuItems();
@@ -199,9 +193,9 @@ var SuggestionsBox = new Lang.Class({
             }
         }
 
-    },
+    }
 
-    add_suggestion: function(params) {
+    add_suggestion(params) {
         params = Params.parse(params, {
             text: false,
             type: 'QUERY',
@@ -231,9 +225,9 @@ var SuggestionsBox = new Lang.Class({
         this.addMenuItem(item)
 
         return true;
-    },
+    }
 
-    add_label: function(text) {
+    add_label(text) {
         let item = new PopupMenu.PopupMenuItem(text, {
             reactive: false,
             activate: false,
@@ -242,14 +236,14 @@ var SuggestionsBox = new Lang.Class({
         });
         item._type = 'LABEL';
         this.addMenuItem(item);
-    },
+    }
 
-    remove_all_by_types: function(types_array) {
+    remove_all_by_types(types_array) {
         let children = this._getMenuItems();
 
         for(let i = 0; i < children.length; i++) {
             let item = children[i];
-            
+
             if(types_array === 'ALL') {
                 item.destroy();
             }
@@ -260,11 +254,11 @@ var SuggestionsBox = new Lang.Class({
                 continue;
             }
         }
-    },
+    }
 
-    close: function() {
+    close() {
         this._search_dialog._remove_delay_id();
         this._entry.grab_key_focus();
-        this.parent();
+        super.close();
     }
-});
+};
