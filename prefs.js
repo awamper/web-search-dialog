@@ -25,6 +25,10 @@ const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
+const Convenience = Me.imports.convenience;
+const Gettext = imports.gettext.domain('web-search-dialog');
+const _ = Gettext.gettext;
+
 var ENGINES_KEY = 'search-engines';
 var SUGGESTIONS_KEY = 'enable-suggestions';
 var SUGGESTIONS_DELAY_KEY = 'suggestions-delay';
@@ -449,7 +453,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         let name_column = new Gtk.TreeViewColumn({
             expand: true,
             sort_column_id: this.columns.DISPLAY_NAME,
-            title: 'Name'
+            title: _("Name")
         });
         let name_renderer = new Gtk.CellRendererText({ editable: true });
         name_renderer.connect('edited', this._make_on_item_edited('name'));
@@ -463,7 +467,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         //engine keyword
         let keyword_column = new Gtk.TreeViewColumn({
-            title: 'Keyword',
+            title: _("Keyword"),
             sort_column_id: this.columns.KEYWORD
         });
         let keyword_renderer = new Gtk.CellRendererText({ editable: true });
@@ -478,7 +482,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         //engine url
         let url_column = new Gtk.TreeViewColumn({
-            title: 'Url',
+            title: _("Url"),
             sort_column_id: this.columns.URL
         });
         let url_renderer = new Gtk.CellRendererText({ editable: true });
@@ -506,7 +510,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         let new_button = new Gtk.ToolButton({
             stock_id: Gtk.STOCK_NEW,
-            label: 'Add search engine',
+            label: _("Add search engine"),
             is_important: true
         });
         new_button.connect('clicked',
@@ -544,7 +548,7 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
     _create_new: function() {
         let dialog = new Gtk.Dialog({
-            title: 'Add new search engine',
+            title: _("Add search engine"),
             transient_for: this.get_toplevel(),
             modal: true
         });
@@ -567,21 +571,21 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         });
 
         // Name
-        grid.attach(new Gtk.Label({ label: 'Name:' }), 0, 0, 1, 1);
+        grid.attach(new Gtk.Label({ label: _("Name")+':' }), 0, 0, 1, 1);
         dialog._engine_name = new Gtk.Entry({
             hexpand: true
         });
         grid.attach(dialog._engine_name, 1, 0, 1, 1);
 
         // Keyword
-        grid.attach(new Gtk.Label({ label: 'Keyword:' }), 0, 1, 1, 1);
+        grid.attach(new Gtk.Label({ label: _("Keyword")+':' }), 0, 1, 1, 1);
         dialog._engine_keyword = new Gtk.Entry({
             hexpand: true
         });
         grid.attach(dialog._engine_keyword, 1, 1, 1, 1);
 
         // Url
-        grid.attach(new Gtk.Label({ label: 'Url:' }), 0, 2, 1, 1);
+        grid.attach(new Gtk.Label({ label: _("Url")+':' }), 0, 2, 1, 1);
         dialog._engine_url = new Gtk.Entry({
             hexpand: true
         });
@@ -673,12 +677,12 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
             let info = JSON.parse(current_items[i]);
 
-            if(info.name == item.name) {
-                printerr("Already have an item for this name");
+            if(info.name == new_item.name) {
+                printerr(_("Already have an item for this name"));
                 return false;
             }
-            else if(info.keyword == item.keyword) {
-                printerr("Already have an item for this keyword");
+            else if(info.keyword == new_item.keyword) {
+                printerr(_("Already have an item for this keyword"));
                 return false;
             }
         }
@@ -761,12 +765,12 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
         let settings_grid = new PrefsGrid(this._settings);
         let settings_grid_label = new Gtk.Label({
-            label: "Settings"
+            label: _("Settings")
         });
 
         let engines = {
             page: new WebSearchDialogPrefsEnginesList(this._settings),
-            name: 'Search engines'
+            name: _("Search engines")
         }
 
         let stack = new Gtk.Stack({
@@ -798,7 +802,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
 
     _get_main_page: function() {
         let settings = Utils.getSettings();
-        let name = 'Main';
+        let name = _("Main");
         let page = new PrefsGrid(settings);
 
         let spin_properties = {
@@ -820,7 +824,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         }
 
         page.add_combo(
-            'Default search engine:',
+            _("Default search engine:"),
             DEFAULT_ENGINE_KEY,
             result_list,
             'int'
@@ -829,23 +833,23 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         page.add_separator();
 
         page.add_boolean(
-            'Duckduckgo.com helper:',
+            _("Duckduckgo.com helper:"),
             HELPER_KEY
         );
         page.add_entry(
-            'Helper language code (e.g. ru, de, fr)',
+            _("Helper language code (e.g. ru, de, fr)"),
             LANGUAGE_CODE
         );
         page.add_boolean(
-            'Suggestions:',
+            _("Suggestions:"),
             SUGGESTIONS_KEY
         );
         page.add_boolean(
-            'Autocomplete with first suggestion:',
+            _("Autocomplete with first suggestion:"),
             SELECT_FIRST_SUGGESTION
         );
         page.add_boolean(
-            'History suggestions:',
+            _("History suggestions:"),
             HISTORY_SUGGESTIONS_KEY
         );
 
@@ -855,7 +859,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         spin_properties.upper = 1000;
         spin_properties.step_increment = 5;
         page.add_spin(
-            'History limit:',
+            _("History limit:"),
             HISTORY_LIMIT_KEY,
             spin_properties,
             'int'
@@ -865,7 +869,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         spin_properties.upper = 1000;
         spin_properties.step_increment = 100;
         page.add_spin(
-            'Suggestions delay(ms):',
+            _("Suggestions delay(ms):"),
             SUGGESTIONS_DELAY_KEY,
             spin_properties,
             'int'
@@ -875,18 +879,18 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         spin_properties.upper = 2000;
         spin_properties.step_increment = 50;
         page.add_spin(
-            'Helper delay(ms):',
+            _("Helper delay(ms):"),
             HELPER_DELAY_KEY,
             spin_properties,
             'int'
         );
 
         let options = [
-            {title: 'Top', value: 'top'},
-            {title: 'Bottom', value: 'bottom'}
+            {title: _("Top"), value: 'top'},
+            {title: _("Bottom"), value: 'bottom'}
         ];
         page.add_combo(
-            'Helper position(top or bottom):',
+            _("Helper position(top or bottom):"),
             HELPER_POSITION_KEY,
             options,
             'string'
@@ -895,11 +899,11 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         page.add_separator();
 
         page.add_entry(
-            'Open url keyword(empty to disable):',
+            _("Open url keyword(empty to disable):"),
             OPEN_URL_KEY
         );
         page.add_entry(
-            'Open url label:',
+            _("Open url label:"),
             OPEN_URL_LABEL
         );
 
@@ -915,7 +919,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
         let page = new PrefsGrid(settings);
 
         let keybindings = {};
-        keybindings[OPEN_SEARCH_DIALOG_KEY] = 'Open search dialog:';
+        keybindings[OPEN_SEARCH_DIALOG_KEY] = _("Open search dialog:");
 
         let keybindings_widget = new KeybindingsWidget(keybindings, settings);
         page.add_item(keybindings_widget)

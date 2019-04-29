@@ -1,0 +1,204 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-04-29 20:16+0200\n"
+"PO-Revision-Date: 2019-04-29 20:23+0200\n"
+"Last-Translator: Jonatan Hatakeyama Zeidler <jonatan_zeidler@gmx.de>\n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.1\n"
+
+#: extension.js:101 extension.js:538
+msgid "Type to search in"
+msgstr "Tippen zum Suchen mit"
+
+#: extension.js:101
+msgid "or enter a keyword and press \"space\"."
+msgstr "oder ein Schlüsselwort eingeben und \"Leertaste\" drücken."
+
+#: extension.js:106 prefs.js:470 prefs.js:581
+msgid "Keyword"
+msgstr "Schlüsselwort"
+
+#: extension.js:106
+msgid "for open URL."
+msgstr "zum Öffnen einer beliebigen Internetadresse"
+
+#: extension.js:109
+msgid "Press \"Tab\" for available search engines."
+msgstr "\"Tab\" drücken, um die verfügbaren Suchmaschine zu erreichen."
+
+#: extension.js:143
+msgid "Web Search"
+msgstr "Websuche"
+
+#: extension.js:292 extension.js:314
+msgid "Clipboard is empty."
+msgstr "Zwischenablage ist leer."
+
+#: extension.js:541
+msgid "Please, enter a URL."
+msgstr "Bitte eine Internetadresse eingeben."
+
+#: extension.js:544
+msgid "Press \"Tab\" to switch search engine."
+msgstr "\"Tab\" drücken, um die Suchmaschine zu wechseln."
+
+#: extension.js:906
+msgid "History"
+msgstr "Verlauf"
+
+#: extension.js:964
+msgid ""
+"Error.\n"
+"Please, enter a query."
+msgstr ""
+"Fehler.\n"
+"Bitte eine Eingabe tätigen."
+
+#: extension.js:988
+msgid "Please, enter a valid url."
+msgstr "Bitte eine gültige Internetadresse eingeben."
+
+#: prefs.js:456 prefs.js:574
+msgid "Name"
+msgstr "Name"
+
+#: prefs.js:485 prefs.js:588
+msgid "Url"
+msgstr "Adresse"
+
+#: prefs.js:513 prefs.js:551
+msgid "Add search engine"
+msgstr "Suchmaschine hinzufügen"
+
+#: prefs.js:681
+msgid "Already have an item for this name"
+msgstr "Es gibt bereits einen Eintrag für diesen Namen"
+
+#: prefs.js:685
+msgid "Already have an item for this keyword"
+msgstr "Es gibt bereits einen Eintrag für dieses Schlüsselwort"
+
+#: prefs.js:768
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: prefs.js:773
+msgid "Search engines"
+msgstr "Suchmaschinen"
+
+#: prefs.js:805
+msgid "Main"
+msgstr "Allgemein"
+
+#: prefs.js:827
+msgid "Default search engine:"
+msgstr "Vorgabe-Suchmachine:"
+
+#: prefs.js:836
+msgid "Duckduckgo.com helper:"
+msgstr "Duckduckgo.com Helfer:"
+
+#: prefs.js:840
+msgid "Helper language code (e.g. ru, de, fr)"
+msgstr "Helfer Sprachkode (z.B. ru, de, fr)"
+
+#: prefs.js:844
+msgid "Suggestions:"
+msgstr "Vorschläge:"
+
+#: prefs.js:848
+msgid "Autocomplete with first suggestion:"
+msgstr "Mit erstem Vorschlag vervollständigen:"
+
+#: prefs.js:852
+msgid "History suggestions:"
+msgstr "Chronik-Vorschläge"
+
+#: prefs.js:862
+msgid "History limit:"
+msgstr "Chronik-Limit:"
+
+#: prefs.js:872
+msgid "Suggestions delay(ms):"
+msgstr "Verzögerung Vorschläge (ms):"
+
+#: prefs.js:882
+msgid "Helper delay(ms):"
+msgstr "Verzögerung Helfer (ms)"
+
+#: prefs.js:889
+msgid "Top"
+msgstr "Oben"
+
+#: prefs.js:890
+msgid "Bottom"
+msgstr "Unten"
+
+#: prefs.js:893
+msgid "Helper position(top or bottom):"
+msgstr "Helferposition (oben oder unten):"
+
+#: prefs.js:902
+msgid "Open url keyword(empty to disable):"
+msgstr "URL Schlüsselwort öffnen (leer zum Deaktivieren):"
+
+#: prefs.js:906
+msgid "Open url label:"
+msgstr "URL-Bezeichnung öffnen:"
+
+#: prefs.js:922
+msgid "Open search dialog:"
+msgstr "Suchdialog öffnen:"
+
+#~ msgid "Default search engine"
+#~ msgstr "Vorgabesuchmaschine"
+
+#~ msgid "Suggestions"
+#~ msgstr "Vorschläge"
+
+#~ msgid "Autocomplete with first suggestion"
+#~ msgstr "Automatisch mit erstem Vorschlag vervollständigen"
+
+#~ msgid "Suggestions delay(ms)"
+#~ msgstr "Vorschlagverzögerung (ms)"
+
+#~ msgid "Duckduckgo.com helper"
+#~ msgstr "Hilfe von Duckduckgo.com"
+
+#~ msgid "Helper delay(ms)"
+#~ msgstr "Hilfeverzögerung (ms)"
+
+#~ msgid "Helper position (top or bottom)"
+#~ msgstr "Hilfeposition (\"top\" für oben oder \"bottom\" für unten)"
+
+#~ msgid "History suggestions"
+#~ msgstr "Vorschlage aus dem Verlauf"
+
+#~ msgid "History limit"
+#~ msgstr "Verlaufslimit"
+
+#~ msgid "Open url keyword (empty to disable)"
+#~ msgstr "Schlüsselwort für Internetadressen (leer zum deaktivieren)"
+
+#~ msgid "Open url label"
+#~ msgstr "Bezeichnung für Internetadresse öffnen"
+
+#~ msgid "Open search dialog"
+#~ msgstr "Suchfeld öffnen"
+
+#~ msgid "Keyboard shortcuts"
+#~ msgstr "Tastenkürzel"
+
+#~ msgid "Add new search engine"
+#~ msgstr "Neue Suchmaschine hinzufügen"

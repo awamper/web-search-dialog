@@ -1,0 +1,160 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-04-29 20:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: extension.js:101 extension.js:538
+msgid "Type to search in"
+msgstr ""
+
+#: extension.js:101
+msgid "or enter a keyword and press \"space\"."
+msgstr ""
+
+#: extension.js:106 prefs.js:470 prefs.js:581
+msgid "Keyword"
+msgstr ""
+
+#: extension.js:106
+msgid "for open URL."
+msgstr ""
+
+#: extension.js:109
+msgid "Press \"Tab\" for available search engines."
+msgstr ""
+
+#: extension.js:143
+msgid "Web Search"
+msgstr ""
+
+#: extension.js:292 extension.js:314
+msgid "Clipboard is empty."
+msgstr ""
+
+#: extension.js:541
+msgid "Please, enter a URL."
+msgstr ""
+
+#: extension.js:544
+msgid "Press \"Tab\" to switch search engine."
+msgstr ""
+
+#: extension.js:906
+msgid "History"
+msgstr ""
+
+#: extension.js:964
+msgid ""
+"Error.\n"
+"Please, enter a query."
+msgstr ""
+
+#: extension.js:988
+msgid "Please, enter a valid url."
+msgstr ""
+
+#: prefs.js:456 prefs.js:574
+msgid "Name"
+msgstr ""
+
+#: prefs.js:485 prefs.js:588
+msgid "Url"
+msgstr ""
+
+#: prefs.js:513 prefs.js:551
+msgid "Add search engine"
+msgstr ""
+
+#: prefs.js:681
+msgid "Already have an item for this name"
+msgstr ""
+
+#: prefs.js:685
+msgid "Already have an item for this keyword"
+msgstr ""
+
+#: prefs.js:768
+msgid "Settings"
+msgstr ""
+
+#: prefs.js:773
+msgid "Search engines"
+msgstr ""
+
+#: prefs.js:805
+msgid "Main"
+msgstr ""
+
+#: prefs.js:827
+msgid "Default search engine:"
+msgstr ""
+
+#: prefs.js:836
+msgid "Duckduckgo.com helper:"
+msgstr ""
+
+#: prefs.js:840
+msgid "Helper language code (e.g. ru, de, fr)"
+msgstr ""
+
+#: prefs.js:844
+msgid "Suggestions:"
+msgstr ""
+
+#: prefs.js:848
+msgid "Autocomplete with first suggestion:"
+msgstr ""
+
+#: prefs.js:852
+msgid "History suggestions:"
+msgstr ""
+
+#: prefs.js:862
+msgid "History limit:"
+msgstr ""
+
+#: prefs.js:872
+msgid "Suggestions delay(ms):"
+msgstr ""
+
+#: prefs.js:882
+msgid "Helper delay(ms):"
+msgstr ""
+
+#: prefs.js:889
+msgid "Top"
+msgstr ""
+
+#: prefs.js:890
+msgid "Bottom"
+msgstr ""
+
+#: prefs.js:893
+msgid "Helper position(top or bottom):"
+msgstr ""
+
+#: prefs.js:902
+msgid "Open url keyword(empty to disable):"
+msgstr ""
+
+#: prefs.js:906
+msgid "Open url label:"
+msgstr ""
+
+#: prefs.js:922
+msgid "Open search dialog:"
+msgstr ""

@@ -18,6 +18,10 @@ const Utils = Me.imports.utils;
 const HistoryManager = Me.imports.history_manager;
 const Prefs = Me.imports.prefs;
 
+const Convenience = Me.imports.convenience;
+const Gettext = imports.gettext.domain('web-search-dialog');
+const _ = Gettext.gettext;
+
 const _httpSession = Utils._httpSession;
 const ICONS = Utils.ICONS;
 
@@ -94,15 +98,15 @@ const WebSearchDialog = new Lang.Class({
     _get_main_hint: function() {
         let default_engine = this._get_default_engine();
         let hint = 
-            'Type to search in '+default_engine.name+' or enter '+
-            'a keyword and press "space".';
+            _("Type to search in")+' '+default_engine.name+' '+_("or enter "+
+            "a keyword and press \"space\".");
 
         if(this._get_open_url_keyword()) {
             hint +=
-                '\nKeyword "'+this._get_open_url_keyword()+'" for open URL.';
+                '\n'+_("Keyword")+' "'+this._get_open_url_keyword()+'" '+_("for open URL.");
         }
 
-        hint += '\nPress "Tab" for available search engines.';
+        hint += '\n'+_("Press \"Tab\" for available search engines.");
 
         return hint;
     },
@@ -136,7 +140,7 @@ const WebSearchDialog = new Lang.Class({
 
         this.search_engine_label = new St.Label({
             style_class: 'search-engine-label',
-            text: 'Web Search:'
+            text: _("Web Search")+':'
         });
 
         this.search_entry = new St.Entry({
@@ -285,7 +289,7 @@ const WebSearchDialog = new Lang.Class({
             this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
                 if(Utils.is_blank(text)) {
                     this._show_hint({
-                        text: 'Clipboard is empty.',
+                        text: _("Clipboard is empty."),
                         icon_name: ICONS.error
                     });
 
@@ -307,7 +311,7 @@ const WebSearchDialog = new Lang.Class({
             this._clipboard.get_text(Lang.bind(this, function(clipboard, url) {
                 if(Utils.is_blank(url)) {
                     this._show_hint({
-                        text: 'Clipboard is empty.',
+                        text: _("Clipboard is empty."),
                         icon_name: ICONS.error
                     });
 
@@ -531,15 +535,17 @@ const WebSearchDialog = new Lang.Class({
             let hint_text;
 
             if(!engine.open_url) {
-                hint_text = 'Type to search in '+this.search_engine.name+'.';
+                hint_text = _("Type to search in")+' '+this.search_engine.name+'.';
             }
             else {
-                hint_text = 'Please, enter a URL.';
+                hint_text = _("Please, enter a URL.");
             }
 
-            hint_text += '\nPress "Tab" to switch search engine.';
+            hint_text += '\n'+_("Press \"Tab\" to switch search engine.");
             this.show_suggestions = false;
             this.search_entry.set_text('');
+            this._show_engine_label(this.search_engine.name+':');
+
             this._show_hint({
                 text: hint_text,
                 icon_name: ICONS.information
@@ -897,7 +903,7 @@ const WebSearchDialog = new Lang.Class({
         });
 
         if(history_suggestions.length > 0) {
-            this.suggestions_box.add_label('History:');
+            this.suggestions_box.add_label(_("History")+':');
 
             for(let i = 0; i < history_suggestions.length; i++) {
                 this.suggestions_box.add_suggestion({
@@ -955,7 +961,7 @@ const WebSearchDialog = new Lang.Class({
 
         if(Utils.is_blank(text)) {
             this._show_hint({
-                text: 'Error.\nPlease, enter a query.',
+                text: _("Error.\nPlease, enter a query."),
                 icon_name: ICONS.error
             });
 
@@ -979,7 +985,7 @@ const WebSearchDialog = new Lang.Class({
 
         if(!url) {
             this._show_hint({
-                text: 'Please, enter a valid url.',
+                text: _("Please, enter a valid url."),
                 icon_name: ICONS.error
             });
 
