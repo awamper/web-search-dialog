@@ -1,3 +1,4 @@
+const GObject = imports.gi.GObject;
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Meta = imports.gi.Meta;
@@ -37,9 +38,9 @@ function launch_extension_prefs(uuid) {
         global.create_app_launch_context(timestamp, -1)
     );
 }
-const WebSearchDialog = class WebSearchDialog extends ModalDialog.ModalDialog {
-    constructor() {
-        super({
+const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends ModalDialog.ModalDialog {
+    _init() {
+        super._init({
             destroyOnClose: false
         });
         this._dialogLayout =
@@ -1050,7 +1051,7 @@ const WebSearchDialog = class WebSearchDialog extends ModalDialog.ModalDialog {
         global.display.disconnect(this._window_handler_id);
         this.destroy();
     }
-};
+});
 
 let search_dialog = null;
 

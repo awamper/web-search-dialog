@@ -4,7 +4,7 @@
   "name": "Web Search Dialog",
   "settings-schema": "org.gnome.shell.extensions.web-search-dialog",
   "shell-version": [
-    "3.32"
+    "3.32", "3.34"
   ],
   "url": "http://github.com/awamper/web-search-dialog",
   "uuid": "web_search_dialog@awamper.gmail.com",
