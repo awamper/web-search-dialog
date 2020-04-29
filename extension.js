@@ -176,12 +176,9 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
 
         this._search_table = new St.Widget({
             name: 'web_search_table',
-            // layout_manager: new Clutter.TableLayout()
             layout_manager: new Clutter.GridLayout({ orientation: Clutter.Orientation.VERTICAL })
         });
         let search_table_layout = this._search_table.layout_manager;
-        // search_table_layout.pack(this.search_engine_label, 0, 0);
-        // search_table_layout.pack(this.search_entry, 1, 0);
         search_table_layout.attach(this.search_engine_label, 0, 0, 1, 1);
         search_table_layout.attach(this.search_entry, 1, 0, 1, 1);
         this._search_table.show();
@@ -715,7 +712,6 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                     callback.call(here, text, false);
                 }
                 else {
-		    console.log(result);
                     callback.call(here, text, result);
                 }
             }
