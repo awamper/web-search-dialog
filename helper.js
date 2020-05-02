@@ -5,6 +5,7 @@ const Params = imports.misc.params;
 const Tweener = imports.ui.tweener;
 const Soup = imports.gi.Soup;
 const Gio = imports.gi.Gio;
+const GObject = imports.gi.GObject;
 const Clutter = imports.gi.Clutter;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();
@@ -16,9 +17,9 @@ const DUCKDUCKGO_API_URL =
     "https://api.duckduckgo.com/?format=json&no_redirect=1"+
     "&skip_disambig=1&q=";
 
-var HelperSpinnerMenuItem = class HelperSpinnerMenuItem extends PopupMenu.PopupBaseMenuItem {
-    constructor(text) {
-        super({
+var HelperSpinnerMenuItem = GObject.registerClass(class HelperSpinnerMenuItem extends PopupMenu.PopupBaseMenuItem {
+    _init(text) {
+        super._init({
             reactive: false,
             activate: false,
             hover: false,
@@ -35,13 +36,13 @@ var HelperSpinnerMenuItem = class HelperSpinnerMenuItem extends PopupMenu.PopupB
         });
         box.add(label);
 
-        this.actor.add_child(box);
+        this.add_child(box);
     }
-}
+});
 
-var DuckDuckGoHelperMenuItem = class DuckDuckGoHelperMenuItem extends PopupMenu.PopupBaseMenuItem {
-    constructor(data) {
-        super({
+var DuckDuckGoHelperMenuItem = GObject.registerClass(class DuckDuckGoHelperMenuItem extends PopupMenu.PopupBaseMenuItem {
+      _init(data) {
+        super._init({
             reactive: false,
             activate: false,
             hover: false,
@@ -85,9 +86,7 @@ var DuckDuckGoHelperMenuItem = class DuckDuckGoHelperMenuItem extends PopupMenu.
         let label = this._get_label(text, 'helper-abstract', max_length);
 
         grid_layout.attach(label, 1, 0, 1, 1);
-        this.actor.add_child(grid);
-
-        return true;
+        this.add_child(grid);
     }
 
     _get_icon(icon_info) {
@@ -108,7 +107,8 @@ var DuckDuckGoHelperMenuItem = class DuckDuckGoHelperMenuItem extends PopupMenu.
             image_file,
             info.width,
             info.height,
-            scale_factor
+            scale_factor,
+            1.0 // TODO: resource scale - is it correct?
         );
 
         this.icon_box = new St.BoxLayout({
@@ -148,7 +148,7 @@ var DuckDuckGoHelperMenuItem = class DuckDuckGoHelperMenuItem extends PopupMenu.
 
         return label;
     }
-};
+});
 
 var DuckDuckGoHelper = class DuckDuckGoHelper {
     constructor() {

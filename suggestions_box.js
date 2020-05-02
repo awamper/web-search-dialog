@@ -1,6 +1,7 @@
 const St = imports.gi.St;
 const Lang = imports.lang;
 const Main = imports.ui.main;
+const GObject = imports.gi.GObject;
 const Clutter = imports.gi.Clutter;
 const PopupMenu = imports.ui.popupMenu;
 const Params = imports.misc.params;
@@ -11,9 +12,9 @@ const Utils = Me.imports.utils;
 
 const ICONS = Utils.ICONS;
 
-const SuggestionMenuItem = class SuggestionMenuItem extends PopupMenu.PopupBaseMenuItem {
-    constructor(text, type, relevance, term, item_id, params) {
-        super(params);
+const SuggestionMenuItem = GObject.registerClass(class SuggestionMenuItem extends PopupMenu.PopupBaseMenuItem {
+    _init(text, type, relevance, term, item_id, params) {
+        super._init(params);
 
         this._text = text.trim();
         this._type = type;
@@ -63,8 +64,8 @@ const SuggestionMenuItem = class SuggestionMenuItem extends PopupMenu.PopupBaseM
         this._box.add(icon);
         this._box.add(label);
 
-        this.actor.add_child(this._box);
-        this.actor.label_actor = label;
+        this.add_child(this._box);
+        this.label_actor = label;
     }
 
     _onKeyPressEvent(actor, event) {
@@ -78,7 +79,7 @@ const SuggestionMenuItem = class SuggestionMenuItem extends PopupMenu.PopupBaseM
             return false;
         }
     }
-};
+});
 
 var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {
     constructor(search_dialog) {
@@ -188,7 +189,7 @@ var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {
 
         for(let i = 0; i < items.length; i++) {
             if(items[i]._item_id === item_id) {
-                items[i].activate();
+                items[i].activate(Clutter.get_current_event());
                 break;
             }
         }
@@ -219,7 +220,7 @@ var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {
             Lang.bind(this, this._on_activated)
         );
         item.connect(
-            'active-changed',
+            'notify::active',
             Lang.bind(this, this._on_active_changed)
         );
         this.addMenuItem(item)

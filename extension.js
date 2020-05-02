@@ -30,7 +30,7 @@ const SETTINGS_ICON = 'emblem-system-symbolic';
 
 function launch_extension_prefs(uuid) {
     let appSys = Shell.AppSystem.get_default();
-    let app = appSys.lookup_app('gnome-shell-extension-prefs.desktop');
+    let app = appSys.lookup_app('org.gnome.Shell.Extensions.desktop');
     let info = app.get_app_info();
     let timestamp = global.display.get_current_time_roundtrip();
     info.launch_uris(
@@ -75,7 +75,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
 
         let available_width = monitor.width;
         let available_height = monitor.height;
-        if(is_primary) available_height -= Main.panel.actor.height;
+        if(is_primary) available_height -= Main.panel.height;
 
         let width = Math.round(available_width / 100 * 85);
 
@@ -213,7 +213,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                     let items = this.suggestions_box._getMenuItems();
 
                     if(items.length > 1) {
-                        items[0].actor.remove_style_pseudo_class('active');
+                        items[0].remove_style_pseudo_class('active');
                         items[1].setActive(true);
                     }
                 }
@@ -254,7 +254,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
         }
         // Ctrl+V
         else if(control_mask && symbol == 118) {
-            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+            this._clipboard.get_text(St.ClipboardType.PRIMARY, Lang.bind(this, function(clipboard, text) {
                 if (Utils.is_blank(text)) {
                     return false;
                 }
@@ -271,7 +271,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
         else if(control_mask && symbol == 99) {
             let clutter_text = this.search_entry.get_clutter_text();
             let selection = clutter_text.get_selection();
-            this._clipboard.set_text(selection);
+            this._clipboard.set_text(St.ClipboardType.PRIMARY, selection);
         }
         // Ctrl+Shift+V - paste and search
         else if(control_mask && shift_mask && symbol == 86) {
@@ -279,7 +279,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                 this._set_engine();
             }
 
-            this._clipboard.get_text(Lang.bind(this, function(clipboard, text) {
+            this._clipboard.get_text(St.ClipboardType.PRIMARY, Lang.bind(this, function(clipboard, text) {
                 if(Utils.is_blank(text)) {
                     this._show_hint({
                         text: 'Clipboard is empty.',
@@ -301,7 +301,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                 this._set_engine();
             }
 
-            this._clipboard.get_text(Lang.bind(this, function(clipboard, url) {
+            this._clipboard.get_text(St.ClipboardType.PRIMARY, Lang.bind(this, function(clipboard, url) {
                 if(Utils.is_blank(url)) {
                     this._show_hint({
                         text: 'Clipboard is empty.',
@@ -703,6 +703,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
         let here = this;
 
         let request = Soup.Message.new('GET', url);
+        request.request_headers.append("Accept", "application/json;charset=utf-8");
 
         _httpSession.queue_message(request, function(_httpSession, message) {
             if(message.status_code === 200) {
@@ -867,7 +868,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
             text.length,
             item._text.length
         );
-        item.actor.add_style_pseudo_class('active');
+        item.add_style_pseudo_class('active');
 
         this._display_helper(text);
 
