@@ -79,6 +79,10 @@ const SuggestionMenuItem = GObject.registerClass(class SuggestionMenuItem extend
             return false;
         }
     }
+
+    setActive(active) {
+	this.active = active;
+    }
 });
 
 var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {

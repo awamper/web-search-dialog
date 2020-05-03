@@ -192,10 +192,10 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
         let control_mask = (e.get_state() & Clutter.ModifierType.CONTROL_MASK);
         let shift_mask = (e.get_state() & Clutter.ModifierType.SHIFT_MASK);
 
-        if(symbol == Clutter.Escape) {
+        if(symbol == Clutter.KEY_Escape) {
             this.close();
         }
-        else if(symbol == Clutter.Tab) {
+        else if(symbol == Clutter.KEY_Tab) {
             if(this.suggestions_box.isOpen) {
                 this.suggestions_box.firstMenuItem.setActive(true);
             }
@@ -207,7 +207,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                 }
             }
         }
-        else if(symbol == Clutter.Down) {
+        else if(symbol == Clutter.KEY_Down) {
             if(this.suggestions_box.isOpen) {
                 if(this._settings.get_boolean(Prefs.SELECT_FIRST_SUGGESTION)) {
                     let items = this.suggestions_box._getMenuItems();
@@ -236,7 +236,7 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
                 // });
             }
         }
-        else if(symbol == Clutter.Up) {
+        else if(symbol == Clutter.KEY_Up) {
             if(!this.suggestions_box.isOpen) {
                 this.show_suggestions = false;
                 let text = this.search_entry.get_text();
@@ -346,17 +346,17 @@ const WebSearchDialog = GObject.registerClass (class WebSearchDialog extends Mod
 
         // reset the search engine on backspace with empty search text
         if(
-            symbol == Clutter.BackSpace &&
+            symbol == Clutter.KEY_BackSpace &&
             !this.search_entry.text.length &&
             !this.search_engine._default
         ) {
             this._set_engine(false);
             this._on_search_text_changed(); // trigger update of hint
         }
-        else if(symbol == Clutter.BackSpace) {
+        else if(symbol == Clutter.KEY_BackSpace) {
             this.select_first_suggestion = false;
         }
-        else if(symbol == Clutter.Right) {
+        else if(symbol == Clutter.KEY_Right) {
             let sel = this.search_entry.clutter_text.get_selection_bound();
 
             if(sel === -1) {

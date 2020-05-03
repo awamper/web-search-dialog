@@ -126,7 +126,7 @@ function is_matches_protocol(text) {
 }
 
 function get_url(text) {
-    let url_regexp = imports.misc.util._urlRegexp;
+    var url_regexp = imports.misc.util._urlRegexp;
     let url = parseUri(text);
     let test_url = '';
 
