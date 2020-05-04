@@ -71,7 +71,7 @@ const SuggestionMenuItem = GObject.registerClass(class SuggestionMenuItem extend
     _onKeyPressEvent(actor, event) {
         let symbol = event.get_key_symbol();
 
-        if(symbol == Clutter.Return || symbol == Clutter.KP_Enter) {
+        if(symbol == Clutter.KEY_Return || symbol == Clutter.KEY_KP_Enter) {
             this.activate(event);
             return true;
         }
@@ -100,19 +100,19 @@ var SuggestionsBox = class SuggestionsBox extends PopupMenu.PopupMenu {
     _onKeyPressEvent(actor, event) {
         let symbol = event.get_key_symbol();
 
-        if(symbol == Clutter.Escape) {
+        if(symbol == Clutter.KEY_Escape) {
             this.close(true);
         }
-        else if(symbol == Clutter.BackSpace) {
+        else if(symbol == Clutter.KEY_BackSpace) {
             this._entry.grab_key_focus();
             this._search_dialog.show_suggestions = false;
             this._entry.set_text(this._entry.get_text().slice(0, -1));
         }
         else {
             let skip_keys = (
-                symbol == Clutter.Up ||
-                symbol == Clutter.Down ||
-                symbol == Clutter.Tab
+                symbol == Clutter.KEY_Up ||
+                symbol == Clutter.KEY_Down ||
+                symbol == Clutter.KEY_Tab
             );
 
             if(!skip_keys) {
