@@ -9,7 +9,7 @@ const Gio = imports.gi.Gio;
 const Soup = imports.gi.Soup;
 const Params = imports.misc.params;
 const ModalDialog = imports.ui.modalDialog;
-const Tweener = imports.ui.tweener;
+const Tweener = imports.tweener.tweener;
 const Shell = imports.gi.Shell;
 
 const Me = imports.misc.extensionUtils.getCurrentExtension();

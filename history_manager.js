@@ -9,13 +9,13 @@ var SearchHistoryManager = class SearchHistoryManager {
     constructor(params) {
         this._settings = Utils.getSettings();
 
-        params = Params.parse(params, {
+        this.params = Params.parse(params, {
             gsettings_key: Prefs.HISTORY_KEY,
             limit: this._settings.get_int(Prefs.HISTORY_LIMIT_KEY)
         });
 
-        this._key = params.gsettings_key;
-        this._limit = params.limit;
+        this._key = this.params.gsettings_key;
+        this._limit = this.params.limit;
 
         if(this._key) {
             this._history = JSON.parse(this._settings.get_string(this._key));
