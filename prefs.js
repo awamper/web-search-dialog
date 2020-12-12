@@ -42,13 +42,9 @@ var SELECT_FIRST_SUGGESTION = 'select-first-suggestion';
 var LANGUAGE_CODE = 'language-code';
 
 
-const KeybindingsWidget = new GObject.Class({
-    Name: 'Keybindings.Widget',
-    GTypeName: 'KeybindingsWidget',
-    Extends: Gtk.Box,
-
-    _init: function(keybindings, settings) {
-        this.parent();
+const KeybindingsWidget = GObject.registerClass(class Keybindings_Widget extends Gtk.Box {
+    _init(keybindings, settings) {
+        super._init();
         this.set_orientation(Gtk.Orientation.VERTICAL);
 
         this._settings = settings;
@@ -136,9 +132,9 @@ const KeybindingsWidget = new GObject.Class({
         this.add(scrolled_window);
 
         this._refresh();
-    },
+    }
 
-    _refresh: function() {
+    _refresh() {
         this._store.clear();
 
         for(let settings_key in this._keybindings) {
@@ -166,19 +162,15 @@ const KeybindingsWidget = new GObject.Class({
 });
 
 
-const PrefsGrid = new GObject.Class({
-    Name: 'Prefs.Grid',
-    GTypeName: 'PrefsGrid',
-    Extends: Gtk.Grid,
-
-    _init: function(settings, params) {
-        this.parent(params);
+const PrefsGrid = GObject.registerClass(class Prefs_Grid extends Gtk.Grid {
+    _init(settings, params) {
+        super._init(params);
         this._settings = settings;
         this.margin = this.row_spacing = this.column_spacing = 10;
         this._rownum = 0;
-    },
+    }
 
-    add_entry: function(text, key) {
+    add_entry(text, key) {
         let item = new Gtk.Entry({
             hexpand: false
         });
@@ -186,9 +178,9 @@ const PrefsGrid = new GObject.Class({
         this._settings.bind(key, item, 'text', Gio.SettingsBindFlags.DEFAULT);
 
         return this.add_row(text, item);
-    },
+    }
 
-    add_shortcut: function(text, settings_key) {
+    add_shortcut(text, settings_key) {
         let item = new Gtk.Entry({
             hexpand: false
         });
@@ -203,18 +195,18 @@ const PrefsGrid = new GObject.Class({
         }));
 
         return this.add_row(text, item);
-    },
+    }
 
-    add_boolean: function(text, key) {
+    add_boolean(text, key) {
         let item = new Gtk.Switch({
             active: this._settings.get_boolean(key)
         });
         this._settings.bind(key, item, 'active', Gio.SettingsBindFlags.DEFAULT);
 
         return this.add_row(text, item);
-    },
+    }
 
-    add_combo: function(text, key, list, type) {
+    add_combo(text, key, list, type) {
         let item = new Gtk.ComboBoxText();
 
         for(let i = 0; i < list.length; i++) {
@@ -248,9 +240,9 @@ const PrefsGrid = new GObject.Class({
         }));
 
         return this.add_row(text, item);
-    },
+    }
 
-    add_spin: function(label, key, adjustment_properties, type, spin_properties) {
+    add_spin(label, key, adjustment_properties, type, spin_properties) {
         adjustment_properties = Params.parse(adjustment_properties, {
             lower: 0,
             upper: 100,
@@ -283,18 +275,18 @@ const PrefsGrid = new GObject.Class({
         }));
 
         return this.add_row(label, spin_button, true);
-    },
+    }
 
-    add_button: function(label, callback) {
+    add_button(label, callback) {
         let item = new Gtk.Button({
             label: label
         });
         item.connect('clicked', callback);
 
         return this.add_item(item);
-    },
+    }
 
-    add_row: function(text, widget, wrap) {
+    add_row(text, widget, wrap) {
         let label = new Gtk.Label({
             label: text,
             hexpand: true,
@@ -307,9 +299,9 @@ const PrefsGrid = new GObject.Class({
         this._rownum++;
 
         return widget;
-    },
+    }
 
-    add_item: function(widget, col, colspan, rowspan) {
+    add_item(widget, col, colspan, rowspan) {
         this.attach(
             widget,
             col || 0,
@@ -320,9 +312,9 @@ const PrefsGrid = new GObject.Class({
         this._rownum++;
 
         return widget;
-    },
+    }
 
-    add_range: function(label, key, range_properties) {
+    add_range(label, key, range_properties) {
         range_properties = Params.parse(range_properties, {
             min: 0,
             max: 100,
@@ -370,17 +362,17 @@ const PrefsGrid = new GObject.Class({
         box.pack_start(range, true, false, 0);
 
         return this.add_item(box);
-    },
+    }
 
-    add_separator: function() {
+    add_separator() {
         let separator = new Gtk.Separator({
             orientation: Gtk.Orientation.HORIZONTAL
         });
 
         this.add_item(separator, 0, 2, 1);
-    },
+    }
 
-    add_levelbar: function(params) {
+    add_levelbar(params) {
         params = Params.parse(params, {
             min_value: 0,
             max_value: 100,
@@ -390,9 +382,9 @@ const PrefsGrid = new GObject.Class({
         });
         let item = new Gtk.LevelBar(params);
         return this.add_item(item);
-    },
+    }
 
-    add_label: function(text, markup=null) {
+    add_label(text, markup=null) {
         let label = new Gtk.Label({
             hexpand: true,
             halign: Gtk.Align.START
@@ -407,13 +399,9 @@ const PrefsGrid = new GObject.Class({
 });
 
 
-const WebSearchDialogPrefsEnginesList = new GObject.Class({
-    Name: 'WebSearchDialog.Prefs.EnginesList',
-    GTypeName: 'WebSearchDialogPrefsEnginesList',
-    Extends: Gtk.Box,
-
-    _init: function(settings, params) {
-        this.parent(params);
+const WebSearchDialogPrefsEnginesList = GObject.registerClass(class WebSearchDialog_Prefs_EnginesList extends Gtk.Box {
+    _init(settings, params) {
+        super._init(params);
         this._settings = settings;
         this._settings.connect('changed', Lang.bind(this, this._refresh));
         this.set_orientation(Gtk.Orientation.VERTICAL);
@@ -530,9 +518,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 
         this._changed_permitted = true;
         this._refresh();
-    },
+    }
 
-    _make_on_item_edited: function (column) {
+    _make_on_item_edited(column) {
         return Lang.bind(this, function (renderer, rowIndex, newVal) {
             let [any, model, iter] = this._tree_view.get_selection().get_selected();
             let name = this._store.get_value(iter, this.columns.DISPLAY_NAME);
@@ -540,9 +528,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             update[column] = newVal;
             return this._update_item(name, update);
         });
-    },
+    }
 
-    _create_new: function() {
+    _create_new() {
         let dialog = new Gtk.Dialog({
             title: 'Add new search engine',
             transient_for: this.get_toplevel(),
@@ -612,9 +600,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         }));
 
         dialog.show_all();
-    },
+    }
 
-    _delete_selected: function() {
+    _delete_selected() {
         let [any, model, iter] =
             this._tree_view.get_selection().get_selected();
 
@@ -623,9 +611,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             this._remove_item(name);
             this._store.remove(iter);
         }
-    },
+    }
 
-    _refresh: function() {
+    _refresh() {
         this._store.clear();
 
         let current_items = this._settings.get_strv(ENGINES_KEY);
@@ -648,9 +636,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
             // some items were filtered out
             this._settings.set_strv(ENGINES_KEY, valid_items);
         }
-    },
+    }
 
-    _is_valid_item: function(item) {
+    _is_valid_item(item) {
         if(Utils.is_blank(item.name)) {
             return false;
         }
@@ -663,9 +651,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         else {
             return true;
         }
-    },
+    }
 
-    _is_duplicate_item: function(item, ignoreIndex) {
+    _is_duplicate_item(item, ignoreIndex) {
         let current_items = this._settings.get_strv(ENGINES_KEY);
 
         for(let i = 0; i < current_items.length; i++) {
@@ -684,9 +672,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         }
 
         return true;
-    },
+    }
 
-    _append_item: function(new_item) {
+    _append_item(new_item) {
         if(!this._is_valid_item(new_item) || !this._is_duplicate_item(new_item)) {
             return false;
         }
@@ -696,9 +684,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         current_items.push(JSON.stringify(new_item));
         this._settings.set_strv(ENGINES_KEY, current_items);
         return true;
-    },
+    }
 
-    _update_item: function(name, update) {
+    _update_item(name, update) {
         let current_items = this._settings.get_strv(ENGINES_KEY);
 
         for(let i = 0; i < current_items.length; i++) {
@@ -720,9 +708,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
         }
 
         return false;
-    },
+    }
 
-    _remove_item: function(name) {
+    _remove_item(name) {
         if(Utils.is_blank(name)) {
             return false;
         }
@@ -746,13 +734,9 @@ const WebSearchDialogPrefsEnginesList = new GObject.Class({
 });
 
 
-const WebSearchDialogPrefsWidget = new GObject.Class({
-    Name: 'WebSearchDialog.Prefs.Widget',
-    GTypeName: 'WebSearchDialogPrefsWidget',
-    Extends: Gtk.Box,
-
-    _init: function(params) {
-        this.parent(params);
+const WebSearchDialogPrefsWidget = GObject.registerClass(class WebSearchDialog_Prefs_Widget extends Gtk.Box {
+    _init(params) {
+        super._init(params);
         this.set_orientation(Gtk.Orientation.VERTICAL);
         this._settings = Utils.getSettings();
 
@@ -794,9 +778,9 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
                 this.get_toplevel().resize(700, 250);
             })
         );
-    },
+    }
 
-    _get_main_page: function() {
+    _get_main_page() {
         let settings = Utils.getSettings();
         let name = 'Main';
         let page = new PrefsGrid(settings);
@@ -907,9 +891,9 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             page: page,
             name: name
         };
-    },
+    }
 
-    _get_keybindings_page: function() {
+    _get_keybindings_page() {
         let settings = Utils.getSettings();
         let name = 'Keybindings';
         let page = new PrefsGrid(settings);
@@ -924,7 +908,7 @@ const WebSearchDialogPrefsWidget = new GObject.Class({
             page: page,
             name: name
         };
-    },
+    }
 });
 
 

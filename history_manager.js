@@ -5,19 +5,17 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Prefs = Me.imports.prefs;
 const Utils = Me.imports.utils;
 
-var SearchHistoryManager = new Lang.Class({
-    Name: "SearchHistoryManager",
-
-    _init: function(params) {
+var SearchHistoryManager = class SearchHistoryManager {
+    constructor(params) {
         this._settings = Utils.getSettings();
 
-        params = Params.parse(params, {
+        this.params = Params.parse(params, {
             gsettings_key: Prefs.HISTORY_KEY,
             limit: this._settings.get_int(Prefs.HISTORY_LIMIT_KEY)
         });
 
-        this._key = params.gsettings_key;
-        this._limit = params.limit;
+        this._key = this.params.gsettings_key;
+        this._limit = this.params.limit;
 
         if(this._key) {
             this._history = JSON.parse(this._settings.get_string(this._key));
@@ -31,14 +29,14 @@ var SearchHistoryManager = new Lang.Class({
         }
 
         this._history_index = this._history.length;
-    },
+    }
 
-    _history_changed: function() {
+    _history_changed() {
         this._history = JSON.parse(this._settings.get_string(this._key));
         this._history_index = this._history.length;
-    },
+    }
 
-    prev_item: function(text) {
+    prev_item(text) {
         if(this._history_index <= 0) {
             return {query: text};
         }
@@ -46,9 +44,9 @@ var SearchHistoryManager = new Lang.Class({
         this._history_index--;
 
         return this._index_changed();
-    },
+    }
 
-    next_item: function(text) {
+    next_item(text) {
         if(this._history_index >= this._history.length) {
             return {query: text};
         }
@@ -56,26 +54,26 @@ var SearchHistoryManager = new Lang.Class({
         this._history_index++;
 
         return this._index_changed();
-    },
+    }
 
-    last_item: function() {
+    last_item() {
         if(this._history_index != this._history.length) {
             this._history_index = this._history.length;
             this._index_changed();
         }
 
         return this._history_index[this._history.length];
-    },
+    }
 
-    current_index: function() {
+    current_index() {
         return this._history_index;
-    },
+    }
 
-    total_items: function() {
+    total_items() {
         return this._history.length;
-    },
+    }
 
-    add_item: function(input) {
+    add_item(input) {
         if(this._history.length == 0 ||
             this._history[this._history.length - 1].query != input.query ||
             this._history[this._history.length - 1].type != input.type) {
@@ -84,9 +82,9 @@ var SearchHistoryManager = new Lang.Class({
             this._save();
         }
         this._history_index = this._history.length;
-    },
+    }
 
-    get_best_matches: function(params) {
+    get_best_matches(params) {
         params = Params.parse(params, {
             text: false,
             types: ['QUERY', 'NAVIGATION'],
@@ -121,21 +119,21 @@ var SearchHistoryManager = new Lang.Class({
         result.sort(function(a, b){return a[0] < b[0]});
 
         return result.slice(0, params.limit);
-    },
+    }
 
-    reset_index: function() {
+    reset_index() {
         this._history_index = this._history.length;
-    },
+    }
 
-    _index_changed: function() {
+    _index_changed() {
         let current = this._history[this._history_index] || {
             query: ''
         };
 
         return current;
-    },
+    }
 
-    _save: function() {
+    _save() {
         if(this._history.length > this._limit) {
             this._history.splice(0, this._history.length - this._limit);
         }
@@ -144,4 +142,4 @@ var SearchHistoryManager = new Lang.Class({
             this._settings.set_string(this._key, JSON.stringify(this._history));
         }
     }
-});
+};
