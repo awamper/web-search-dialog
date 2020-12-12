@@ -41,3 +41,12 @@ Run the following command:
 Run the following command:
 
 `sudo git clone https://github.com/awamper/web-search-dialog.git /usr/share/gnome-shell/extensions/web_search_dialog@awamper.gmail.com/`
+
+## Dependencies
+
+Be sure those packages are installed :
+
+```
+sudo apt install gnome-shell-extensions
+sudo apt install gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0
+```
